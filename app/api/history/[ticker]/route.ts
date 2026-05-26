@@ -5,23 +5,28 @@ import type { StockHistoryProfile, EventSentiment } from "@/lib/stockHistory";
 
 /* ═══════════════════════════════════════════════════════════════
    R.H.T.I.H — Company History API Route
-   Returns company-specific institutional history intelligence.
 
    Priority chain:
-   1. Hardcoded deep profiles (RELIANCE, TCS, HDFCBANK, ADANIENT, INFY,
-      ICICIBANK, BHARTIARTL, HAL, IRFC) — enriched with live news
-   2. Dynamic sector-playbook generation for all other tickers
+   1. Cache (HIT → serve immediately)
+   2. For KNOWN tickers → hardcoded deep profile + live news enrichment
+   3. For ALL OTHER tickers → Claude AI generates real company history
+   4. Fallback → sector playbook (no API key / Claude timeout)
+   5. Last resort → generic fallback
 
-   Always returns a valid StockHistoryProfile — never an error object.
+   Cache TTL:
+   - Known tickers: 24h (stable institutional archive)
+   - AI-generated:  4h  (semi-fresh but expensive)
+   - Sector fallback: 30m
 ═══════════════════════════════════════════════════════════════ */
 
-export const dynamic = "force-dynamic";
+export const dynamic    = "force-dynamic";
+export const maxDuration = 60;
 
 export interface HistoryAPIResponse extends StockHistoryProfile {
   _meta: {
     ticker:       string;
     generatedAt:  string;
-    source:       "hardcoded" | "dynamic";
+    source:       "hardcoded" | "ai-generated" | "sector-playbook" | "fallback";
     isKnownStock: boolean;
     newsCount:    number;
     currentPrice: number | null;
@@ -30,7 +35,7 @@ export interface HistoryAPIResponse extends StockHistoryProfile {
   };
 }
 
-/* Known tickers that have deep hardcoded profiles */
+/* Known tickers with hand-curated deep profiles */
 const KNOWN_TICKERS = new Set([
   "RELIANCE","TCS","HDFCBANK","ADANIENT","INFY",
   "ICICIBANK","BHARTIARTL","HAL","IRFC",
@@ -94,7 +99,7 @@ export async function GET(
   const T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
   const cacheKey = `history:${T}`;
 
-  /* ── Serve from cache ─────────────────────────── */
+  /* ── Cache hit ───────────────────────────────────────────── */
   const cached = cache.get<HistoryAPIResponse>(cacheKey);
   if (cached) {
     return NextResponse.json(cached, {
@@ -109,7 +114,7 @@ export async function GET(
     let response: HistoryAPIResponse;
 
     if (KNOWN_TICKERS.has(T)) {
-      /* ── Deep hardcoded profile + live news enrichment ─── */
+      /* ── Deep hardcoded profile + live news enrichment ────── */
       const base = getStockHistory(T);
       const mergedDevelopments = [
         ...liveDevelopments,
@@ -131,28 +136,47 @@ export async function GET(
         },
       };
 
-      cache.set(cacheKey, response, TTL.STATIC); // 24h for deep profiles
+      cache.set(cacheKey, response, TTL.STATIC); // 24h
 
     } else {
-      /* ── Dynamic generation via sector playbooks ─────── */
-      const { buildCompanyHistory } = await import("@/lib/services/companyHistoryEngine");
-      const dynamic = buildCompanyHistory(T, quote, summary, news);
+      /* ── AI-generated company-specific history ───────────── */
+      let dynamic: StockHistoryProfile;
+      let source: HistoryAPIResponse["_meta"]["source"] = "ai-generated";
+      let model = "claude-ai-historian";
+
+      try {
+        const { generateAICompanyHistory } = await import("@/lib/services/aiHistoryEngine");
+        dynamic = await generateAICompanyHistory(T, quote, summary, news);
+      } catch (aiErr) {
+        console.warn(`[History API] AI generation failed for ${T}, falling back to sector playbook:`, aiErr);
+        /* Fallback: sector playbook (no API key or Claude timeout) */
+        const { buildCompanyHistory } = await import("@/lib/services/companyHistoryEngine");
+        dynamic = buildCompanyHistory(T, quote, summary, news);
+        source  = "sector-playbook";
+        model   = "sector-playbook";
+      }
+
+      /* Merge live news into latestDevelopments */
+      dynamic.latestDevelopments = liveDevelopments.length > 0
+        ? liveDevelopments
+        : dynamic.latestDevelopments;
 
       response = {
         ...dynamic,
         _meta: {
           ticker:       T,
           generatedAt:  new Date().toISOString(),
-          source:       "dynamic",
+          source,
           isKnownStock: false,
           newsCount:    news.length,
           currentPrice: quote?.regularMarketPrice ?? null,
           priceChange:  quote?.regularMarketChangePercent ?? null,
-          model:        "sector-playbook",
+          model,
         },
       };
 
-      cache.set(cacheKey, response, 1800); // 30m for dynamic profiles
+      /* Cache AI results for 4h (expensive to regenerate) */
+      cache.set(cacheKey, response, source === "ai-generated" ? 14_400 : 1800);
     }
 
     return NextResponse.json(response, {
@@ -161,14 +185,13 @@ export async function GET(
 
   } catch (err) {
     console.error(`[History API /${T}]:`, err);
-    /* Absolute last resort — minimal valid shape */
-    const fallback = getStockHistory(T); // returns generic for unknown tickers
+    const fallback = getStockHistory(T);
     const resp: HistoryAPIResponse = {
       ...fallback,
       _meta: {
         ticker:       T,
         generatedAt:  new Date().toISOString(),
-        source:       "hardcoded",
+        source:       "fallback",
         isKnownStock: KNOWN_TICKERS.has(T),
         newsCount:    0,
         currentPrice: null,
