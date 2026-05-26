@@ -1,0 +1,14 @@
+{
+  "name": "r-h-t-i-h",
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "functions": {
+    "app/api/ai-analysis/[ticker]/route.ts": { "maxDuration": 60 },
+    "app/api/intelligence/[ticker]/route.ts": { "maxDuration": 60 },
+    "app/api/technicals/[ticker]/route.ts": { "maxDuration": 30 },
+    "app/api/fundamentals/[ticker]/route.ts": { "maxDuration": 30 },
+    "app/api/news/[ticker]/route.ts": { "maxDuration": 30 }
+  }
+}
