@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,28 +13,28 @@ import { MarketTicker } from "@/components/MarketTicker";
 import type { HistoryAPIResponse } from "@/app/api/history/[ticker]/route";
 import type { TimelineEvent, NarrativeEra } from "@/lib/stockHistory";
 
-/* ─── Quick picks ───────────────────────────────── */
+/* â”€â”€â”€ Quick picks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const QUICK_PICKS = ["RELIANCE","TCS","HDFCBANK","ICICIBANK","BHARTIARTL","HAL","IRFC","ADANIENT","INFY","SBIN"];
 
-/* ─── Colour helpers ────────────────────────────── */
+/* â”€â”€â”€ Colour helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function scoreColor(s: number): string {
-  if (s >= 75) return "#00FF9C";
-  if (s >= 55) return "#FFD700";
-  if (s >= 40) return "#FFB800";
-  return "#FF4D4D";
+  if (s >= 75) return "var(--positive)";
+  if (s >= 55) return "var(--gold)";
+  if (s >= 40) return "var(--neutral)";
+  return "var(--negative)";
 }
 
 const SENT_COL: Record<string, { color: string; bg: string; border: string }> = {
-  BULLISH:  { color: "#00FF9C", bg: "rgba(0,255,156,0.09)",   border: "rgba(0,255,156,0.25)"  },
-  BEARISH:  { color: "#FF4D4D", bg: "rgba(255,77,77,0.09)",   border: "rgba(255,77,77,0.25)"  },
-  NEUTRAL:  { color: "#FFB800", bg: "rgba(255,184,0,0.09)",   border: "rgba(255,184,0,0.25)"  },
-  MIXED:    { color: "#C084FC", bg: "rgba(192,132,252,0.09)", border: "rgba(192,132,252,0.25)" },
+  BULLISH:  { color: "var(--positive)", bg: "var(--th-green-bg)",   border: "rgba(0,255,156,0.25)"  },
+  BEARISH:  { color: "var(--negative)", bg: "var(--th-red-bg)",   border: "rgba(255,77,77,0.25)"  },
+  NEUTRAL:  { color: "var(--neutral)", bg: "rgba(255,184,0,0.09)",   border: "rgba(255,184,0,0.25)"  },
+  MIXED:    { color: "var(--th-blue)", bg: "rgba(192,132,252,0.09)", border: "rgba(192,132,252,0.25)" },
 };
 
 const CAT_COL: Record<string, string> = {
-  EARNINGS: "#FFD700", MACRO: "#38BDF8", CORPORATE: "#00FF9C",
-  REGULATORY: "#FB923C", SOCIAL: "#C084FC", TECHNICAL: "#A78BFA",
-  FUNDRAISE: "#10B981", CONTROVERSY: "#FF4D4D",
+  EARNINGS: "var(--gold)", MACRO: "var(--th-blue)", CORPORATE: "var(--positive)",
+  REGULATORY: "#FB923C", SOCIAL: "var(--th-blue)", TECHNICAL: "#A78BFA",
+  FUNDRAISE: "#10B981", CONTROVERSY: "var(--negative)",
 };
 
 const CAT_LABEL: Record<string, string> = {
@@ -43,13 +43,13 @@ const CAT_LABEL: Record<string, string> = {
   FUNDRAISE: "FUNDRAISE", CONTROVERSY: "CONTROVERSY",
 };
 
-/* ─── Format event date from year + month ──────── */
+/* â”€â”€â”€ Format event date from year + month â”€â”€â”€â”€â”€â”€â”€â”€ */
 function formatEventDate(event: TimelineEvent): string {
   if (event.month) return `${event.month} ${event.year}`;
   return String(event.year);
 }
 
-/* ─── Sentiment chart ──────────────────────────── */
+/* â”€â”€â”€ Sentiment chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function SentimentChart({ data }: { data: { year: number; score: number; label: string }[] }) {
   if (!data?.length) return null;
   const W = 280, H = 90, PAD = 18;
@@ -81,13 +81,13 @@ function SentimentChart({ data }: { data: { year: number; score: number; label: 
           const origIdx = data.indexOf(d);
           return (
             <text key={d.year} x={toX(origIdx)} y={H - 2} textAnchor="middle"
-              fill="#2A2A2A" fontSize="6.5" fontFamily="monospace">{d.year}</text>
+              fill="var(--th-text-ultra-faint)" fontSize="6.5" fontFamily="monospace">{d.year}</text>
           );
         })}
       </svg>
       <div className="flex items-center justify-between mt-1">
-        <span className="text-[8px] font-mono" style={{ color: "#1E1E1E" }}>
-          Low: {minY} · Avg: {avg} · High: {maxY}
+        <span className="text-[8px] font-mono" style={{ color: "var(--th-text-faint)" }}>
+          Low: {minY} Â· Avg: {avg} Â· High: {maxY}
         </span>
         <span className="text-[8px] font-mono font-bold" style={{ color: col }}>
           Current: {data[data.length - 1]?.score ?? avg}/100
@@ -97,14 +97,14 @@ function SentimentChart({ data }: { data: { year: number; score: number; label: 
   );
 }
 
-/* ─── Narrative era dots ─────────────────────────── */
+/* â”€â”€â”€ Narrative era dots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function NarrativeSection({ eras }: { eras: NarrativeEra[] }) {
   if (!eras?.length) return null;
   return (
-    <div className="rounded-xl p-5" style={{ background: "rgba(9,9,9,0.95)", border: "1px solid rgba(255,215,0,0.08)" }}>
+    <div className="rounded-xl p-5" style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-card)" }}>
       <div className="flex items-center gap-2 mb-4">
-        <Activity size={11} style={{ color: "#FFD700" }} />
-        <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "#3A3A3A" }}>Narrative Evolution</span>
+        <Activity size={11} style={{ color: "var(--gold)" }} />
+        <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>Narrative Evolution</span>
       </div>
       <div className="space-y-3">
         {eras.map((era, i) => (
@@ -127,11 +127,11 @@ function NarrativeSection({ eras }: { eras: NarrativeEra[] }) {
                 </span>
               </div>
               <div className="text-[11.5px] font-semibold mb-1"
-                style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", color: "#DEDEDE" }}>
+                style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", color: "var(--th-text-secondary)" }}>
                 {era.title}
               </div>
-              <p className="text-[10.5px] leading-relaxed" style={{ color: "#3A3A3A" }}>{era.description}</p>
-              <div className="mt-1 text-[9px] font-mono" style={{ color: `${era.color}50` }}>◈ {era.dominant}</div>
+              <p className="text-[10.5px] leading-relaxed" style={{ color: "var(--th-text-faint)" }}>{era.description}</p>
+              <div className="mt-1 text-[9px] font-mono" style={{ color: `${era.color}50` }}>â—ˆ {era.dominant}</div>
             </div>
           </motion.div>
         ))}
@@ -140,7 +140,7 @@ function NarrativeSection({ eras }: { eras: NarrativeEra[] }) {
   );
 }
 
-/* ─── Event card ────────────────────────────────── */
+/* â”€â”€â”€ Event card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function EventCard({ event, index }: { event: TimelineEvent; index: number }) {
   const [expanded, setExpanded] = useState(index === 0);
   const sc       = SENT_COL[event.sentiment] ?? SENT_COL["NEUTRAL"];
@@ -157,7 +157,7 @@ function EventCard({ event, index }: { event: TimelineEvent; index: number }) {
         {/* Timeline marker */}
         <div className="flex flex-col items-center flex-shrink-0 pt-1" style={{ width: "68px" }}>
           <div className="text-[10px] font-mono font-bold px-2 py-1 rounded-lg text-center w-full"
-            style={{ color: "#FFD700", background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.16)" }}>
+            style={{ color: "var(--gold)", background: "var(--th-border-subtle)", border: "1px solid rgba(255,215,0,0.16)" }}>
             {dateStr}
           </div>
           <div className="w-px flex-1 mt-1.5 min-h-[24px]"
@@ -166,7 +166,7 @@ function EventCard({ event, index }: { event: TimelineEvent; index: number }) {
 
         {/* Card */}
         <div className="flex-1 rounded-xl overflow-hidden transition-all duration-200"
-          style={{ background: "rgba(9,9,9,0.96)", border: `1px solid ${catColor}16` }}
+          style={{ background: "var(--th-bg-card)", border: `1px solid ${catColor}16` }}
           onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = `${catColor}30`; }}
           onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = `${catColor}16`; }}>
 
@@ -189,13 +189,13 @@ function EventCard({ event, index }: { event: TimelineEvent; index: number }) {
                     {event.impactScore}
                   </span>
                 </div>
-                <span className="text-[9px] font-mono" style={{ color: expanded ? "#FFD700" : "#2A2A2A" }}>
-                  {expanded ? "▲" : "▼"}
+                <span className="text-[9px] font-mono" style={{ color: expanded ? "var(--gold)" : "var(--th-text-ultra-faint)" }}>
+                  {expanded ? "â–²" : "â–¼"}
                 </span>
               </div>
             </div>
             <h3 className="text-[13px] font-semibold leading-snug"
-              style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", color: "#ECECEC" }}>
+              style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", color: "var(--th-text-soft)" }}>
               {event.headline}
             </h3>
           </button>
@@ -210,21 +210,21 @@ function EventCard({ event, index }: { event: TimelineEvent; index: number }) {
                   </p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-3 rounded-lg" style={{ background: "rgba(255,215,0,0.02)", border: "1px solid rgba(255,215,0,0.07)" }}>
-                      <div className="text-[8px] font-mono uppercase tracking-wider mb-1.5" style={{ color: "rgba(255,215,0,0.4)" }}>
+                    <div className="p-3 rounded-lg" style={{ background: "var(--th-gold-bg)", border: "1px solid var(--th-border-subtle)" }}>
+                      <div className="text-[8px] font-mono uppercase tracking-wider mb-1.5" style={{ color: "var(--th-gold-text-dim)" }}>
                         Market Reaction
                       </div>
-                      <p className="text-[11px] leading-relaxed" style={{ color: "#5A5A5A" }}>{event.marketReaction}</p>
+                      <p className="text-[11px] leading-relaxed" style={{ color: "var(--th-text-dim)" }}>{event.marketReaction}</p>
                     </div>
 
-                    <div className="p-3 rounded-lg" style={{ background: "rgba(255,215,0,0.02)", borderLeft: "2px solid rgba(255,215,0,0.2)" }}>
+                    <div className="p-3 rounded-lg" style={{ background: "var(--th-gold-bg)", borderLeft: "2px solid rgba(255,215,0,0.2)" }}>
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <Brain size={9} style={{ color: "#FFD700" }} />
-                        <span className="text-[8px] font-mono uppercase tracking-wider" style={{ color: "rgba(255,215,0,0.5)" }}>
+                        <Brain size={9} style={{ color: "var(--gold)" }} />
+                        <span className="text-[8px] font-mono uppercase tracking-wider" style={{ color: "var(--th-gold-text-dim)" }}>
                           AI Institutional Read
                         </span>
                       </div>
-                      <p className="text-[11px] leading-relaxed" style={{ color: "#6A6A6A" }}>
+                      <p className="text-[11px] leading-relaxed" style={{ color: "var(--th-text-muted)" }}>
                         {event.institutionalRead}
                       </p>
                     </div>
@@ -232,25 +232,25 @@ function EventCard({ event, index }: { event: TimelineEvent; index: number }) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.012)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                      <div className="text-[8px] font-mono uppercase tracking-wider mb-1" style={{ color: "#2A2A2A" }}>
+                      <div className="text-[8px] font-mono uppercase tracking-wider mb-1" style={{ color: "var(--th-text-ultra-faint)" }}>
                         Retail / Social
                       </div>
-                      <p className="text-[11px] leading-relaxed" style={{ color: "#4A4A4A" }}>{event.retailSentiment}</p>
+                      <p className="text-[11px] leading-relaxed" style={{ color: "var(--th-text-muted)" }}>{event.retailSentiment}</p>
                     </div>
                     <div className="p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.012)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                      <div className="text-[8px] font-mono uppercase tracking-wider mb-1" style={{ color: "#2A2A2A" }}>
+                      <div className="text-[8px] font-mono uppercase tracking-wider mb-1" style={{ color: "var(--th-text-ultra-faint)" }}>
                         Long-Term Impact
                       </div>
-                      <p className="text-[11px] leading-relaxed" style={{ color: "#4A4A4A" }}>{event.longTermImpact}</p>
+                      <p className="text-[11px] leading-relaxed" style={{ color: "var(--th-text-muted)" }}>{event.longTermImpact}</p>
                     </div>
                   </div>
 
                   {/* Conviction bars */}
                   <div className="flex flex-wrap gap-2 pt-1">
                     {[
-                      { label: "Institutional", score: event.institutionalConf, color: "#38BDF8"  },
-                      { label: "Retail Heat",   score: event.retailExcitement,  color: "#C084FC"  },
-                      { label: "LT Importance", score: event.ltImportance,      color: "#00FF9C"  },
+                      { label: "Institutional", score: event.institutionalConf, color: "var(--th-blue)"  },
+                      { label: "Retail Heat",   score: event.retailExcitement,  color: "var(--th-blue)"  },
+                      { label: "LT Importance", score: event.ltImportance,      color: "var(--positive)"  },
                     ].map(s => (
                       <div key={s.label} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
                         style={{ background: `${s.color}07`, border: `1px solid ${s.color}16` }}>
@@ -269,29 +269,29 @@ function EventCard({ event, index }: { event: TimelineEvent; index: number }) {
   );
 }
 
-/* ─── Phase legend ──────────────────────────────── */
+/* â”€â”€â”€ Phase legend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function PhaseLegend({ timeline }: { timeline: TimelineEvent[] }) {
   const phases: Record<string, number> = {};
   timeline.forEach(e => {
     const decade = Math.floor(e.year / 5) * 5;
-    const key = `${decade}–${decade + 4}`;
+    const key = `${decade}â€“${decade + 4}`;
     phases[key] = (phases[key] ?? 0) + 1;
   });
   const bullish  = timeline.filter(e => e.sentiment === "BULLISH").length;
   const bearish  = timeline.filter(e => e.sentiment === "BEARISH").length;
   const avgImpact = Math.round(timeline.reduce((s, e) => s + e.impactScore, 0) / (timeline.length || 1));
   return (
-    <div className="rounded-xl p-4" style={{ background: "rgba(9,9,9,0.95)", border: "1px solid rgba(255,215,0,0.07)" }}>
+    <div className="rounded-xl p-4" style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-subtle)" }}>
       <div className="flex items-center gap-2 mb-3">
-        <Calendar size={10} style={{ color: "#FFD700" }} />
-        <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "#3A3A3A" }}>
+        <Calendar size={10} style={{ color: "var(--gold)" }} />
+        <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>
           Timeline Stats
         </span>
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: "Bullish Events",  val: bullish,    color: "#00FF9C" },
-          { label: "Bearish Events",  val: bearish,    color: "#FF4D4D" },
+          { label: "Bullish Events",  val: bullish,    color: "var(--positive)" },
+          { label: "Bearish Events",  val: bearish,    color: "var(--negative)" },
           { label: "Avg Impact",      val: `${avgImpact}/100`, color: scoreColor(avgImpact) },
         ].map(s => (
           <div key={s.label} className="text-center p-2 rounded-lg"
@@ -305,7 +305,7 @@ function PhaseLegend({ timeline }: { timeline: TimelineEvent[] }) {
   );
 }
 
-/* ─── Loading ───────────────────────────────────── */
+/* â”€â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const ARCH_MSGS = [
   "Accessing institutional memory archive...",
   "Fetching Yahoo Finance financial data...",
@@ -331,40 +331,40 @@ function LoadingState({ ticker }: { ticker: string }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       className="max-w-2xl mx-auto mt-16 px-4">
-      <div className="rounded-2xl p-8" style={{ background: "rgba(7,7,7,0.97)", border: "1px solid rgba(255,215,0,0.12)" }}>
+      <div className="rounded-2xl p-8" style={{ background: "rgba(7,7,7,0.97)", border: "1px solid var(--th-border-normal)" }}>
         <div className="flex items-center gap-3 mb-7">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.2)" }}>
-            <BookOpen size={17} style={{ color: "#FFD700" }} />
+            style={{ background: "var(--th-border-card)", border: "1px solid var(--th-border-accent)" }}>
+            <BookOpen size={17} style={{ color: "var(--gold)" }} />
           </div>
           <div>
-            <div className="text-[13px] font-mono font-bold" style={{ color: "#F5F5F5" }}>
+            <div className="text-[13px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
               Building {ticker} Evolution Archive
             </div>
-            <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "#3A3A3A" }}>
-              Institutional Memory · Real Company History
+            <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
+              Institutional Memory Â· Real Company History
             </div>
           </div>
           <div className="ml-auto flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-[#FFD700] animate-live-dot" />
-            <span className="text-[8.5px] font-mono" style={{ color: "#FFD700" }}>LIVE</span>
+            <span className="text-[8.5px] font-mono" style={{ color: "var(--gold)" }}>LIVE</span>
           </div>
         </div>
         <div className="space-y-2 mb-6 min-h-[150px]">
           {ARCH_MSGS.slice(0, msgIdx + 1).map((msg, i) => (
             <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-2.5">
-              <CheckCircle size={10} style={{ color: i === msgIdx ? "#FFD700" : "#00FF9C", flexShrink: 0 }} />
-              <span className="text-[10px] font-mono" style={{ color: i === msgIdx ? "#F5F5F5" : "#2A2A2A" }}>{msg}</span>
-              {i === msgIdx && <span className="text-[10px] font-mono animate-blink" style={{ color: "#FFD700" }}>█</span>}
+              <CheckCircle size={10} style={{ color: i === msgIdx ? "var(--gold)" : "var(--positive)", flexShrink: 0 }} />
+              <span className="text-[10px] font-mono" style={{ color: i === msgIdx ? "var(--th-text-primary)" : "var(--th-text-ultra-faint)" }}>{msg}</span>
+              {i === msgIdx && <span className="text-[10px] font-mono animate-blink" style={{ color: "var(--gold)" }}>â–ˆ</span>}
             </motion.div>
           ))}
         </div>
-        <div className="h-0.5 rounded-full overflow-hidden mb-1.5" style={{ background: "rgba(255,215,0,0.06)" }}>
+        <div className="h-0.5 rounded-full overflow-hidden mb-1.5" style={{ background: "var(--th-border-subtle)" }}>
           <motion.div className="h-full rounded-full" animate={{ width: `${progress}%` }} transition={{ duration: 0.5 }}
             style={{ background: "linear-gradient(90deg,#C9A227,#FFD700)", boxShadow: "0 0 8px rgba(255,215,0,0.4)" }} />
         </div>
-        <div className="text-right text-[8.5px] font-mono" style={{ color: "#2A2A2A" }}>
+        <div className="text-right text-[8.5px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>
           Compiling institutional archive...
         </div>
       </div>
@@ -372,7 +372,7 @@ function LoadingState({ ticker }: { ticker: string }) {
   );
 }
 
-/* ─── Error state ───────────────────────────────── */
+/* â”€â”€â”€ Error state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function ErrorState({ error, ticker, onReset, onRetry }: {
   error: string; ticker: string; onReset: () => void; onRetry: () => void;
 }) {
@@ -382,14 +382,14 @@ function ErrorState({ error, ticker, onReset, onRetry }: {
       <div className="rounded-2xl p-8" style={{ background: "rgba(7,7,7,0.97)", border: "1px solid rgba(255,77,77,0.2)" }}>
         <div className="flex items-center gap-3 mb-5">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.2)" }}>
-            <AlertTriangle size={17} style={{ color: "#FF4D4D" }} />
+            style={{ background: "var(--th-red-bg)", border: "1px solid rgba(255,77,77,0.2)" }}>
+            <AlertTriangle size={17} style={{ color: "var(--negative)" }} />
           </div>
           <div>
-            <div className="text-[13px] font-mono font-bold" style={{ color: "#F5F5F5" }}>
-              Archive load failed — {ticker}
+            <div className="text-[13px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
+              Archive load failed â€” {ticker}
             </div>
-            <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "rgba(255,77,77,0.5)" }}>
+            <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-red-text-dim)" }}>
               Network or data error
             </div>
           </div>
@@ -401,12 +401,12 @@ function ErrorState({ error, ticker, onReset, onRetry }: {
         <div className="flex gap-3">
           <button onClick={onRetry}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-mono"
-            style={{ color: "#FFD700", background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)" }}>
+            style={{ color: "var(--gold)", background: "var(--th-border-card)", border: "1px solid var(--th-border-accent)" }}>
             <RefreshCw size={10} /> Retry
           </button>
           <button onClick={onReset}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-mono"
-            style={{ color: "#4A4A4A", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,215,0,0.08)" }}>
+            style={{ color: "var(--th-text-muted)", background: "rgba(255,255,255,0.02)", border: "1px solid var(--th-border-card)" }}>
             <X size={10} /> New Stock
           </button>
         </div>
@@ -415,7 +415,7 @@ function ErrorState({ error, ticker, onReset, onRetry }: {
   );
 }
 
-/* ─── Full history view ─────────────────────────── */
+/* â”€â”€â”€ Full history view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset: () => void }) {
   const timeline = report.timeline ?? [];
   const isKnown  = report._meta?.isKnownStock;
@@ -431,66 +431,66 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={onReset}
             className="flex items-center gap-1 text-[10px] font-mono transition-colors"
-            style={{ color: "#3A3A3A" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#FFD700"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#3A3A3A"; }}>
+            style={{ color: "var(--th-text-faint)" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--gold)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-faint)"; }}>
             <ChevronLeft size={10} /> Archive
           </button>
-          <span style={{ color: "#1E1E1E" }}>/</span>
-          <span className="text-[10px] font-mono" style={{ color: "#5A5A5A" }}>{report.ticker}</span>
+          <span style={{ color: "var(--th-text-faint)" }}>/</span>
+          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-dim)" }}>{report.ticker}</span>
           <span className="text-[8px] font-mono px-1.5 py-0.5 rounded ml-1"
-            style={{ color: "#00FF9C", background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.15)" }}>
-            LIVE · {new Date(report._meta?.generatedAt ?? Date.now()).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+            style={{ color: "var(--positive)", background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.15)" }}>
+            LIVE Â· {new Date(report._meta?.generatedAt ?? Date.now()).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
           </span>
           {isKnown && (
             <span className="text-[8px] font-mono px-1.5 py-0.5 rounded"
-              style={{ color: "#FFD700", background: "rgba(255,215,0,0.06)", border: "1px solid rgba(255,215,0,0.15)" }}>
+              style={{ color: "var(--gold)", background: "var(--th-border-subtle)", border: "1px solid var(--th-border-normal)" }}>
               DEEP ARCHIVE
             </span>
           )}
         </div>
         <button onClick={onReset}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono"
-          style={{ color: "#4A4A4A", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,215,0,0.08)" }}>
+          style={{ color: "var(--th-text-muted)", background: "rgba(255,255,255,0.02)", border: "1px solid var(--th-border-card)" }}>
           <Search size={10} /> New Search
         </button>
       </div>
 
       {/* Stock header */}
       <div className="rounded-2xl p-5 relative overflow-hidden"
-        style={{ background: "rgba(8,8,8,0.97)", border: "1px solid rgba(255,215,0,0.12)" }}>
+        style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-normal)" }}>
         <div className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse 70% 100% at 0% 50%, rgba(255,215,0,0.022) 0%, transparent 60%)" }} />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <span className="text-[8.5px] font-mono px-2 py-0.5 rounded"
-                style={{ color: "#FFD700", background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.2)" }}>
+                style={{ color: "var(--gold)", background: "var(--th-border-card)", border: "1px solid var(--th-border-accent)" }}>
                 {report.ticker}
               </span>
               <span className="text-[8.5px] font-mono px-2 py-0.5 rounded"
-                style={{ color: "#4A4A4A", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                style={{ color: "var(--th-text-muted)", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 {report.sector}
               </span>
               {report.cap && (
-                <span className="text-[8px] font-mono" style={{ color: "#2A2A2A" }}>{report.cap}</span>
+                <span className="text-[8px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>{report.cap}</span>
               )}
             </div>
             <h1 className="font-bold mb-1"
-              style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", fontSize: "clamp(18px,3vw,26px)", color: "#F5F5F5" }}>
+              style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", fontSize: "clamp(18px,3vw,26px)", color: "var(--th-text-primary)" }}>
               {report.name}
             </h1>
-            <p className="text-[11px] italic max-w-2xl" style={{ color: "#3A3A3A" }}>
+            <p className="text-[11px] italic max-w-2xl" style={{ color: "var(--th-text-faint)" }}>
               &ldquo;{report.oneLiner}&rdquo;
             </p>
             {report._meta?.currentPrice && (
               <div className="flex items-center gap-3 mt-1.5">
-                <span className="text-[11px] font-mono font-bold" style={{ color: "#F5F5F5" }}>
-                  ₹{report._meta.currentPrice.toFixed(2)}
+                <span className="text-[11px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
+                  â‚¹{report._meta.currentPrice.toFixed(2)}
                 </span>
                 {report._meta.priceChange != null && (
                   <span className="text-[10px] font-mono"
-                    style={{ color: report._meta.priceChange >= 0 ? "#00FF9C" : "#FF4D4D" }}>
+                    style={{ color: report._meta.priceChange >= 0 ? "var(--positive)" : "var(--negative)" }}>
                     {report._meta.priceChange >= 0 ? "+" : ""}{report._meta.priceChange.toFixed(2)}% today
                   </span>
                 )}
@@ -507,8 +507,8 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
                 {report.currentSentiment}
               </span>
             </div>
-            <div className="text-[8.5px] font-mono text-right" style={{ color: "#2A2A2A" }}>
-              {timeline.length} timeline events · {report._meta?.newsCount ?? 0} articles
+            <div className="text-[8.5px] font-mono text-right" style={{ color: "var(--th-text-ultra-faint)" }}>
+              {timeline.length} timeline events Â· {report._meta?.newsCount ?? 0} articles
             </div>
           </div>
         </div>
@@ -520,15 +520,15 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
         {/* LEFT: Timeline */}
         <div>
           <div className="flex items-center gap-2 mb-5">
-            <Clock size={11} style={{ color: "#FFD700" }} />
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "#3A3A3A" }}>
+            <Clock size={11} style={{ color: "var(--gold)" }} />
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>
               Historical Intelligence Timeline
             </span>
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-[8px] font-mono" style={{ color: "#1E1E1E" }}>
-                {timeline[0] ? `${timeline[0].year} – ${timeline[timeline.length - 1]?.year ?? "Present"}` : ""}
+              <span className="text-[8px] font-mono" style={{ color: "var(--th-text-faint)" }}>
+                {timeline[0] ? `${timeline[0].year} â€“ ${timeline[timeline.length - 1]?.year ?? "Present"}` : ""}
               </span>
-              <span className="text-[8px] font-mono" style={{ color: "#2A2A2A" }}>Click to expand</span>
+              <span className="text-[8px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>Click to expand</span>
             </div>
           </div>
           {timeline.map((event, i) => (
@@ -541,10 +541,10 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
 
           {/* Sentiment chart */}
           {(report.sentimentChart?.length ?? 0) > 0 && (
-            <div className="rounded-xl p-4" style={{ background: "rgba(9,9,9,0.95)", border: "1px solid rgba(255,215,0,0.08)" }}>
+            <div className="rounded-xl p-4" style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-card)" }}>
               <div className="flex items-center gap-2 mb-3">
-                <BarChart2 size={10} style={{ color: "#FFD700" }} />
-                <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "#3A3A3A" }}>
+                <BarChart2 size={10} style={{ color: "var(--gold)" }} />
+                <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>
                   Sentiment Evolution
                 </span>
                 <span className="ml-auto text-[8px] font-mono font-bold"
@@ -566,14 +566,14 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
 
           {/* Smart money */}
           {report.smartMoneyAnalysis && (
-            <div className="rounded-xl p-4" style={{ background: "rgba(9,9,9,0.95)", border: "1px solid rgba(255,215,0,0.08)" }}>
+            <div className="rounded-xl p-4" style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-card)" }}>
               <div className="flex items-center gap-2 mb-3">
-                <Eye size={10} style={{ color: "#FFD700" }} />
-                <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "#3A3A3A" }}>
+                <Eye size={10} style={{ color: "var(--gold)" }} />
+                <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>
                   Smart Money History
                 </span>
               </div>
-              <p className="text-[11px] leading-relaxed" style={{ color: "#4A4A4A" }}>
+              <p className="text-[11px] leading-relaxed" style={{ color: "var(--th-text-muted)" }}>
                 {report.smartMoneyAnalysis}
               </p>
             </div>
@@ -581,14 +581,14 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
 
           {/* Macro */}
           {report.macroConnections && (
-            <div className="rounded-xl p-4" style={{ background: "rgba(9,9,9,0.95)", border: "1px solid rgba(38,189,248,0.08)" }}>
+            <div className="rounded-xl p-4" style={{ background: "var(--th-bg-card)", border: "1px solid rgba(38,189,248,0.08)" }}>
               <div className="flex items-center gap-2 mb-3">
-                <Globe size={10} style={{ color: "#38BDF8" }} />
-                <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "#3A3A3A" }}>
+                <Globe size={10} style={{ color: "var(--th-blue)" }} />
+                <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>
                   Macro Connections
                 </span>
               </div>
-              <p className="text-[11px] leading-relaxed" style={{ color: "#4A4A4A" }}>
+              <p className="text-[11px] leading-relaxed" style={{ color: "var(--th-text-muted)" }}>
                 {report.macroConnections}
               </p>
             </div>
@@ -596,18 +596,18 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
 
           {/* Key risks */}
           {(report.keyRisks?.length ?? 0) > 0 && (
-            <div className="rounded-xl p-4" style={{ background: "rgba(9,9,9,0.95)", border: "1px solid rgba(255,77,77,0.09)" }}>
+            <div className="rounded-xl p-4" style={{ background: "var(--th-bg-card)", border: "1px solid rgba(255,77,77,0.09)" }}>
               <div className="flex items-center gap-2 mb-3">
-                <Shield size={10} style={{ color: "#FF4D4D" }} />
-                <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "rgba(255,77,77,0.5)" }}>
+                <Shield size={10} style={{ color: "var(--negative)" }} />
+                <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-red-text-dim)" }}>
                   Key Risks
                 </span>
               </div>
               <div className="space-y-2">
                 {(report.keyRisks ?? []).map((r, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="text-[8px] font-mono mt-0.5 flex-shrink-0" style={{ color: "#FF4D4D" }}>▸</span>
-                    <span className="text-[10.5px] leading-relaxed" style={{ color: "#4A4A4A" }}>{r}</span>
+                    <span className="text-[8px] font-mono mt-0.5 flex-shrink-0" style={{ color: "var(--negative)" }}>â–¸</span>
+                    <span className="text-[10.5px] leading-relaxed" style={{ color: "var(--th-text-muted)" }}>{r}</span>
                   </div>
                 ))}
               </div>
@@ -618,14 +618,14 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
 
       {/* Latest developments */}
       {(report.latestDevelopments?.length ?? 0) > 0 && (
-        <div className="rounded-2xl p-5" style={{ background: "rgba(8,8,8,0.97)", border: "1px solid rgba(255,215,0,0.1)" }}>
+        <div className="rounded-2xl p-5" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-normal)" }}>
           <div className="flex items-center gap-2 mb-4">
-            <Zap size={11} style={{ color: "#FFD700" }} />
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "#3A3A3A" }}>
+            <Zap size={11} style={{ color: "var(--gold)" }} />
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>
               Latest Developments
             </span>
             <span className="ml-auto text-[8px] font-mono px-2 py-0.5 rounded"
-              style={{ color: "#00FF9C", background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.15)" }}>
+              style={{ color: "var(--positive)", background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.15)" }}>
               LIVE DATA
             </span>
           </div>
@@ -639,15 +639,15 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[8px] font-mono px-1.5 py-0.5 rounded"
                       style={{ color: sc.color, background: sc.bg }}>{d.sentiment}</span>
-                    <span className="text-[8px] font-mono" style={{ color: "#2A2A2A" }}>{d.date}</span>
+                    <span className="text-[8px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>{d.date}</span>
                   </div>
                   <h4 className="text-[12px] font-semibold mb-2 leading-snug"
                     style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", color: "#E0E0E0" }}>
                     {d.headline}
                   </h4>
                   <div className="p-2.5 rounded-lg"
-                    style={{ background: "rgba(255,215,0,0.02)", borderLeft: "2px solid rgba(255,215,0,0.14)" }}>
-                    <p className="text-[10.5px] leading-relaxed" style={{ color: "#5A5A5A" }}>{d.aiRead}</p>
+                    style={{ background: "var(--th-gold-bg)", borderLeft: "2px solid rgba(255,215,0,0.14)" }}>
+                    <p className="text-[10.5px] leading-relaxed" style={{ color: "var(--th-text-dim)" }}>{d.aiRead}</p>
                   </div>
                 </motion.div>
               );
@@ -657,64 +657,64 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
       )}
 
       <div className="py-4 text-center">
-        <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "#1E1E1E" }}>
-          R.H.T.I.H Company Intelligence Archive · {report._meta?.newsCount ?? 0} Articles Analyzed
-          · {isKnown ? "Institutional Deep Archive" : "Sector Playbook Engine"} · Not Investment Advice
+        <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
+          MARKET KA BAADSHAH Company Intelligence Archive Â· {report._meta?.newsCount ?? 0} Articles Analyzed
+          Â· {isKnown ? "Institutional Deep Archive" : "Sector Playbook Engine"} Â· Not Investment Advice
         </p>
       </div>
     </div>
   );
 }
 
-/* ─── Query input ───────────────────────────────── */
+/* â”€â”€â”€ Query input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function QueryInput({ onSearch }: { onSearch: (t: string) => void }) {
   const [input, setInput] = useState("");
   const submit = () => { const t = input.trim().toUpperCase(); if (t) onSearch(t); };
   return (
     <div className="max-w-4xl mx-auto px-4 py-16 text-center">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-        <div className="text-[9.5px] font-mono uppercase tracking-[0.3em] mb-4" style={{ color: "#3A3A3A" }}>
-          ◈ Institutional Intelligence Archive · Company Evolution Engine
+        <div className="text-[9.5px] font-mono uppercase tracking-[0.3em] mb-4" style={{ color: "var(--th-text-faint)" }}>
+          â—ˆ Institutional Intelligence Archive Â· Company Evolution Engine
         </div>
         <h1 className="font-bold mb-3 leading-tight"
-          style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", fontSize: "clamp(26px,5vw,50px)", color: "#F5F5F5", letterSpacing: "-0.025em" }}>
+          style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", fontSize: "clamp(26px,5vw,50px)", color: "var(--th-text-primary)", letterSpacing: "-0.025em" }}>
           The Complete Evolution of{" "}
           <span style={{ background: "linear-gradient(135deg,#FFD700,#C9A227)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
             Any Indian Stock.
           </span>
         </h1>
-        <p className="text-[13px] mb-10" style={{ color: "#4A4A4A" }}>
+        <p className="text-[13px] mb-10" style={{ color: "var(--th-text-muted)" }}>
           Company milestones. Narrative evolution. Institutional cycles. Smart money history.
-          Every report is company-specific — RELIANCE is not TCS is not HAL.
+          Every report is company-specific â€” RELIANCE is not TCS is not HAL.
         </p>
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.7 }}
         className="relative max-w-xl mx-auto mb-8">
         <div className="relative flex items-center rounded-2xl overflow-hidden"
-          style={{ background: "rgba(10,10,10,0.95)", border: "1px solid rgba(255,215,0,0.18)", height: "56px" }}>
-          <div className="absolute left-4"><BookOpen size={16} style={{ color: "#FFD700" }} /></div>
+          style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-accent)", height: "56px" }}>
+          <div className="absolute left-4"><BookOpen size={16} style={{ color: "var(--gold)" }} /></div>
           <input type="text" value={input}
             onChange={e => setInput(e.target.value.toUpperCase())}
             onKeyDown={e => e.key === "Enter" && submit()}
             placeholder="RELIANCE, TCS, HAL, HDFCBANK, IRFC..."
             autoFocus
             className="w-full bg-transparent outline-none font-mono text-[13px] pl-12 pr-28 h-full"
-            style={{ color: "#F5F5F5" }} />
+            style={{ color: "var(--th-text-primary)" }} />
           {input && (
-            <button onClick={() => setInput("")} className="absolute right-24" style={{ color: "#3A3A3A" }}>
+            <button onClick={() => setInput("")} className="absolute right-24" style={{ color: "var(--th-text-faint)" }}>
               <X size={13} />
             </button>
           )}
           <button onClick={submit}
             className="absolute right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-mono font-bold"
-            style={{ color: input ? "#FFD700" : "#3A3A3A", background: input ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.03)", border: input ? "1px solid rgba(255,215,0,0.3)" : "1px solid rgba(255,255,255,0.05)" }}>
+            style={{ color: input ? "var(--gold)" : "var(--th-text-faint)", background: input ? "var(--th-border-normal)" : "rgba(255,255,255,0.03)", border: input ? "1px solid var(--th-border-strong)" : "1px solid rgba(255,255,255,0.05)" }}>
             Search <ArrowRight size={10} />
           </button>
         </div>
       </motion.div>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-        <div className="text-[8.5px] font-mono uppercase tracking-[0.2em] mb-3" style={{ color: "#2A2A2A" }}>
+        <div className="text-[8.5px] font-mono uppercase tracking-[0.2em] mb-3" style={{ color: "var(--th-text-ultra-faint)" }}>
           Deep Archive Available
         </div>
         <div className="flex flex-wrap justify-center gap-2">
@@ -723,9 +723,9 @@ function QueryInput({ onSearch }: { onSearch: (t: string) => void }) {
               transition={{ delay: i * 0.06 + 0.55 }}
               onClick={() => onSearch(t)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-mono transition-all duration-200"
-              style={{ color: "#4A4A4A", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,215,0,0.07)" }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLButtonElement; el.style.color = "#FFD700"; el.style.borderColor = "rgba(255,215,0,0.28)"; el.style.background = "rgba(255,215,0,0.05)"; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLButtonElement; el.style.color = "#4A4A4A"; el.style.borderColor = "rgba(255,215,0,0.07)"; el.style.background = "rgba(255,255,255,0.02)"; }}>
+              style={{ color: "var(--th-text-muted)", background: "rgba(255,255,255,0.02)", border: "1px solid var(--th-border-subtle)" }}
+              onMouseEnter={e => { const el = e.currentTarget as HTMLButtonElement; el.style.color = "var(--gold)"; el.style.borderColor = "var(--th-border-accent)"; el.style.background = "var(--th-border-subtle)"; }}
+              onMouseLeave={e => { const el = e.currentTarget as HTMLButtonElement; el.style.color = "var(--th-text-muted)"; el.style.borderColor = "var(--th-border-subtle)"; el.style.background = "rgba(255,255,255,0.02)"; }}>
               {t} <ArrowRight size={9} />
             </motion.button>
           ))}
@@ -735,7 +735,7 @@ function QueryInput({ onSearch }: { onSearch: (t: string) => void }) {
   );
 }
 
-/* ─── Page ─────────────────────────────────────── */
+/* â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 type State = "idle" | "loading" | "result" | "error";
 
 export default function HistoryPage() {
@@ -782,7 +782,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#050505" }}>
+    <div className="min-h-screen" style={{ background: "var(--th-bg-page)" }}>
       <Navbar /><MarketTicker />
       <AnimatePresence mode="wait">
         {state === "idle"    && <motion.div key="idle"    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><QueryInput onSearch={handleSearch} /></motion.div>}
@@ -790,12 +790,12 @@ export default function HistoryPage() {
         {state === "error"   && <motion.div key="error"   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><ErrorState error={errMsg} ticker={ticker} onReset={handleReset} onRetry={handleRetry} /></motion.div>}
         {state === "result"  && report && <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><HistoryView report={report} onReset={handleReset} /></motion.div>}
       </AnimatePresence>
-      <footer className="px-4 py-6 mt-8" style={{ borderTop: "1px solid rgba(255,215,0,0.05)" }}>
+      <footer className="px-4 py-6 mt-8" style={{ borderTop: "1px solid var(--th-border-subtle)" }}>
         <div className="max-w-[1440px] mx-auto flex justify-between items-center">
-          <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "#1E1E1E" }}>
-            R.H.T.I.H Company Intelligence Archive
+          <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
+            MARKET KA BAADSHAH Company Intelligence Archive
           </span>
-          <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "#1E1E1E" }}>
+          <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
             Not investment advice
           </span>
         </div>

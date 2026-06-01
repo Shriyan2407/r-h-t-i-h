@@ -1,38 +1,21 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, TrendingUp, ArrowRight, X, Zap } from "lucide-react";
+import { Search, TrendingUp, X, Zap, ChevronRight, Flame, ArrowUpRight } from "lucide-react";
 import { searchStocks } from "@/lib/api";
-import { formatPercent } from "@/lib/utils";
-import type { SearchResult } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/lib/context/ThemeContext";
+import {
+  intelligentSearch,
+  getTrending,
+  resolveAliasesToTickers,
+  type SearchResultGroup,
+  type SearchResultItem,
+} from "@/lib/search/searchEngine";
+import type { SearchResult } from "@/lib/types";
 
-const POPULAR_STOCKS = [
-  { ticker: "RELIANCE",   name: "Reliance Industries",       sector: "Energy"     },
-  { ticker: "TCS",        name: "Tata Consultancy Services", sector: "Technology" },
-  { ticker: "HDFCBANK",   name: "HDFC Bank",                 sector: "Banking"    },
-  { ticker: "INFY",       name: "Infosys",                   sector: "Technology" },
-  { ticker: "ICICIBANK",  name: "ICICI Bank",                sector: "Banking"    },
-  { ticker: "BHARTIARTL", name: "Bharti Airtel",             sector: "Telecom"    },
-  { ticker: "WIPRO",      name: "Wipro",                     sector: "Technology" },
-  { ticker: "HCLTECH",    name: "HCL Technologies",          sector: "Technology" },
-];
-
-const SECTOR_COLORS: Record<string, string> = {
-  Energy:     "#FFB800",
-  Technology: "#38BDF8",
-  Banking:    "#00FF9C",
-  Telecom:    "#C084FC",
-  Default:    "#6A6A6A",
-};
-
-function hexToRgb(hex: string) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return { r, g, b };
-}
+/* ── Props ────────────────────────────────────────────────────────────── */
 
 interface SearchBarProps {
   size?:        "hero" | "compact";
@@ -40,48 +23,79 @@ interface SearchBarProps {
   autoFocus?:   boolean;
 }
 
+/* ── Category colours ─────────────────────────────────────────────────── */
+
+const KIND_META = {
+  stock:    { color: "var(--gold)",     bg: "var(--th-gold-bg-strong)",    label: "STOCK"    },
+  sector:   { color: "var(--th-blue)",  bg: "var(--th-blue-bg)",           label: "SECTOR"   },
+  theme:    { color: "var(--positive)", bg: "var(--th-green-bg)",          label: "THEME"    },
+  person:   { color: "var(--neutral)",  bg: "rgba(255,184,0,0.08)",        label: "PERSON"   },
+  trending: { color: "var(--gold)",     bg: "var(--th-gold-bg)",           label: "TRENDING" },
+} as const;
+
+const MOMENTUM_ICON = {
+  hot:    <Flame size={9} />,
+  rising: <ArrowUpRight size={9} />,
+  steady: <TrendingUp size={9} />,
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SEARCH BAR COMPONENT
+══════════════════════════════════════════════════════════════════════════ */
+
 export function SearchBar({
   size        = "hero",
-  placeholder = "Search NSE/BSE — ticker or company name",
+  placeholder = "Search stocks, sectors, themes, CEOs…",
   autoFocus   = false,
 }: SearchBarProps) {
-  const [query,       setQuery]       = useState("");
-  const [results,     setResults]     = useState<SearchResult[]>([]);
-  const [loading,     setLoading]     = useState(false);
-  const [focused,     setFocused]     = useState(false);
-  const [selectedIdx, setSelectedIdx] = useState(-1);
+  const router  = useRouter();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
 
-  const inputRef     = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const router       = useRouter();
+  const [query,        setQuery]        = useState("");
+  const [focused,      setFocused]      = useState(false);
+  const [apiResults,   setApiResults]   = useState<SearchResult[]>([]);
+  const [intelGroups,  setIntelGroups]  = useState<SearchResultGroup[]>([]);
+  const [loading,      setLoading]      = useState(false);
+  const [selectedIdx,  setSelectedIdx]  = useState(-1);
 
-  const doSearch = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); return; }
-    setLoading(true);
-    try {
-      const res = await searchStocks(q);
-      setResults(res.slice(0, 8));
-    } catch {
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const inputRef    = useRef<HTMLInputElement>(null);
+  const dropRef     = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const trending = getTrending();
+  const isHero   = size === "hero";
+  const showDrop = focused && (query.length > 0 || true);
+
+  /* ── Auto-focus ─────────────────────────────────────────────────────── */
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(query), 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [query, doSearch]);
-
-  useEffect(() => {
-    if (autoFocus) inputRef.current?.focus();
+    if (autoFocus) setTimeout(() => inputRef.current?.focus(), 80);
   }, [autoFocus]);
 
+  /* ── ⌘K shortcut ────────────────────────────────────────────────────── */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setFocused(true);
+      }
+      if (e.key === "Escape") {
+        setFocused(false);
+        inputRef.current?.blur();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  /* ── Click outside ──────────────────────────────────────────────────── */
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        dropRef.current && !dropRef.current.contains(e.target as Node) &&
+        inputRef.current && !inputRef.current.contains(e.target as Node)
+      ) {
         setFocused(false);
       }
     };
@@ -89,65 +103,118 @@ export function SearchBar({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const navigate = (ticker: string) => {
-    router.push(`/stock/${ticker}`);
-    setQuery("");
-    setFocused(false);
-    setResults([]);
-  };
-
-  const getItems = (): SearchResult[] =>
-    query
-      ? results
-      : POPULAR_STOCKS.map(s => ({
-          ticker: s.ticker,
-          company_name: s.name,
-          exchange: "NSE" as const,
-          sector: s.sector,
-          market_cap_category: "Large Cap" as const,
-        }));
-
-  const handleKey = (e: React.KeyboardEvent) => {
-    const items = getItems();
-    if (e.key === "ArrowDown") { e.preventDefault(); setSelectedIdx(i => Math.min(i + 1, items.length - 1)); }
-    if (e.key === "ArrowUp")   { e.preventDefault(); setSelectedIdx(i => Math.max(i - 1, 0)); }
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (selectedIdx >= 0 && items[selectedIdx]) navigate(items[selectedIdx].ticker);
-      else if (query.trim()) navigate(query.trim().toUpperCase());
+  /* ── Debounced search ───────────────────────────────────────────────── */
+  const doSearch = useCallback(async (q: string) => {
+    if (!q.trim()) {
+      setApiResults([]);
+      setIntelGroups([]);
+      return;
     }
-    if (e.key === "Escape") { setFocused(false); inputRef.current?.blur(); }
+
+    // 1. Instant client-side intelligence
+    const intel = intelligentSearch(q);
+    setIntelGroups(intel);
+
+    // 2. Resolve aliases to extra tickers for API search
+    const extraTickers = resolveAliasesToTickers(q);
+
+    // 3. API search (actual quotes)
+    setLoading(true);
+    try {
+      // Search original query + first alias-resolved ticker
+      const searchQ = extraTickers.length > 0 && extraTickers[0] !== q.toUpperCase()
+        ? `${q} ${extraTickers[0]}`
+        : q;
+      const results = await searchStocks(searchQ);
+      setApiResults(results.slice(0, 6));
+    } catch {
+      setApiResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => doSearch(query), 150);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query, doSearch]);
+
+  /* ── Flat navigation list ────────────────────────────────────────────── */
+  const flatItems: { href: string; ticker?: string }[] = [
+    ...intelGroups.flatMap(g => g.items.map(i => ({ href: i.href }))),
+    ...apiResults.map(r => ({ href: `/stock/${r.ticker}`, ticker: r.ticker })),
+  ];
+
+  /* ── Keyboard nav ───────────────────────────────────────────────────── */
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (!focused) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIdx(i => Math.min(i + 1, flatItems.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIdx(i => Math.max(i - 1, -1));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (selectedIdx >= 0 && flatItems[selectedIdx]) {
+        router.push(flatItems[selectedIdx].href);
+        setFocused(false);
+        setQuery("");
+      } else if (query.trim()) {
+        const ticker = query.trim().toUpperCase();
+        router.push(`/stock/${ticker}`);
+        setFocused(false);
+        setQuery("");
+      }
+    }
   };
 
-  const dropdownItems = getItems();
-  const isHero = size === "hero";
+  const navigate = (href: string) => {
+    router.push(href);
+    setFocused(false);
+    setQuery("");
+    setApiResults([]);
+    setIntelGroups([]);
+  };
+
+  /* ── Merge intel stocks with API results ─────────────────────────────── */
+  const intelStockTickers = new Set(
+    intelGroups.find(g => g.kind === "stock")?.items.map(i => i.id) ?? []
+  );
+  const apiOnly = apiResults.filter(r => !intelStockTickers.has(r.ticker));
+
+  /* ══════════════════════════════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════════════════════════════ */
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div className="relative w-full" style={{ isolation: "isolate" }}>
 
-      {/* ── Input ── */}
+      {/* ── Input container ─────────────────────────────────────────────── */}
       <div
         className={cn(
-          "relative flex items-center rounded-xl overflow-hidden transition-all duration-300",
+          "relative flex items-center rounded-2xl overflow-hidden transition-all duration-300",
           isHero ? "h-14" : "h-10"
         )}
         style={{
-          background: "rgba(14,14,14,0.92)",
-          backdropFilter: "blur(20px)",
+          background: focused
+            ? isLight ? "rgba(255,253,247,0.99)" : "rgba(12,12,12,0.99)"
+            : "var(--th-bg-elevated)",
+          backdropFilter: "blur(24px)",
           border: focused
-            ? "1px solid rgba(255,215,0,0.4)"
-            : "1px solid rgba(255,215,0,0.1)",
+            ? "1px solid var(--th-border-accent)"
+            : "1px solid var(--th-border-normal)",
           boxShadow: focused
-            ? "0 0 0 3px rgba(255,215,0,0.05), 0 0 30px rgba(255,215,0,0.08)"
-            : "0 4px 24px rgba(0,0,0,0.4)",
+            ? `0 0 0 3px ${isLight ? "rgba(184,150,46,0.08)" : "rgba(255,215,0,0.05)"}, var(--th-shadow-elevated)`
+            : "none",
         }}
       >
-        {/* Shimmer overlay when focused */}
+        {/* Shimmer on focus */}
         {focused && (
-          <div
-            className="absolute inset-0 pointer-events-none"
+          <div className="absolute inset-0 pointer-events-none"
             style={{
-              background: "linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.03) 50%, transparent 100%)",
+              background: "linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.025) 50%, transparent 100%)",
               backgroundSize: "200% auto",
               animation: "shimmer 3s linear infinite",
             }}
@@ -155,26 +222,17 @@ export function SearchBar({
         )}
 
         {/* Search icon */}
-        <div
-          className={cn(
-            "absolute flex items-center justify-center transition-all duration-300",
-            isHero ? "left-4" : "left-3"
-          )}
-          style={{ color: focused ? "#FFD700" : "#4A4A4A" }}
-        >
-          {loading ? (
-            <div
-              className="rounded-full animate-spin"
-              style={{
-                width: isHero ? 16 : 13,
-                height: isHero ? 16 : 13,
-                border: "1.5px solid rgba(255,215,0,0.2)",
-                borderTopColor: "#FFD700",
-              }}
-            />
-          ) : (
-            <Search size={isHero ? 16 : 13} />
-          )}
+        <div className={cn("absolute flex items-center justify-center transition-all duration-200", isHero ? "left-4" : "left-3")}>
+          {loading
+            ? <div className="rounded-full animate-spin"
+                style={{
+                  width: isHero ? 16 : 13, height: isHero ? 16 : 13,
+                  border: "1.5px solid var(--th-border-normal)",
+                  borderTopColor: "var(--gold)",
+                }}
+              />
+            : <Search size={isHero ? 16 : 13} style={{ color: focused ? "var(--gold)" : "var(--th-text-muted)" }} />
+          }
         </div>
 
         <input
@@ -184,201 +242,297 @@ export function SearchBar({
           onChange={e => { setQuery(e.target.value); setSelectedIdx(-1); }}
           onFocus={() => setFocused(true)}
           onKeyDown={handleKey}
-          placeholder={placeholder}
+          placeholder={focused ? "RELIANCE · TCS · defense stocks · Mukesh Ambani · AI plays…" : placeholder}
           className={cn(
             "w-full bg-transparent outline-none font-mono relative z-10",
-            "placeholder:text-[#2A2A2A]",
             isHero ? "pl-12 pr-24 text-[13px]" : "pl-9 pr-16 text-[11px]",
             "h-full"
           )}
-          style={{ color: "#F5F5F5" }}
+          style={{
+            color: "var(--th-text-primary)",
+          }}
         />
 
+        {/* Right slot */}
         <div className="absolute right-3 flex items-center gap-2 z-10">
           {query && (
-            <button
-              onClick={() => { setQuery(""); setResults([]); inputRef.current?.focus(); }}
-              className="text-[#4A4A4A] hover:text-[#8A8A8A] transition-colors"
-            >
+            <button onClick={() => { setQuery(""); setApiResults([]); setIntelGroups([]); inputRef.current?.focus(); }}
+              className="transition-opacity hover:opacity-80"
+              style={{ color: "var(--th-text-muted)" }}>
               <X size={13} />
             </button>
           )}
           {!query && (
-            <kbd
-              className="hidden sm:flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono"
+            <kbd className="hidden sm:flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono"
               style={{
-                color: "#4A4A4A",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
+                color: "var(--th-text-faint)",
+                background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.04)",
+                border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)",
+              }}>
               ⌘K
             </kbd>
           )}
         </div>
       </div>
 
-      {/* ── Dropdown ── */}
+      {/* ══════════════════════════════════════════════════════════════════
+          DROPDOWN
+      ══════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {focused && (
           <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.98 }}
-            transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-50"
+            ref={dropRef}
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0,  scale: 1    }}
+            exit={{    opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-50"
             style={{
-              background: "rgba(9,9,9,0.98)",
-              border: "1px solid rgba(255,215,0,0.13)",
-              backdropFilter: "blur(24px)",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,215,0,0.04)",
+              background: isLight ? "rgba(255,253,247,0.99)" : "rgba(10,10,10,0.99)",
+              border: `1px solid var(--th-border-normal)`,
+              backdropFilter: "blur(32px)",
+              boxShadow: isLight
+                ? "0 20px 60px rgba(100,80,20,0.15), 0 4px 12px rgba(0,0,0,0.06)"
+                : "0 24px 70px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,215,0,0.04)",
+              maxHeight: "72vh",
+              overflowY: "auto",
             }}
           >
+            {/* ── No query: Trending ─────────────────────────────────────── */}
             {!query && (
-              <div
-                className="flex items-center gap-2 px-4 py-2.5"
-                style={{ borderBottom: "1px solid rgba(255,215,0,0.05)" }}
-              >
-                <TrendingUp size={10} style={{ color: "#FFD700" }} />
-                <span
-                  className="text-[9px] font-mono uppercase tracking-[0.18em]"
-                  style={{ color: "#4A4A4A" }}
-                >
-                  Popular Stocks
-                </span>
+              <div>
+                <SectionHeader icon={<Flame size={9} />} label="TRENDING SEARCHES" color="var(--gold)" />
+                <div className="pb-2">
+                  {trending.map((t, i) => (
+                    <TrendingRow
+                      key={t.query}
+                      item={t}
+                      selected={selectedIdx === i}
+                      onSelect={() => {
+                        if (t.ticker) navigate(`/stock/${t.ticker}`);
+                        else { setQuery(t.query); inputRef.current?.focus(); }
+                      }}
+                    />
+                  ))}
+                </div>
+                <DropFooter />
               </div>
             )}
 
-            {dropdownItems.length > 0 ? (
-              <ul>
-                {dropdownItems.map((item, idx) => {
-                  const sectorColor = SECTOR_COLORS[item.sector || ""] || SECTOR_COLORS.Default;
-                  const rgb = hexToRgb(sectorColor);
-                  const active = idx === selectedIdx;
-
-                  return (
-                    <li key={item.ticker} style={{ borderBottom: "1px solid rgba(255,215,0,0.03)" }}>
-                      <button
-                        onMouseEnter={() => setSelectedIdx(idx)}
-                        onClick={() => navigate(item.ticker)}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-100"
-                        style={{
-                          background: active ? "rgba(255,215,0,0.04)" : "transparent",
-                          borderLeft: active ? "2px solid #FFD700" : "2px solid transparent",
-                        }}
-                      >
-                        {/* Sector badge */}
-                        <div
-                          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 font-mono font-bold text-[10px]"
-                          style={{
-                            background: `rgba(${rgb.r},${rgb.g},${rgb.b},0.08)`,
-                            border: `1px solid rgba(${rgb.r},${rgb.g},${rgb.b},0.2)`,
-                            color: sectorColor,
-                          }}
-                        >
-                          {item.ticker.slice(0, 3)}
-                        </div>
-
-                        {/* Stock info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[13px] font-mono font-semibold" style={{ color: "#F5F5F5" }}>
-                              {item.ticker}
-                            </span>
-                            <span
-                              className="text-[8.5px] font-mono px-1.5 py-0.5 rounded"
-                              style={{
-                                color: "#4A4A4A",
-                                background: "rgba(255,255,255,0.04)",
-                                border: "1px solid rgba(255,255,255,0.06)",
-                              }}
-                            >
-                              {item.exchange}
-                            </span>
-                            {item.market_cap_category && (
-                              <span className="text-[8.5px] font-mono" style={{ color: "#3A3A3A" }}>
-                                {item.market_cap_category}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] truncate" style={{ color: "#6A6A6A" }}>
-                              {item.company_name}
-                            </span>
-                            {item.sector && (
-                              <span className="text-[9px] font-mono" style={{ color: sectorColor }}>
-                                {item.sector}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Price */}
-                        <div className="flex flex-col items-end flex-shrink-0">
-                          {item.current_price && (
-                            <span className="text-[12px] font-mono" style={{ color: "#F5F5F5" }}>
-                              ₹{item.current_price.toFixed(2)}
-                            </span>
-                          )}
-                          {item.change_pct !== undefined && (
-                            <span
-                              className="text-[10px] font-mono"
-                              style={{ color: item.change_pct >= 0 ? "#00FF9C" : "#FF4D4D" }}
-                            >
-                              {formatPercent(item.change_pct)}
-                            </span>
-                          )}
-                        </div>
-
-                        <ArrowRight size={11} style={{ color: "#2A2A2A", flexShrink: 0 }} />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : query && !loading ? (
-              <div className="px-4 py-10 text-center">
-                <Search size={20} className="mx-auto mb-3" style={{ color: "#2A2A2A" }} />
-                <p className="text-[11px] font-mono" style={{ color: "#4A4A4A" }}>
-                  No results for &ldquo;{query}&rdquo;
-                </p>
-              </div>
-            ) : null}
-
-            {/* Footer */}
-            <div
-              className="flex items-center justify-between px-4 py-2"
-              style={{ borderTop: "1px solid rgba(255,215,0,0.05)" }}
-            >
-              <div className="flex items-center gap-3">
-                {[
-                  { key: "↑↓", label: "navigate" },
-                  { key: "↵",  label: "open"     },
-                  { key: "esc",label: "close"     },
-                ].map(({ key, label }) => (
-                  <div key={key} className="flex items-center gap-1">
-                    <kbd
-                      className="px-1.5 py-0.5 rounded text-[8px] font-mono"
-                      style={{
-                        color: "#FFD700",
-                        background: "rgba(255,215,0,0.06)",
-                        border: "1px solid rgba(255,215,0,0.15)",
-                      }}
-                    >
-                      {key}
-                    </kbd>
-                    <span className="text-[8.5px] font-mono" style={{ color: "#3A3A3A" }}>{label}</span>
+            {/* ── Has query: Results ────────────────────────────────────── */}
+            {query && (
+              <div>
+                {/* Intelligence groups */}
+                {intelGroups.map((group, gi) => (
+                  <div key={group.kind}>
+                    <SectionHeader icon={<span>{group.icon}</span>} label={group.label} color={KIND_META[group.kind].color} />
+                    {group.items.map((item, ii) => {
+                      const flatIdx = intelGroups.slice(0, gi).reduce((acc, g) => acc + g.items.length, 0) + ii;
+                      return (
+                        <IntelResultRow
+                          key={`${item.kind}-${item.id}`}
+                          item={item}
+                          selected={selectedIdx === flatIdx}
+                          onSelect={() => navigate(item.href)}
+                        />
+                      );
+                    })}
                   </div>
                 ))}
+
+                {/* API results (real quotes) not already shown */}
+                {apiOnly.length > 0 && (
+                  <div>
+                    <SectionHeader icon={<Zap size={9} />} label="LIVE QUOTES" color="var(--th-blue)" />
+                    {apiOnly.map((r, i) => {
+                      const baseIdx = intelGroups.reduce((a, g) => a + g.items.length, 0) + i;
+                      const isUp = (r.change_pct ?? 0) >= 0;
+                      return (
+                        <button
+                          key={r.ticker}
+                          onClick={() => navigate(`/stock/${r.ticker}`)}
+                          className="w-full px-4 py-2.5 flex items-center gap-3 transition-all duration-150 text-left group"
+                          style={{
+                            background: selectedIdx === baseIdx ? "var(--th-gold-bg-mid)" : "transparent",
+                          }}
+                          onMouseEnter={() => setSelectedIdx(baseIdx)}
+                        >
+                          <TickerChip ticker={r.ticker} />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12px] font-mono font-semibold truncate" style={{ color: "var(--th-text-primary)" }}>
+                              {r.company_name || r.ticker}
+                            </div>
+                          </div>
+                          {r.current_price && (
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
+                                ₹{r.current_price.toFixed(2)}
+                              </span>
+                              <span className="text-[10px] font-mono font-bold"
+                                style={{ color: isUp ? "var(--positive)" : "var(--negative)" }}>
+                                {isUp ? "▲" : "▼"} {Math.abs(r.change_pct ?? 0).toFixed(2)}%
+                              </span>
+                            </div>
+                          )}
+                          <ChevronRight size={10} style={{ color: "var(--th-text-faint)" }} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {intelGroups.length === 0 && apiOnly.length === 0 && !loading && (
+                  <div className="px-5 py-8 text-center">
+                    <div className="text-[11px] font-mono" style={{ color: "var(--th-text-faint)" }}>
+                      No matches for "{query}"
+                    </div>
+                    <button
+                      onClick={() => navigate(`/stock/${query.toUpperCase()}`)}
+                      className="mt-3 text-[10px] font-mono px-3 py-1.5 rounded-lg transition-all"
+                      style={{ color: "var(--gold)", background: "var(--th-gold-bg)", border: "1px solid var(--th-border-accent)" }}
+                    >
+                      Try {query.toUpperCase()} directly →
+                    </button>
+                  </div>
+                )}
+
+                <DropFooter />
               </div>
-              <div className="flex items-center gap-1">
-                <Zap size={9} style={{ color: "#FFD700" }} />
-                <span className="text-[8.5px] font-mono" style={{ color: "#3A3A3A" }}>AI-powered</span>
-              </div>
-            </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SUB-COMPONENTS
+══════════════════════════════════════════════════════════════════════════ */
+
+function SectionHeader({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) {
+  return (
+    <div className="flex items-center gap-2 px-4 pt-3 pb-1.5">
+      <span style={{ color }}>{icon}</span>
+      <span className="text-[8.5px] font-mono uppercase tracking-[0.22em]" style={{ color }}>
+        {label}
+      </span>
+      <div className="flex-1 h-px" style={{ background: `${color}20` }} />
+    </div>
+  );
+}
+
+function TickerChip({ ticker }: { ticker: string }) {
+  return (
+    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md flex-shrink-0 min-w-[52px] text-center"
+      style={{
+        background: "var(--th-gold-bg-strong)",
+        border: "1px solid var(--th-border-accent)",
+        color: "var(--gold)",
+      }}>
+      {ticker.slice(0, 8)}
+    </span>
+  );
+}
+
+function IntelResultRow({ item, selected, onSelect }: {
+  item: SearchResultItem;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const meta = KIND_META[item.kind];
+  return (
+    <button
+      onClick={onSelect}
+      className="w-full px-4 py-2.5 flex items-center gap-3 transition-all duration-120 text-left group"
+      style={{ background: selected ? "var(--th-gold-bg-mid)" : "transparent" }}
+      onMouseEnter={() => {}}
+    >
+      {/* Left: ticker badge or kind icon */}
+      {item.kind === "stock" ? (
+        <TickerChip ticker={item.id} />
+      ) : (
+        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md flex-shrink-0 min-w-[52px] text-center"
+          style={{ background: meta.bg, border: `1px solid ${meta.color}28`, color: meta.color }}>
+          {meta.label}
+        </span>
+      )}
+
+      {/* Center */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-[12.5px] font-mono font-semibold truncate" style={{ color: "var(--th-text-primary)" }}>
+            {item.kind === "stock" ? item.subtitle : item.title}
+          </span>
+          {item.meta && (
+            <span className="text-[8.5px] font-mono px-1.5 py-0.5 rounded flex-shrink-0"
+              style={{ color: meta.color, background: meta.bg }}>
+              {item.meta}
+            </span>
+          )}
+        </div>
+        {item.kind !== "stock" && (
+          <div className="text-[10px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
+            {item.subtitle}
+          </div>
+        )}
+        {/* Chips */}
+        {item.chips && item.chips.length > 0 && (
+          <div className="flex items-center gap-1 mt-1 flex-wrap">
+            {item.chips.slice(0, 4).map(chip => (
+              <span key={chip} className="text-[8px] font-mono px-1.5 py-0.5 rounded"
+                style={{ color: "var(--th-text-muted)", background: "var(--th-bg-row)", border: "1px solid var(--th-border-subtle)" }}>
+                {chip}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ChevronRight size={10} style={{ color: "var(--th-text-faint)" }} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+    </button>
+  );
+}
+
+function TrendingRow({ item, selected, onSelect }: {
+  item: ReturnType<typeof getTrending>[number];
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const col = item.momentum === "hot"    ? "var(--negative)"
+            : item.momentum === "rising" ? "var(--positive)"
+            : "var(--th-text-muted)";
+
+  return (
+    <button
+      onClick={onSelect}
+      className="w-full px-4 py-2 flex items-center gap-3 transition-all duration-120 text-left group"
+      style={{ background: selected ? "var(--th-gold-bg)" : "transparent" }}
+    >
+      <span style={{ color: col }}>{MOMENTUM_ICON[item.momentum]}</span>
+      <span className="flex-1 text-[12px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
+        {item.query}
+      </span>
+      <span className="text-[8.5px] font-mono uppercase px-1.5 py-0.5 rounded flex-shrink-0"
+        style={{ color: col, background: `${col}12`, border: `1px solid ${col}28` }}>
+        {item.category}
+      </span>
+      <ChevronRight size={9} style={{ color: "var(--th-text-faint)" }} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+    </button>
+  );
+}
+
+function DropFooter() {
+  return (
+    <div className="px-4 py-2.5 flex items-center justify-between"
+      style={{ borderTop: "1px solid var(--th-border-subtle)" }}>
+      <span className="text-[8px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-ultra-faint)" }}>
+        ↑↓ navigate · ↵ open · esc dismiss
+      </span>
+      <span className="text-[8px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-ultra-faint)" }}>
+        Market Ka Baadshah · Intelligence Engine
+      </span>
     </div>
   );
 }

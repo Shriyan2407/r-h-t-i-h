@@ -14,6 +14,8 @@ import { getChartData, type Candle } from "@/lib/api";
 import type { ChartInterval } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Spinner } from "./ui/Spinner";
+import { useTheme } from "@/lib/context/ThemeContext";
+import { RefreshCw } from "lucide-react";
 
 const INTERVALS: { label: string; value: ChartInterval }[] = [
   { label: "1D", value: "1D" },
@@ -32,12 +34,28 @@ interface StockChartProps {
   changePct?: number;
 }
 
+function getChartTheme(isLight: boolean) {
+  return {
+    bg:              isLight ? "#FAF6EE"                    : "#060606",
+    textColor:       isLight ? "#7A7268"                    : "#888888",
+    gridColor:       isLight ? "rgba(0,0,0,0.05)"           : "rgba(255,255,255,0.035)",
+    borderColor:     isLight ? "rgba(150,120,45,0.18)"      : "rgba(255,215,0,0.09)",
+    crosshairColor:  isLight ? "rgba(150,120,45,0.55)"      : "rgba(255,215,0,0.45)",
+    labelBg:         isLight ? "#E8E2D4"                    : "#141414",
+    upColor:         isLight ? "#0A7A50"                    : "#00FF9C",
+    downColor:       isLight ? "#C42B2B"                    : "#FF4D4D",
+    volUp:           isLight ? "rgba(10,122,80,0.28)"       : "rgba(0,255,156,0.22)",
+    volDown:         isLight ? "rgba(196,43,43,0.28)"       : "rgba(255,77,77,0.22)",
+  };
+}
+
 export function StockChart({ ticker, currentPrice, changePct }: StockChartProps) {
+  const { theme }       = useTheme();
+  const isLight         = theme === "light";
   const containerRef    = useRef<HTMLDivElement>(null);
   const chartRef        = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null);
-  // Track which ticker the chart was last built for — prevents stale renders
   const chartTickerRef  = useRef<string>("");
 
   const [interval, setInterval] = useState<ChartInterval>("3M");
@@ -45,12 +63,8 @@ export function StockChart({ ticker, currentPrice, changePct }: StockChartProps)
   const [error,    setError]    = useState<string | null>(null);
   const [ohlcv,    setOhlcv]    = useState<{ o: number; h: number; l: number; c: number } | null>(null);
 
-  // ─── Build / rebuild the chart ─────────────────────────────────────────────
-  // Runs whenever ticker changes so old series never bleeds into a new symbol.
   const buildChart = useCallback(() => {
     if (!containerRef.current) return;
-
-    // Destroy previous instance completely
     if (chartRef.current) {
       chartRef.current.remove();
       chartRef.current        = null;
@@ -58,43 +72,45 @@ export function StockChart({ ticker, currentPrice, changePct }: StockChartProps)
       volumeSeriesRef.current = null;
     }
 
+    const t = getChartTheme(isLight);
+
     const chart = createChart(containerRef.current, {
       layout: {
-        background: { type: ColorType.Solid, color: "#0d1117" },
-        textColor:  "#8b949e",
+        background: { type: ColorType.Solid, color: t.bg },
+        textColor:  t.textColor,
         fontSize:   11,
         fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
       },
       grid: {
-        vertLines: { color: "#21262d", style: 1 },
-        horzLines: { color: "#21262d", style: 1 },
+        vertLines: { color: t.gridColor, style: 1 },
+        horzLines: { color: t.gridColor, style: 1 },
       },
       crosshair: {
         mode:      CrosshairMode.Normal,
-        vertLine: { color: "#484f58", labelBackgroundColor: "#21262d" },
-        horzLine: { color: "#484f58", labelBackgroundColor: "#21262d" },
+        vertLine: { color: t.crosshairColor, labelBackgroundColor: t.labelBg },
+        horzLine: { color: t.crosshairColor, labelBackgroundColor: t.labelBg },
       },
       rightPriceScale: {
-        borderColor:   "#30363d",
-        scaleMargins: { top: 0.1, bottom: 0.25 },
+        borderColor:  t.borderColor,
+        scaleMargins: { top: 0.08, bottom: 0.24 },
       },
       timeScale: {
-        borderColor:    "#30363d",
+        borderColor:    t.borderColor,
         timeVisible:    true,
         secondsVisible: false,
-        rightOffset:    5,
+        rightOffset:    6,
       },
       handleScroll: true,
       handleScale:  true,
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor:        "#00ff88",
-      downColor:      "#ff4466",
-      borderUpColor:  "#00ff88",
-      borderDownColor:"#ff4466",
-      wickUpColor:    "#00ff88",
-      wickDownColor:  "#ff4466",
+      upColor:         t.upColor,
+      downColor:       t.downColor,
+      borderUpColor:   t.upColor,
+      borderDownColor: t.downColor,
+      wickUpColor:     t.upColor,
+      wickDownColor:   t.downColor,
     });
 
     const volumeSeries = chart.addSeries(HistogramSeries, {
@@ -103,20 +119,18 @@ export function StockChart({ ticker, currentPrice, changePct }: StockChartProps)
     });
 
     chart.priceScale("volume").applyOptions({
-      scaleMargins: { top: 0.8, bottom: 0 },
+      scaleMargins: { top: 0.82, bottom: 0 },
     });
 
-    // Crosshair tooltip
     chart.subscribeCrosshairMove((param) => {
       if (!param.time || !candleSeriesRef.current) { setOhlcv(null); return; }
       const d = param.seriesData.get(candleSeriesRef.current) as
         | { open: number; high: number; low: number; close: number }
         | undefined;
       if (d) setOhlcv({ o: d.open, h: d.high, l: d.low, c: d.close });
-      else    setOhlcv(null);
+      else   setOhlcv(null);
     });
 
-    // Resize observer
     const ro = new ResizeObserver(() => {
       if (containerRef.current && chartRef.current) {
         chartRef.current.applyOptions({
@@ -130,7 +144,7 @@ export function StockChart({ ticker, currentPrice, changePct }: StockChartProps)
     chartRef.current        = chart;
     candleSeriesRef.current = candleSeries;
     volumeSeriesRef.current = volumeSeries;
-    chartTickerRef.current  = ticker;   // stamp which ticker owns this chart
+    chartTickerRef.current  = ticker;
 
     return () => {
       ro.disconnect();
@@ -139,100 +153,94 @@ export function StockChart({ ticker, currentPrice, changePct }: StockChartProps)
       candleSeriesRef.current = null;
       volumeSeriesRef.current = null;
     };
-  }, [ticker]); // ← rebuild the entire chart when ticker changes
+  }, [ticker, isLight]);
 
-  // ─── Load candle data ──────────────────────────────────────────────────────
   const loadData = useCallback(async () => {
     if (!chartRef.current || !candleSeriesRef.current || !volumeSeriesRef.current) return;
-
     setLoading(true);
     setError(null);
     setOhlcv(null);
-
-    // Safety: don't paint data for a different ticker onto this chart
     const expectedTicker = ticker;
-
-    console.log(`[StockChart] Fetching candles  ticker=${ticker}  interval=${interval}`);
+    const t = getChartTheme(isLight);
 
     try {
       const candles: Candle[] = await getChartData(ticker, interval);
-
-      // Guard: if ticker changed while request was in-flight, discard
-      if (chartTickerRef.current !== expectedTicker) {
-        console.warn(`[StockChart] Stale response discarded (expected=${expectedTicker}, chart=${chartTickerRef.current})`);
-        return;
-      }
-
-      if (!candles || candles.length === 0) {
-        setError(`No data returned for ${ticker}.`);
-        return;
-      }
-
+      if (chartTickerRef.current !== expectedTicker) return;
+      if (!candles || candles.length === 0) { setError(`No chart data for ${ticker}.`); return; }
       if (!candleSeriesRef.current || !volumeSeriesRef.current) return;
 
-      console.log(`[StockChart] Received ${candles.length} candles for ${ticker}`);
-      console.log(`[StockChart] Sample candles:`, candles.slice(0, 3));
-      console.log(`[StockChart] Price range: ${Math.min(...candles.map(c => c.low)).toFixed(2)} – ${Math.max(...candles.map(c => c.high)).toFixed(2)}`);
-
-      const candleData = candles.map((c) => ({
-        time:  c.time as Time,
-        open:  c.open,
-        high:  c.high,
-        low:   c.low,
-        close: c.close,
-      }));
-
-      const volumeData = candles.map((c) => ({
+      candleSeriesRef.current.setData(candles.map(c => ({
+        time: c.time as Time,
+        open: c.open, high: c.high, low: c.low, close: c.close,
+      })));
+      volumeSeriesRef.current.setData(candles.map(c => ({
         time:  c.time as Time,
         value: c.volume,
-        color: c.close >= c.open ? "rgba(0,255,136,0.3)" : "rgba(255,68,102,0.3)",
-      }));
-
-      // setData() replaces all series data — no stale candles possible
-      candleSeriesRef.current.setData(candleData);
-      volumeSeriesRef.current.setData(volumeData);
+        color: c.close >= c.open ? t.volUp : t.volDown,
+      })));
       chartRef.current?.timeScale().fitContent();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[StockChart] Fetch error for ${ticker}:`, msg);
       setError(msg.includes("No data") || msg.includes("404") ? msg : `Chart fetch failed: ${msg}`);
     } finally {
       setLoading(false);
     }
-  }, [ticker, interval]);
+  }, [ticker, interval, isLight]);
 
-  // Rebuild chart when ticker changes → clears old series completely
   useEffect(() => {
     const cleanup = buildChart();
     return cleanup;
   }, [buildChart]);
 
-  // Reload data when chart is ready OR interval changes
   useEffect(() => {
     if (chartRef.current) loadData();
   }, [loadData]);
 
   const isPositive = (changePct ?? 0) >= 0;
+  const t = getChartTheme(isLight);
 
   return (
-    <div className="flex flex-col h-full bg-[#0d1117]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#21262d]">
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col h-full" style={{ background: t.bg }}>
+
+      {/* ── Header ── */}
+      <div
+        className="flex items-center justify-between px-4 py-2.5 gap-3 flex-wrap"
+        style={{
+          borderBottom: "1px solid var(--th-border-subtle)",
+          background: isLight ? "rgba(250,246,238,0.95)" : "rgba(8,8,8,0.97)",
+        }}
+      >
+        {/* OHLCV or current price */}
+        <div className="flex items-center gap-3 min-w-0">
           {ohlcv ? (
             <div className="flex items-center gap-3 text-[11px] font-mono">
-              <span className="text-[#8b949e]">O <span className="text-[#e6edf3]">{ohlcv.o.toFixed(2)}</span></span>
-              <span className="text-[#8b949e]">H <span className="text-[#00ff88]">{ohlcv.h.toFixed(2)}</span></span>
-              <span className="text-[#8b949e]">L <span className="text-[#ff4466]">{ohlcv.l.toFixed(2)}</span></span>
-              <span className="text-[#8b949e]">C <span className="text-[#e6edf3]">{ohlcv.c.toFixed(2)}</span></span>
+              <span style={{ color: "var(--th-text-muted)" }}>
+                O <span style={{ color: "var(--th-text-primary)", fontWeight: 600 }}>{ohlcv.o.toFixed(2)}</span>
+              </span>
+              <span style={{ color: "var(--th-text-muted)" }}>
+                H <span style={{ color: "var(--positive)", fontWeight: 600 }}>{ohlcv.h.toFixed(2)}</span>
+              </span>
+              <span style={{ color: "var(--th-text-muted)" }}>
+                L <span style={{ color: "var(--negative)", fontWeight: 600 }}>{ohlcv.l.toFixed(2)}</span>
+              </span>
+              <span style={{ color: "var(--th-text-muted)" }}>
+                C <span style={{ color: "var(--th-text-primary)", fontWeight: 600 }}>{ohlcv.c.toFixed(2)}</span>
+              </span>
             </div>
           ) : currentPrice ? (
-            <div className="flex items-center gap-2">
-              <span className="text-base font-mono font-bold text-[#e6edf3]">
-                ₹{currentPrice.toFixed(2)}
+            <div className="flex items-center gap-2.5">
+              <span className="text-[16px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
+                ₹{currentPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               {changePct !== undefined && (
-                <span className={cn("text-xs font-mono font-semibold", isPositive ? "text-[#00ff88]" : "text-[#ff4466]")}>
+                <span
+                  className="text-[11px] font-mono font-bold px-2 py-0.5 rounded"
+                  style={{
+                    color: isPositive ? "var(--positive)" : "var(--negative)",
+                    background: isPositive ? "var(--th-green-bg)" : "var(--th-red-bg)",
+                    border: `1px solid ${isPositive ? "rgba(0,255,156,0.2)" : "rgba(255,77,77,0.2)"}`,
+                  }}
+                >
                   {isPositive ? "▲" : "▼"} {Math.abs(changePct).toFixed(2)}%
                 </span>
               )}
@@ -241,17 +249,37 @@ export function StockChart({ ticker, currentPrice, changePct }: StockChartProps)
         </div>
 
         {/* Interval selector */}
-        <div className="flex items-center gap-0.5 bg-[#161b22] border border-[#30363d] rounded-lg p-0.5">
+        <div
+          className="flex items-center gap-0.5 rounded-lg p-0.5 flex-shrink-0"
+          style={{
+            background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)",
+            border: "1px solid var(--th-border-subtle)",
+          }}
+        >
           {INTERVALS.map(({ label, value }) => (
             <button
               key={value}
               onClick={() => setInterval(value)}
-              className={cn(
-                "px-2.5 py-1 text-[11px] font-mono rounded-md transition-all",
-                interval === value
-                  ? "bg-[#00aaff]/10 text-[#00aaff] border border-[#00aaff]/30"
-                  : "text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d]"
-              )}
+              className="px-2.5 py-1 text-[10.5px] font-mono font-semibold rounded-md transition-all duration-150"
+              style={{
+                color: interval === value ? (isLight ? "#050505" : "#050505") : "var(--th-text-muted)",
+                background: interval === value
+                  ? "linear-gradient(135deg, #FFD700, #C9A227)"
+                  : "transparent",
+                boxShadow: interval === value ? "0 0 10px rgba(255,215,0,0.2)" : "none",
+              }}
+              onMouseEnter={e => {
+                if (interval !== value) {
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-primary)";
+                  (e.currentTarget as HTMLButtonElement).style.background = "var(--th-bg-hover)";
+                }
+              }}
+              onMouseLeave={e => {
+                if (interval !== value) {
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)";
+                  (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                }
+              }}
             >
               {label}
             </button>
@@ -259,21 +287,44 @@ export function StockChart({ ticker, currentPrice, changePct }: StockChartProps)
         </div>
       </div>
 
-      {/* Chart body */}
+      {/* ── Chart body ── */}
       <div className="relative flex-1 min-h-0">
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#0d1117]/80 z-10">
-            <Spinner />
+          <div
+            className="absolute inset-0 flex items-center justify-center z-10"
+            style={{ background: `${t.bg}CC` }}
+          >
+            <div className="flex flex-col items-center gap-3">
+              <Spinner />
+              <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
+                Loading chart data…
+              </span>
+            </div>
           </div>
         )}
         {error && !loading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0d1117] z-10">
-            <span className="text-xs font-mono text-[#ff4466] text-center max-w-xs px-4">{error}</span>
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10 p-6 text-center"
+            style={{ background: t.bg }}
+          >
+            <div className="text-[13px] font-mono font-semibold" style={{ color: "var(--negative)" }}>
+              Chart unavailable
+            </div>
+            <div className="text-[11px] font-mono max-w-xs" style={{ color: "var(--th-text-muted)" }}>
+              {error}
+            </div>
             <button
               onClick={loadData}
-              className="text-xs font-mono text-[#00aaff] hover:underline"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-mono font-semibold transition-all"
+              style={{
+                color: "var(--gold)",
+                background: "var(--th-gold-bg-strong)",
+                border: "1px solid var(--th-border-accent)",
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 16px rgba(255,215,0,0.15)"}
+              onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"}
             >
-              Retry
+              <RefreshCw size={11} /> Retry
             </button>
           </div>
         )}

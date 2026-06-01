@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,18 +60,18 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
       transition={{ duration: 0.22 }}
       className="group relative rounded-xl overflow-hidden transition-all duration-300"
       style={{
-        background: "rgba(12,12,12,0.9)",
-        border: "1px solid rgba(255,215,0,0.07)",
+        background: "var(--th-bg-card)",
+        border: "1px solid var(--th-border-subtle)",
       }}
       onMouseEnter={e => {
         const el = e.currentTarget as HTMLDivElement;
-        el.style.borderColor = "rgba(255,215,0,0.22)";
+        el.style.borderColor = "var(--th-border-accent)";
         el.style.boxShadow   = "0 12px 40px rgba(0,0,0,0.5)";
         el.style.transform   = "translateY(-2px)";
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLDivElement;
-        el.style.borderColor = "rgba(255,215,0,0.07)";
+        el.style.borderColor = "var(--th-border-subtle)";
         el.style.boxShadow   = "none";
         el.style.transform   = "translateY(0)";
       }}
@@ -81,10 +81,10 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
         className="absolute top-0 left-0 right-0 h-[1.5px] transition-all duration-500"
         style={{
           background: quote.loading
-            ? "rgba(255,215,0,0.15)"
+            ? "var(--th-border-normal)"
             : isUp
-            ? "#00FF9C"
-            : "#FF4D4D",
+            ? "var(--positive)"
+            : "var(--negative)",
           opacity: quote.loading ? 0.4 : 0.7,
         }}
       />
@@ -96,9 +96,9 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 font-mono font-bold text-[10px]"
               style={{
-                background: "rgba(255,215,0,0.07)",
-                border: "1px solid rgba(255,215,0,0.15)",
-                color: "#FFD700",
+                background: "var(--th-border-subtle)",
+                border: "1px solid var(--th-border-normal)",
+                color: "var(--gold)",
               }}
             >
               {item.ticker.slice(0, 3)}
@@ -107,14 +107,14 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
               <div className="flex items-center gap-1.5">
                 <span
                   className="text-[13px] font-mono font-bold transition-colors duration-200 group-hover/lnk:text-[#FFD700]"
-                  style={{ color: "#F5F5F5" }}
+                  style={{ color: "var(--th-text-primary)" }}
                 >
                   {item.ticker}
                 </span>
                 <span
                   className="text-[8.5px] font-mono px-1.5 py-0.5 rounded"
                   style={{
-                    color: "#4A4A4A",
+                    color: "var(--th-text-muted)",
                     background: "rgba(255,255,255,0.03)",
                     border: "1px solid rgba(255,255,255,0.06)",
                   }}
@@ -122,7 +122,7 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
                   {item.exchange}
                 </span>
               </div>
-              <div className="text-[11px] truncate max-w-[160px]" style={{ color: "#6A6A6A" }}>
+              <div className="text-[11px] truncate max-w-[160px]" style={{ color: "var(--th-text-muted)" }}>
                 {item.name}
               </div>
             </div>
@@ -131,13 +131,13 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
           <button
             onClick={onRemove}
             className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all duration-200"
-            style={{ color: "#3A3A3A" }}
+            style={{ color: "var(--th-text-faint)" }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.color      = "#FF4D4D";
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,77,77,0.08)";
+              (e.currentTarget as HTMLButtonElement).style.color      = "var(--negative)";
+              (e.currentTarget as HTMLButtonElement).style.background = "var(--th-red-bg)";
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.color      = "#3A3A3A";
+              (e.currentTarget as HTMLButtonElement).style.color      = "var(--th-text-faint)";
               (e.currentTarget as HTMLButtonElement).style.background = "transparent";
             }}
           >
@@ -154,17 +154,17 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
                 <div className="w-16 h-3.5 skeleton rounded" />
               </div>
             ) : quote.error ? (
-              <div className="text-[11px] font-mono" style={{ color: "#3A3A3A" }}>
+              <div className="text-[11px] font-mono" style={{ color: "var(--th-text-faint)" }}>
                 Price unavailable
               </div>
             ) : (
               <>
-                <div className="text-[20px] font-mono font-bold" style={{ color: "#F5F5F5" }}>
+                <div className="text-[20px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
                   ₹{quote.price.toFixed(2)}
                 </div>
                 <div
                   className="text-[11px] font-mono font-semibold"
-                  style={{ color: isUp ? "#00FF9C" : "#FF4D4D" }}
+                  style={{ color: isUp ? "var(--positive)" : "var(--negative)" }}
                 >
                   {isUp ? "▲" : "▼"} {Math.abs(quote.change).toFixed(2)} ({Math.abs(quote.changePct).toFixed(2)}%)
                 </div>
@@ -174,7 +174,7 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
 
           <div className="flex flex-col items-end gap-1.5">
             {!quote.loading && !quote.error && (
-              <div className="flex items-center gap-2.5 text-[9.5px] font-mono" style={{ color: "#3A3A3A" }}>
+              <div className="flex items-center gap-2.5 text-[9.5px] font-mono" style={{ color: "var(--th-text-faint)" }}>
                 <span>H ₹{quote.high.toFixed(0)}</span>
                 <span>L ₹{quote.low.toFixed(0)}</span>
               </div>
@@ -183,9 +183,9 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
               <button
                 onClick={refresh}
                 className="p-1 rounded transition-colors"
-                style={{ color: "#3A3A3A" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#6A6A6A"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#3A3A3A"; }}
+                style={{ color: "var(--th-text-faint)" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-faint)"; }}
               >
                 <RefreshCw size={10} />
               </button>
@@ -193,21 +193,21 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
                 href={`/stock/${item.ticker}`}
                 className="flex items-center gap-1 px-2 py-1 rounded text-[9.5px] font-mono transition-all duration-200"
                 style={{
-                  color: "#6A6A6A",
-                  background: "rgba(255,215,0,0.04)",
-                  border: "1px solid rgba(255,215,0,0.1)",
+                  color: "var(--th-text-muted)",
+                  background: "var(--th-border-subtle)",
+                  border: "1px solid var(--th-border-normal)",
                 }}
                 onMouseEnter={e => {
                   const el = e.currentTarget as HTMLAnchorElement;
-                  el.style.color       = "#FFD700";
-                  el.style.borderColor = "rgba(255,215,0,0.3)";
-                  el.style.background  = "rgba(255,215,0,0.07)";
+                  el.style.color       = "var(--gold)";
+                  el.style.borderColor = "var(--th-border-strong)";
+                  el.style.background  = "var(--th-border-subtle)";
                 }}
                 onMouseLeave={e => {
                   const el = e.currentTarget as HTMLAnchorElement;
-                  el.style.color       = "#6A6A6A";
-                  el.style.borderColor = "rgba(255,215,0,0.1)";
-                  el.style.background  = "rgba(255,215,0,0.04)";
+                  el.style.color       = "var(--th-text-muted)";
+                  el.style.borderColor = "var(--th-border-normal)";
+                  el.style.background  = "var(--th-border-subtle)";
                 }}
               >
                 Analyze <ArrowRight size={9} />
@@ -219,10 +219,10 @@ function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => vo
         {/* Footer */}
         <div
           className="mt-3 pt-2.5 flex items-center justify-between"
-          style={{ borderTop: "1px solid rgba(255,215,0,0.05)" }}
+          style={{ borderTop: "1px solid var(--th-border-subtle)" }}
         >
-          <span className="text-[9.5px] font-mono" style={{ color: "#3A3A3A" }}>{item.sector}</span>
-          <span className="text-[9px] font-mono flex items-center gap-1" style={{ color: "#2A2A2A" }}>
+          <span className="text-[9.5px] font-mono" style={{ color: "var(--th-text-faint)" }}>{item.sector}</span>
+          <span className="text-[9px] font-mono flex items-center gap-1" style={{ color: "var(--th-text-ultra-faint)" }}>
             <Clock size={8} />
             Added {added.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
           </span>
@@ -244,11 +244,11 @@ function EmptyWatchlist() {
       <div
         className="w-16 h-16 rounded-2xl flex items-center justify-center"
         style={{
-          background: "rgba(14,14,14,0.9)",
-          border: "1px solid rgba(255,215,0,0.1)",
+          background: "var(--th-bg-elevated)",
+          border: "1px solid var(--th-border-normal)",
         }}
       >
-        <Star size={22} style={{ color: "#2A2A2A" }} />
+        <Star size={22} style={{ color: "var(--th-text-ultra-faint)" }} />
       </div>
       <div className="text-center">
         <h3
@@ -256,14 +256,14 @@ function EmptyWatchlist() {
           style={{
             fontFamily: "var(--font-space-grotesk, sans-serif)",
             fontSize: "16px",
-            color: "#F5F5F5",
+            color: "var(--th-text-primary)",
           }}
         >
           No stocks in watchlist
         </h3>
-        <p className="text-[13px] max-w-xs" style={{ color: "#4A4A4A" }}>
+        <p className="text-[13px] max-w-xs" style={{ color: "var(--th-text-muted)" }}>
           Search for a stock and click{" "}
-          <strong style={{ color: "#FFD700" }}>Watch</strong> to track it here.
+          <strong style={{ color: "var(--gold)" }}>Watch</strong> to track it here.
         </p>
       </div>
       <div className="w-full max-w-sm">
@@ -289,7 +289,7 @@ export default function WatchlistPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#050505" }}>
+    <div className="min-h-screen" style={{ background: "var(--th-bg-page)" }}>
       <Navbar />
       <MarketTicker />
 
@@ -301,16 +301,16 @@ export default function WatchlistPage() {
             <div className="flex items-center gap-2.5 mb-1">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.18)" }}
+                style={{ background: "var(--th-border-card)", border: "1px solid var(--th-border-accent)" }}
               >
-                <Star size={13} style={{ color: "#FFD700" }} />
+                <Star size={13} style={{ color: "var(--gold)" }} />
               </div>
               <h1
                 className="font-bold"
                 style={{
                   fontFamily: "var(--font-space-grotesk, sans-serif)",
                   fontSize: "22px",
-                  color: "#F5F5F5",
+                  color: "var(--th-text-primary)",
                 }}
               >
                 Watchlist
@@ -319,16 +319,16 @@ export default function WatchlistPage() {
                 <span
                   className="text-[10px] font-mono px-2 py-0.5 rounded-full"
                   style={{
-                    color: "#FFD700",
-                    background: "rgba(255,215,0,0.08)",
-                    border: "1px solid rgba(255,215,0,0.2)",
+                    color: "var(--gold)",
+                    background: "var(--th-border-card)",
+                    border: "1px solid var(--th-border-accent)",
                   }}
                 >
                   {items.length} {items.length === 1 ? "stock" : "stocks"}
                 </span>
               )}
             </div>
-            <p className="text-[12px] font-mono" style={{ color: "#4A4A4A" }}>
+            <p className="text-[12px] font-mono" style={{ color: "var(--th-text-muted)" }}>
               Stocks you&apos;re tracking — live prices · click any to analyze
             </p>
           </div>
@@ -339,13 +339,13 @@ export default function WatchlistPage() {
               onBlur={() => setConfirmClear(false)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all duration-200 flex-shrink-0"
               style={confirmClear ? {
-                color: "#FF4D4D",
-                background: "rgba(255,77,77,0.08)",
+                color: "var(--negative)",
+                background: "var(--th-red-bg)",
                 border: "1px solid rgba(255,77,77,0.28)",
               } : {
-                color: "#4A4A4A",
+                color: "var(--th-text-muted)",
                 background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,215,0,0.08)",
+                border: "1px solid var(--th-border-card)",
               }}
             >
               <Trash2 size={11} />
@@ -383,13 +383,13 @@ export default function WatchlistPage() {
             {/* Add more strip */}
             <div
               className="mt-10 pt-8"
-              style={{ borderTop: "1px solid rgba(255,215,0,0.06)" }}
+              style={{ borderTop: "1px solid var(--th-border-subtle)" }}
             >
               <div className="flex items-center gap-2 mb-3">
-                <BarChart2 size={12} style={{ color: "#FFD700" }} />
+                <BarChart2 size={12} style={{ color: "var(--gold)" }} />
                 <span
                   className="text-[9.5px] font-mono uppercase tracking-[0.18em]"
-                  style={{ color: "#4A4A4A" }}
+                  style={{ color: "var(--th-text-muted)" }}
                 >
                   Add more stocks
                 </span>

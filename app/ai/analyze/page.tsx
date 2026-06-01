@@ -19,15 +19,15 @@ import type { IntelligenceReport } from "@/app/api/intelligence/[ticker]/route";
 type Verdict = "BULLISH" | "BEARISH" | "NEUTRAL" | "MIXED";
 
 const SENT_COL: Record<Verdict,{color:string;bg:string;border:string;glow:string}> = {
-  BULLISH: {color:"#00FF9C",bg:"rgba(0,255,156,0.09)",border:"rgba(0,255,156,0.28)",glow:"0 0 24px rgba(0,255,156,0.25)"},
-  BEARISH: {color:"#FF4D4D",bg:"rgba(255,77,77,0.09)",border:"rgba(255,77,77,0.28)",glow:"0 0 24px rgba(255,77,77,0.25)"},
-  NEUTRAL: {color:"#FFB800",bg:"rgba(255,184,0,0.08)",border:"rgba(255,184,0,0.24)",glow:"0 0 20px rgba(255,184,0,0.2)"},
-  MIXED:   {color:"#C084FC",bg:"rgba(192,132,252,0.08)",border:"rgba(192,132,252,0.24)",glow:"0 0 20px rgba(192,132,252,0.2)"},
+  BULLISH: {color:"var(--positive)",bg:"var(--th-green-bg)",border:"rgba(0,255,156,0.28)",glow:"0 0 24px rgba(0,255,156,0.25)"},
+  BEARISH: {color:"var(--negative)",bg:"var(--th-red-bg)",border:"rgba(255,77,77,0.28)",glow:"0 0 24px rgba(255,77,77,0.25)"},
+  NEUTRAL: {color:"var(--neutral)",bg:"rgba(255,184,0,0.08)",border:"rgba(255,184,0,0.24)",glow:"0 0 20px rgba(255,184,0,0.2)"},
+  MIXED:   {color:"var(--th-blue)",bg:"rgba(192,132,252,0.08)",border:"rgba(192,132,252,0.24)",glow:"0 0 20px rgba(192,132,252,0.2)"},
 };
 
 function scoreColor(s:number):string {
-  if(s>=75) return "#00FF9C"; if(s>=60) return "#FFD700";
-  if(s>=45) return "#FFB800"; return "#FF4D4D";
+  if(s>=75) return "var(--positive)"; if(s>=60) return "var(--gold)";
+  if(s>=45) return "var(--neutral)"; return "var(--negative)";
 }
 
 const QUICK_PICKS = ["RELIANCE","TCS","HDFCBANK","ICICIBANK","BHARTIARTL","INFY","SBIN","HAL","IRFC","TATAMOTORS"];
@@ -58,8 +58,8 @@ function ScoreArc({ score, size=110 }: { score:number; size?:number }) {
 function ScoreBar({ label, score, delay=0 }: { label:string; score:number; delay?:number }) {
   const col=scoreColor(score);
   return (
-    <div className="flex items-center gap-3 py-1.5" style={{borderBottom:"1px solid rgba(255,215,0,0.04)"}}>
-      <span className="text-[10px] font-mono w-40 flex-shrink-0" style={{color:"#5A5A5A"}}>{label}</span>
+    <div className="flex items-center gap-3 py-1.5" style={{borderBottom:"1px solid var(--th-border-subtle)"}}>
+      <span className="text-[10px] font-mono w-40 flex-shrink-0" style={{color:"var(--th-text-dim)"}}>{label}</span>
       <div className="flex-1 h-1 rounded-full overflow-hidden" style={{background:"rgba(255,255,255,0.04)"}}>
         <motion.div className="h-full rounded-full"
           initial={{width:0}} animate={{width:`${score}%`}}
@@ -102,37 +102,37 @@ function LoadingState({ ticker }:{ ticker:string }) {
   }, []);
   return (
     <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} className="max-w-2xl mx-auto mt-16 px-4">
-      <div className="rounded-2xl p-8" style={{background:"rgba(7,7,7,0.97)",border:"1px solid rgba(255,215,0,0.12)"}}>
+      <div className="rounded-2xl p-8" style={{background:"var(--th-bg-card)",border:"1px solid var(--th-border-normal)"}}>
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)"}}>
-            <Brain size={18} style={{color:"#FFD700"}}/>
+            style={{background:"var(--th-border-card)",border:"1px solid var(--th-border-accent)"}}>
+            <Brain size={18} style={{color:"var(--gold)"}}/>
           </div>
           <div>
-            <div className="text-[13px] font-mono font-bold" style={{color:"#F5F5F5"}}>Analyzing {ticker}</div>
-            <div className="text-[9px] font-mono uppercase tracking-wider" style={{color:"#3A3A3A"}}>
+            <div className="text-[13px] font-mono font-bold" style={{color:"var(--th-text-primary)"}}>Analyzing {ticker}</div>
+            <div className="text-[9px] font-mono uppercase tracking-wider" style={{color:"var(--th-text-faint)"}}>
               Live Data · AI Engine · Real Intelligence
             </div>
           </div>
           <div className="ml-auto flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-[#FFD700] animate-live-dot"/>
-            <span className="text-[8.5px] font-mono" style={{color:"#FFD700"}}>LIVE</span>
+            <span className="text-[8.5px] font-mono" style={{color:"var(--gold)"}}>LIVE</span>
           </div>
         </div>
         <div className="space-y-2 mb-6 min-h-[140px]">
           {LOAD_MSGS.slice(0,msgIdx+1).map((msg,i) => (
             <motion.div key={i} initial={{opacity:0,x:-8}} animate={{opacity:1,x:0}} className="flex items-center gap-2.5">
-              <CheckCircle size={10} style={{color:i===msgIdx?"#FFD700":"#00FF9C",flexShrink:0}}/>
-              <span className="text-[10px] font-mono" style={{color:i===msgIdx?"#F5F5F5":"#2A2A2A"}}>{msg}</span>
-              {i===msgIdx && <span className="text-[10px] font-mono animate-blink" style={{color:"#FFD700"}}>█</span>}
+              <CheckCircle size={10} style={{color:i===msgIdx?"var(--gold)":"var(--positive)",flexShrink:0}}/>
+              <span className="text-[10px] font-mono" style={{color:i===msgIdx?"var(--th-text-primary)":"var(--th-text-ultra-faint)"}}>{msg}</span>
+              {i===msgIdx && <span className="text-[10px] font-mono animate-blink" style={{color:"var(--gold)"}}>█</span>}
             </motion.div>
           ))}
         </div>
-        <div className="h-0.5 rounded-full overflow-hidden mb-1.5" style={{background:"rgba(255,215,0,0.06)"}}>
+        <div className="h-0.5 rounded-full overflow-hidden mb-1.5" style={{background:"var(--th-border-subtle)"}}>
           <motion.div className="h-full rounded-full" animate={{width:`${progress}%`}} transition={{duration:0.5}}
             style={{background:"linear-gradient(90deg,#C9A227,#FFD700)",boxShadow:"0 0 8px rgba(255,215,0,0.4)"}}/>
         </div>
-        <div className="text-right text-[8.5px] font-mono" style={{color:"#2A2A2A"}}>Processing live data...</div>
+        <div className="text-right text-[8.5px] font-mono" style={{color:"var(--th-text-ultra-faint)"}}>Processing live data...</div>
       </div>
     </motion.div>
   );
@@ -147,17 +147,17 @@ function ErrorState({ error, ticker, onReset, onRetry }: {
 }) {
   return (
     <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} className="max-w-2xl mx-auto mt-16 px-4">
-      <div className="rounded-2xl p-8" style={{background:"rgba(7,7,7,0.97)",border:"1px solid rgba(255,77,77,0.2)"}}>
+      <div className="rounded-2xl p-8" style={{background:"var(--th-bg-card)",border:"1px solid rgba(255,77,77,0.2)"}}>
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{background:"rgba(255,77,77,0.08)",border:"1px solid rgba(255,77,77,0.2)"}}>
-            <AlertTriangle size={17} style={{color:"#FF4D4D"}}/>
+            style={{background:"var(--th-red-bg)",border:"1px solid rgba(255,77,77,0.2)"}}>
+            <AlertTriangle size={17} style={{color:"var(--negative)"}}/>
           </div>
           <div>
-            <div className="text-[13px] font-mono font-bold" style={{color:"#F5F5F5"}}>
+            <div className="text-[13px] font-mono font-bold" style={{color:"var(--th-text-primary)"}}>
               Analysis timed out — {ticker}
             </div>
-            <div className="text-[9px] font-mono uppercase tracking-wider" style={{color:"rgba(255,77,77,0.5)"}}>
+            <div className="text-[9px] font-mono uppercase tracking-wider" style={{color:"var(--th-red-text-dim)"}}>
               Network or data fetch error
             </div>
           </div>
@@ -169,12 +169,12 @@ function ErrorState({ error, ticker, onReset, onRetry }: {
         <div className="flex gap-3">
           <button onClick={onRetry}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-mono"
-            style={{color:"#FFD700",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.25)"}}>
+            style={{color:"var(--gold)",background:"var(--th-border-card)",border:"1px solid var(--th-border-accent)"}}>
             <RefreshCw size={10}/> Retry Analysis
           </button>
           <button onClick={onReset}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-mono"
-            style={{color:"#4A4A4A",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,215,0,0.08)"}}>
+            style={{color:"var(--th-text-muted)",background:"rgba(255,255,255,0.02)",border:"1px solid var(--th-border-card)"}}>
             <X size={10}/> New Stock
           </button>
         </div>
@@ -212,22 +212,22 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button onClick={onReset} className="flex items-center gap-1 text-[10px] font-mono transition-colors"
-            style={{color:"#3A3A3A"}}
-            onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.color="#FFD700";}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.color="#3A3A3A";}}>
+            style={{color:"var(--th-text-faint)"}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.color="var(--gold)";}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.color="var(--th-text-faint)";}}>
             <ChevronLeft size={11}/> New Analysis
           </button>
-          <span style={{color:"#1E1E1E"}}>/</span>
-          <span className="text-[10px] font-mono" style={{color:"#5A5A5A"}}>{report.ticker}</span>
+          <span style={{color:"var(--th-text-faint)"}}>/</span>
+          <span className="text-[10px] font-mono" style={{color:"var(--th-text-dim)"}}>{report.ticker}</span>
           {report._meta && (
             <>
               <span className="text-[8px] font-mono px-1.5 py-0.5 rounded ml-1"
-                style={{color:"#00FF9C",background:"rgba(0,255,156,0.06)",border:"1px solid rgba(0,255,156,0.15)"}}>
+                style={{color:"var(--positive)",background:"rgba(0,255,156,0.06)",border:"1px solid rgba(0,255,156,0.15)"}}>
                 LIVE · {new Date(report._meta.generatedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}
               </span>
               {report._meta.model && (
                 <span className="text-[8px] font-mono px-1.5 py-0.5 rounded ml-1"
-                  style={{color:"#38BDF8",background:"rgba(56,189,248,0.06)",border:"1px solid rgba(56,189,248,0.15)"}}>
+                  style={{color:"var(--th-blue)",background:"rgba(56,189,248,0.06)",border:"1px solid rgba(56,189,248,0.15)"}}>
                   {report._meta.model.includes("deterministic") ? "QUANT ENGINE" : report._meta.model.includes("ollama") ? "OLLAMA AI" : "CLAUDE AI"}
                 </span>
               )}
@@ -235,37 +235,37 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
           )}
         </div>
         <button onClick={onReset} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono"
-          style={{color:"#4A4A4A",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,215,0,0.08)"}}>
+          style={{color:"var(--th-text-muted)",background:"rgba(255,255,255,0.02)",border:"1px solid var(--th-border-card)"}}>
           <RefreshCw size={10}/> New Query
         </button>
       </div>
 
       {/* Stock header */}
       <div className="rounded-2xl p-5 relative overflow-hidden"
-        style={{background:"rgba(8,8,8,0.97)",border:`1px solid rgba(255,215,0,0.12)`}}>
+        style={{background:"var(--th-bg-elevated)",border:`1px solid rgba(255,215,0,0.12)`}}>
         <div className="absolute inset-0 pointer-events-none"
           style={{background:`radial-gradient(ellipse 80% 80% at 0% 50%, ${vc.bg} 0%, transparent 60%)`}}/>
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <span className="text-[8.5px] font-mono px-2 py-0.5 rounded"
-                style={{color:"#FFD700",background:"rgba(255,215,0,0.08)",border:"1px solid rgba(255,215,0,0.2)"}}>{report.ticker}</span>
+                style={{color:"var(--gold)",background:"var(--th-border-card)",border:"1px solid var(--th-border-accent)"}}>{report.ticker}</span>
               <span className="text-[8.5px] font-mono px-2 py-0.5 rounded"
-                style={{color:"#4A4A4A",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)"}}>{report.exchange}</span>
+                style={{color:"var(--th-text-dim)",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)"}}>{report.exchange}</span>
               {report._meta?.newsCount && (
-                <span className="text-[8px] font-mono" style={{color:"#3A3A3A"}}>
+                <span className="text-[8px] font-mono" style={{color:"var(--th-text-faint)"}}>
                   {report._meta.newsCount} articles analyzed
                 </span>
               )}
             </div>
-            <h1 className="font-bold mb-1" style={{fontFamily:"var(--font-space-grotesk,sans-serif)",fontSize:"clamp(18px,3vw,26px)",color:"#F5F5F5"}}>
+            <h1 className="font-bold mb-1" style={{fontFamily:"var(--font-space-grotesk,sans-serif)",fontSize:"clamp(18px,3vw,26px)",color:"var(--th-text-primary)"}}>
               {report.companyName}
             </h1>
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-[11px]" style={{color:"#4A4A4A"}}>{report.sector}</span>
+              <span className="text-[11px]" style={{color:"var(--th-text-dim)"}}>{report.sector}</span>
               <span className="text-[10px] font-mono" style={{color:scoreColor(overall)}}>◈ {report.trendState}</span>
             </div>
-            <p className="text-[11px] mt-1.5 italic max-w-xl" style={{color:"#3A3A3A"}}>&ldquo;{report.oneLiner}&rdquo;</p>
+            <p className="text-[11px] mt-1.5 italic max-w-xl" style={{color:"var(--th-text-faint)"}}>&ldquo;{report.oneLiner}&rdquo;</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <motion.div initial={{scale:0.8,opacity:0}} animate={{scale:1,opacity:1}} transition={{delay:0.3,type:"spring",stiffness:300}}
@@ -274,8 +274,8 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
               <span className="w-2 h-2 rounded-full animate-live-dot" style={{background:vc.color}}/>
               {report.currentSentiment}
             </motion.div>
-            <div className="text-[9px] font-mono uppercase tracking-wider" style={{color:"#3A3A3A"}}>
-              AI Confidence: <span style={{color:"#FFD700"}}>{report.aiConfidence}%</span>
+            <div className="text-[9px] font-mono uppercase tracking-wider" style={{color:"var(--th-text-faint)"}}>
+              AI Confidence: <span style={{color:"var(--gold)"}}>{report.aiConfidence}%</span>
             </div>
           </div>
         </div>
@@ -284,18 +284,18 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
       {/* Score dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="md:col-span-2 rounded-2xl p-5 flex flex-col items-center justify-center"
-          style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.1)"}}>
-          <div className="text-[9px] font-mono uppercase tracking-[0.2em] mb-3" style={{color:"#3A3A3A"}}>Overall AI Score</div>
+          style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
+          <div className="text-[9px] font-mono uppercase tracking-[0.2em] mb-3" style={{color:"var(--th-text-faint)"}}>Overall AI Score</div>
           <ScoreArc score={overall} size={130}/>
           <div className="mt-3 text-[11px] font-mono text-center" style={{color:`${scoreColor(overall)}80`}}>
             {overall>=75?"Institutional Grade":overall>=62?"Above Average":overall>=50?"Average Profile":"Below Average — Caution"}
           </div>
         </div>
         <div className="md:col-span-3 rounded-2xl p-5"
-          style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.1)"}}>
+          style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="flex items-center gap-2 mb-4">
-            <Cpu size={10} style={{color:"#FFD700"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>Score Breakdown</span>
+            <Cpu size={10} style={{color:"var(--gold)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Score Breakdown</span>
           </div>
           {SCORE_BARS.map(b=><ScoreBar key={b.label} {...b}/>)}
         </div>
@@ -303,17 +303,17 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
 
       {/* Entry zones */}
       {report.entryZone && (
-        <div className="rounded-2xl p-5" style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.1)"}}>
+        <div className="rounded-2xl p-5" style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="flex items-center gap-2 mb-4">
-            <Target size={11} style={{color:"#FFD700"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>Entry · Stop · Target Zones</span>
+            <Target size={11} style={{color:"var(--gold)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Entry · Stop · Target Zones</span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              {label:"Entry Zone",    value:report.entryZone.entry,     color:"#FFD700", icon:"→"},
-              {label:"Stop Loss",     value:report.entryZone.stopLoss,  color:"#FF4D4D", icon:"✕"},
-              {label:"Target 1",      value:report.entryZone.target1,   color:"#00FF9C", icon:"↑"},
-              {label:"Target 2",      value:report.entryZone.target2,   color:"#00FF9C", icon:"↑↑"},
+              {label:"Entry Zone",    value:report.entryZone.entry,     color:"var(--gold)", icon:"→"},
+              {label:"Stop Loss",     value:report.entryZone.stopLoss,  color:"var(--negative)", icon:"✕"},
+              {label:"Target 1",      value:report.entryZone.target1,   color:"var(--positive)", icon:"↑"},
+              {label:"Target 2",      value:report.entryZone.target2,   color:"var(--positive)", icon:"↑↑"},
             ].map((z,i)=>(
               <motion.div key={z.label} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:i*0.1+0.3}}
                 className="p-3.5 rounded-xl" style={{background:`${z.color}07`,border:`1px solid ${z.color}20`}}>
@@ -323,63 +323,63 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
             ))}
           </div>
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-[9px] font-mono" style={{color:"#3A3A3A"}}>Risk / Reward:</span>
-            <span className="text-[11px] font-mono font-bold" style={{color:"#FFD700"}}>{report.entryZone.riskReward}</span>
+            <span className="text-[9px] font-mono" style={{color:"var(--th-text-faint)"}}>Risk / Reward:</span>
+            <span className="text-[11px] font-mono font-bold" style={{color:"var(--gold)"}}>{report.entryZone.riskReward}</span>
           </div>
         </div>
       )}
 
       {/* Technical + Graph */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl p-5" style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.1)"}}>
+        <div className="rounded-2xl p-5" style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="flex items-center gap-2 mb-4">
-            <Activity size={11} style={{color:"#FFD700"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>Technical Analysis</span>
+            <Activity size={11} style={{color:"var(--gold)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Technical Analysis</span>
             <div className="ml-auto px-2 py-0.5 rounded text-[8px] font-mono"
               style={{color:scoreColor(sc.technical),background:`${scoreColor(sc.technical)}10`,border:`1px solid ${scoreColor(sc.technical)}25`}}>
               {sc.technical}/100
             </div>
           </div>
           {(report.techAnalysis ?? "").split("\n\n").map((para,i)=>(
-            <p key={i} className="text-[11.5px] leading-relaxed mb-3" style={{color:i===0?"#9A9A9A":"#5A5A5A"}}>{para}</p>
+            <p key={i} className="text-[11.5px] leading-relaxed mb-3" style={{color:i===0?"#9A9A9A":"var(--th-text-dim)"}}>{para}</p>
           ))}
         </div>
-        <div className="rounded-2xl p-5" style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.1)"}}>
+        <div className="rounded-2xl p-5" style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="flex items-center gap-2 mb-4">
-            <BarChart2 size={11} style={{color:"#FFD700"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>Graph Intelligence</span>
+            <BarChart2 size={11} style={{color:"var(--gold)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Graph Intelligence</span>
             <div className="ml-auto px-2 py-0.5 rounded text-[8px] font-mono"
               style={{color:scoreColor(sc.momentum),background:`${scoreColor(sc.momentum)}10`,border:`1px solid ${scoreColor(sc.momentum)}25`}}>
               Momentum: {sc.momentum}/100
             </div>
           </div>
           {(report.graphAnalysis ?? "").split("\n\n").map((para,i)=>(
-            <p key={i} className="text-[11.5px] leading-relaxed mb-3" style={{color:i===0?"#9A9A9A":"#5A5A5A"}}>{para}</p>
+            <p key={i} className="text-[11.5px] leading-relaxed mb-3" style={{color:i===0?"#9A9A9A":"var(--th-text-dim)"}}>{para}</p>
           ))}
         </div>
       </div>
 
       {/* Multi-timeframe */}
       {report.timeframes && (
-        <div className="rounded-2xl p-5" style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.1)"}}>
+        <div className="rounded-2xl p-5" style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="flex items-center gap-2 mb-4">
-            <Layers size={11} style={{color:"#FFD700"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>Multi-Timeframe</span>
+            <Layers size={11} style={{color:"var(--gold)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Multi-Timeframe</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {(Object.entries(report.timeframes) as [string,{trend:string;strength:string;risk:string;note:string}][]).map(([key,tf],i)=>{
-              const riskCol: Record<string,string> = {Low:"#00FF9C",Medium:"#FFB800",High:"#FF4D4D"};
-              const rc = riskCol[tf.risk]||"#6A6A6A";
+              const riskCol: Record<string,string> = {Low:"var(--positive)",Medium:"var(--neutral)",High:"var(--negative)"};
+              const rc = riskCol[tf.risk]||"var(--th-text-muted)";
               return (
                 <motion.div key={key} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:i*0.08+0.4}}
-                  className="p-3.5 rounded-xl" style={{background:"rgba(255,255,255,0.015)",border:"1px solid rgba(255,215,0,0.06)"}}>
-                  <div className="text-[9px] font-mono uppercase tracking-wider mb-2" style={{color:"#3A3A3A"}}>
+                  className="p-3.5 rounded-xl" style={{background:"rgba(255,255,255,0.015)",border:"1px solid var(--th-border-subtle)"}}>
+                  <div className="text-[9px] font-mono uppercase tracking-wider mb-2" style={{color:"var(--th-text-faint)"}}>
                     {key==="longTerm"?"Long-Term":key.charAt(0).toUpperCase()+key.slice(1)}
                   </div>
                   <div className="text-[11px] font-mono font-semibold mb-1.5" style={{color:"#E0E0E0"}}>{tf.trend}</div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-[8.5px] font-mono px-1.5 py-0.5 rounded"
-                      style={{color:tf.strength==="Strong"?"#00FF9C":tf.strength==="Moderate"?"#FFD700":"#FF4D4D",background:"rgba(255,255,255,0.03)"}}>
+                      style={{color:tf.strength==="Strong"?"var(--positive)":tf.strength==="Moderate"?"var(--gold)":"var(--negative)",background:"rgba(255,255,255,0.03)"}}>
                       {tf.strength}
                     </span>
                     <span className="text-[8.5px] font-mono px-1.5 py-0.5 rounded"
@@ -387,7 +387,7 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
                       {tf.risk} Risk
                     </span>
                   </div>
-                  <p className="text-[10px] leading-relaxed" style={{color:"#3A3A3A"}}>{tf.note}</p>
+                  <p className="text-[10px] leading-relaxed" style={{color:"var(--th-text-faint)"}}>{tf.note}</p>
                 </motion.div>
               );
             })}
@@ -397,23 +397,23 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
 
       {/* Institutional flow + Risk */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl p-5" style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.1)"}}>
+        <div className="rounded-2xl p-5" style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="flex items-center gap-2 mb-4">
-            <Eye size={11} style={{color:"#FFD700"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>Institutional Flow</span>
+            <Eye size={11} style={{color:"var(--gold)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Institutional Flow</span>
           </div>
-          <p className="text-[11.5px] leading-relaxed" style={{color:"#6A6A6A"}}>{report.institutionalFlow}</p>
+          <p className="text-[11.5px] leading-relaxed" style={{color:"var(--th-text-muted)"}}>{report.institutionalFlow}</p>
         </div>
-        <div className="rounded-2xl p-5" style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,77,77,0.1)"}}>
+        <div className="rounded-2xl p-5" style={{background:"var(--th-bg-elevated)",border:"1px solid rgba(255,77,77,0.1)"}}>
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle size={11} style={{color:"#FF4D4D"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>Risk Analysis</span>
+            <AlertTriangle size={11} style={{color:"var(--negative)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Risk Analysis</span>
           </div>
-          <p className="text-[11.5px] leading-relaxed mb-4" style={{color:"#6A6A6A"}}>{report.riskAnalysis}</p>
+          <p className="text-[11.5px] leading-relaxed mb-4" style={{color:"var(--th-text-muted)"}}>{report.riskAnalysis}</p>
           {report.invalidation && (
-            <div className="p-3 rounded-xl" style={{background:"rgba(255,77,77,0.05)",border:"1px solid rgba(255,77,77,0.15)"}}>
-              <div className="text-[8.5px] font-mono uppercase tracking-wider mb-1" style={{color:"rgba(255,77,77,0.6)"}}>✕ Invalidation</div>
-              <div className="text-[11px] font-mono" style={{color:"#FF4D4D"}}>{report.invalidation}</div>
+            <div className="p-3 rounded-xl" style={{background:"var(--th-red-bg)",border:"1px solid rgba(255,77,77,0.15)"}}>
+              <div className="text-[8.5px] font-mono uppercase tracking-wider mb-1" style={{color:"var(--th-red-text-mid)"}}>✕ Invalidation</div>
+              <div className="text-[11px] font-mono" style={{color:"var(--negative)"}}>{report.invalidation}</div>
             </div>
           )}
         </div>
@@ -421,21 +421,21 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
 
       {/* Macro + AI Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl p-5" style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.1)"}}>
+        <div className="rounded-2xl p-5" style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="flex items-center gap-2 mb-4">
-            <Globe size={11} style={{color:"#38BDF8"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>Macro Context</span>
+            <Globe size={11} style={{color:"var(--th-blue)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Macro Context</span>
           </div>
-          <p className="text-[11.5px] leading-relaxed" style={{color:"#6A6A6A"}}>{report.macroContext}</p>
+          <p className="text-[11.5px] leading-relaxed" style={{color:"var(--th-text-muted)"}}>{report.macroContext}</p>
         </div>
         <div className="rounded-2xl p-5 relative overflow-hidden"
-          style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.14)"}}>
+          style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="absolute inset-0 pointer-events-none"
             style={{background:"radial-gradient(ellipse 60% 60% at 100% 0%, rgba(255,215,0,0.03) 0%, transparent 60%)"}}/>
           <div className="relative">
             <div className="flex items-center gap-2 mb-4">
-              <Brain size={11} style={{color:"#FFD700"}}/>
-              <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>AI Intelligence Core</span>
+              <Brain size={11} style={{color:"var(--gold)"}}/>
+              <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>AI Intelligence Core</span>
             </div>
             <p className="text-[11.5px] leading-relaxed" style={{color:"#7A7A7A"}}>{report.aiInsights}</p>
           </div>
@@ -446,28 +446,28 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-2xl p-5" style={{background:"rgba(0,255,156,0.03)",border:"1px solid rgba(0,255,156,0.1)"}}>
           <div className="flex items-center gap-2 mb-3">
-            <TrendingUp size={11} style={{color:"#00FF9C"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"rgba(0,255,156,0.5)"}}>Bull Case</span>
+            <TrendingUp size={11} style={{color:"var(--positive)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-green-text-dim)"}}>Bull Case</span>
           </div>
-          <p className="text-[11.5px] leading-relaxed" style={{color:"#5A5A5A"}}>{report.bullCase}</p>
+          <p className="text-[11.5px] leading-relaxed" style={{color:"var(--th-text-dim)"}}>{report.bullCase}</p>
         </div>
         <div className="rounded-2xl p-5" style={{background:"rgba(255,77,77,0.03)",border:"1px solid rgba(255,77,77,0.1)"}}>
           <div className="flex items-center gap-2 mb-3">
-            <TrendingDown size={11} style={{color:"#FF4D4D"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"rgba(255,77,77,0.5)"}}>Bear Case</span>
+            <TrendingDown size={11} style={{color:"var(--negative)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-red-text-dim)"}}>Bear Case</span>
           </div>
-          <p className="text-[11.5px] leading-relaxed" style={{color:"#5A5A5A"}}>{report.bearCase}</p>
+          <p className="text-[11.5px] leading-relaxed" style={{color:"var(--th-text-dim)"}}>{report.bearCase}</p>
         </div>
       </div>
 
       {/* Latest developments */}
       {(report.latestDevelopments?.length ?? 0) > 0 && (
-        <div className="rounded-2xl p-5" style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,215,0,0.1)"}}>
+        <div className="rounded-2xl p-5" style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="flex items-center gap-2 mb-4">
-            <Zap size={11} style={{color:"#FFD700"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"#3A3A3A"}}>Latest Developments</span>
+            <Zap size={11} style={{color:"var(--gold)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Latest Developments</span>
             <span className="ml-auto text-[8px] font-mono px-2 py-0.5 rounded"
-              style={{color:"#00FF9C",background:"rgba(0,255,156,0.06)",border:"1px solid rgba(0,255,156,0.15)"}}>
+              style={{color:"var(--positive)",background:"rgba(0,255,156,0.06)",border:"1px solid rgba(0,255,156,0.15)"}}>
               LIVE DATA
             </span>
           </div>
@@ -479,12 +479,12 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
                   className="p-4 rounded-xl" style={{background:"rgba(255,255,255,0.015)",border:`1px solid ${sc.color}15`}}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[8px] font-mono px-1.5 py-0.5 rounded" style={{color:sc.color,background:sc.bg}}>{d.sentiment}</span>
-                    <span className="text-[8px] font-mono" style={{color:"#2A2A2A"}}>{d.date}</span>
+                    <span className="text-[8px] font-mono" style={{color:"var(--th-text-ultra-faint)"}}>{d.date}</span>
                   </div>
                   <h4 className="text-[12px] font-semibold mb-2 leading-snug"
                     style={{fontFamily:"var(--font-space-grotesk,sans-serif)",color:"#E0E0E0"}}>{d.headline}</h4>
-                  <div className="p-2.5 rounded-lg" style={{background:"rgba(255,215,0,0.02)",borderLeft:"2px solid rgba(255,215,0,0.15)"}}>
-                    <p className="text-[10.5px] leading-relaxed" style={{color:"#5A5A5A"}}>{d.aiRead}</p>
+                  <div className="p-2.5 rounded-lg" style={{background:"var(--th-gold-bg)",borderLeft:"2px solid rgba(255,215,0,0.15)"}}>
+                    <p className="text-[10.5px] leading-relaxed" style={{color:"var(--th-text-dim)"}}>{d.aiRead}</p>
                   </div>
                 </motion.div>
               );
@@ -495,17 +495,17 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
 
       {/* Key risks */}
       {(report.keyRisks?.length ?? 0) > 0 && (
-        <div className="rounded-2xl p-5" style={{background:"rgba(8,8,8,0.97)",border:"1px solid rgba(255,77,77,0.1)"}}>
+        <div className="rounded-2xl p-5" style={{background:"var(--th-bg-elevated)",border:"1px solid rgba(255,77,77,0.1)"}}>
           <div className="flex items-center gap-2 mb-3">
-            <Shield size={11} style={{color:"#FF4D4D"}}/>
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"rgba(255,77,77,0.5)"}}>Key Risks</span>
+            <Shield size={11} style={{color:"var(--negative)"}}/>
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-red-text-dim)"}}>Key Risks</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(report.keyRisks??[]).map((r:any,i:number)=>(
               <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg"
                 style={{background:"rgba(255,77,77,0.04)",border:"1px solid rgba(255,77,77,0.1)"}}>
-                <span className="text-[8px] font-mono mt-0.5 flex-shrink-0" style={{color:"#FF4D4D"}}>▸</span>
-                <span className="text-[11px] leading-relaxed" style={{color:"#4A4A4A"}}>{r}</span>
+                <span className="text-[8px] font-mono mt-0.5 flex-shrink-0" style={{color:"var(--negative)"}}>▸</span>
+                <span className="text-[11px] leading-relaxed" style={{color:"var(--th-text-secondary)"}}>{r}</span>
               </div>
             ))}
           </div>
@@ -513,9 +513,10 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
       )}
 
       <div className="py-4 text-center">
-        <p className="text-[9px] font-mono uppercase tracking-wider" style={{color:"#1E1E1E"}}>
-          R.H.T.I.H Real Intelligence · {report._meta?.newsCount ?? 0} News Articles · {report._meta?.model ? `Engine: ${report._meta.model}` : "AI Analysis"} · Not Investment Advice
+        <p className="text-[9px] font-mono uppercase tracking-wider" style={{color:"var(--th-text-ultra-faint)"}}>
+          MARKET KA BAADSHAH Real Intelligence · {report._meta?.newsCount ?? 0} News Articles · {report._meta?.model ? `Engine: ${report._meta.model}` : "AI Analysis"} · Not Investment Advice
         </p>
+
       </div>
     </motion.div>
   );
@@ -530,54 +531,54 @@ function QueryInput({ onAnalyze }:{ onAnalyze:(t:string)=>void }) {
   return (
     <div className="max-w-5xl mx-auto px-4 py-20 text-center">
       <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:0.6}}>
-        <div className="text-[9.5px] font-mono uppercase tracking-[0.3em] mb-4" style={{color:"#3A3A3A"}}>
+        <div className="text-[9.5px] font-mono uppercase tracking-[0.3em] mb-4" style={{color:"var(--th-text-faint)"}}>
           ◈ Live Intelligence · Yahoo Finance + AI Engine
         </div>
         <h1 className="font-bold mb-4 leading-tight"
-          style={{fontFamily:"var(--font-space-grotesk,sans-serif)",fontSize:"clamp(28px,5vw,54px)",color:"#F5F5F5",letterSpacing:"-0.025em"}}>
+          style={{fontFamily:"var(--font-space-grotesk,sans-serif)",fontSize:"clamp(28px,5vw,54px)",color:"var(--th-text-primary)",letterSpacing:"-0.025em"}}>
           Enter a Ticker.{" "}
           <span style={{background:"linear-gradient(135deg,#FFD700,#C9A227)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>
             Get Real Intelligence.
           </span>
         </h1>
-        <p className="text-[13px] mb-10" style={{color:"#4A4A4A"}}>
+        <p className="text-[13px] mb-10" style={{color:"var(--th-text-muted)"}}>
           Live Yahoo Finance data + AI-powered analysis. Every report is unique. No hardcoded content.
         </p>
       </motion.div>
       <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.7,delay:0.15}}
         className="relative max-w-xl mx-auto mb-8">
         <div className="relative flex items-center rounded-2xl overflow-hidden"
-          style={{background:"rgba(10,10,10,0.95)",border:"1px solid rgba(255,215,0,0.18)",height:"56px"}}>
-          <div className="absolute left-4"><Search size={17} style={{color:"#FFD700"}}/></div>
+          style={{background:"var(--th-bg-card)",border:"1px solid var(--th-border-accent)",height:"56px"}}>
+          <div className="absolute left-4"><Search size={17} style={{color:"var(--gold)"}}/></div>
           <input type="text" value={input}
             onChange={e=>setInput(e.target.value.toUpperCase())}
             onKeyDown={e=>e.key==="Enter"&&input.trim()&&onAnalyze(input.trim())}
             placeholder="RELIANCE, TCS, HDFCBANK, HAL, IRFC..."
             autoFocus
             className="w-full bg-transparent outline-none font-mono text-[14px] h-full pl-12 pr-28"
-            style={{color:"#F5F5F5"}}/>
+            style={{color:"var(--th-text-primary)"}}/>
           {input && (
-            <button onClick={()=>setInput("")} className="absolute right-24" style={{color:"#3A3A3A"}}>
+            <button onClick={()=>setInput("")} className="absolute right-24" style={{color:"var(--th-text-faint)"}}>
               <X size={13}/>
             </button>
           )}
           <button onClick={()=>input.trim()&&onAnalyze(input.trim())}
             className="absolute right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-mono font-bold"
-            style={{color:input?"#FFD700":"#3A3A3A",background:input?"rgba(255,215,0,0.1)":"rgba(255,255,255,0.03)",border:input?"1px solid rgba(255,215,0,0.3)":"1px solid rgba(255,255,255,0.05)"}}>
+            style={{color:input?"var(--gold)":"var(--th-text-faint)",background:input?"var(--th-border-normal)":"rgba(255,255,255,0.03)",border:input?"1px solid var(--th-border-strong)":"1px solid rgba(255,255,255,0.05)"}}>
             Analyze <ArrowRight size={11}/>
           </button>
         </div>
       </motion.div>
       <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.4}}>
-        <div className="text-[8.5px] font-mono uppercase tracking-[0.2em] mb-3" style={{color:"#2A2A2A"}}>Quick Analysis</div>
+        <div className="text-[8.5px] font-mono uppercase tracking-[0.2em] mb-3" style={{color:"var(--th-text-ultra-faint)"}}>Quick Analysis</div>
         <div className="flex flex-wrap justify-center gap-2">
           {QUICK_PICKS.map((t,i)=>(
             <motion.button key={t} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:i*0.06+0.5}}
               onClick={()=>onAnalyze(t)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-mono transition-all duration-200"
-              style={{color:"#4A4A4A",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,215,0,0.07)"}}
-              onMouseEnter={e=>{const el=e.currentTarget as HTMLButtonElement;el.style.color="#FFD700";el.style.borderColor="rgba(255,215,0,0.28)";el.style.background="rgba(255,215,0,0.05)";}}
-              onMouseLeave={e=>{const el=e.currentTarget as HTMLButtonElement;el.style.color="#4A4A4A";el.style.borderColor="rgba(255,215,0,0.07)";el.style.background="rgba(255,255,255,0.02)";}}>
+              style={{color:"var(--th-text-muted)",background:"rgba(255,255,255,0.02)",border:"1px solid var(--th-border-subtle)"}}
+              onMouseEnter={e=>{const el=e.currentTarget as HTMLButtonElement;el.style.color="var(--gold)";el.style.borderColor="var(--th-border-accent)";el.style.background="var(--th-border-subtle)";}}
+              onMouseLeave={e=>{const el=e.currentTarget as HTMLButtonElement;el.style.color="var(--th-text-muted)";el.style.borderColor="var(--th-border-subtle)";el.style.background="rgba(255,255,255,0.02)";}}>
               {t} <ArrowRight size={9}/>
             </motion.button>
           ))}
@@ -601,8 +602,8 @@ function AiBadge({ status }: { status: AiStatus }) {
         <motion.div key="thinking"
           initial={{opacity:0,scale:0.9}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.9}}
           className="fixed bottom-6 right-6 flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-mono font-bold z-50"
-          style={{background:"rgba(192,132,252,0.1)",border:"1px solid rgba(192,132,252,0.35)",color:"#C084FC",backdropFilter:"blur(12px)"}}>
-          <span className="w-1.5 h-1.5 rounded-full animate-live-dot" style={{background:"#C084FC"}}/>
+          style={{background:"rgba(192,132,252,0.1)",border:"1px solid rgba(192,132,252,0.35)",color:"var(--th-blue)",backdropFilter:"blur(12px)"}}>
+          <span className="w-1.5 h-1.5 rounded-full animate-live-dot" style={{background:"var(--th-blue)"}}/>
           ◈ AI ANALYZING…
         </motion.div>
       )}
@@ -611,7 +612,7 @@ function AiBadge({ status }: { status: AiStatus }) {
           initial={{opacity:0,scale:0.9}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.9}}
           transition={{delay:0.1}}
           className="fixed bottom-6 right-6 flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-mono font-bold z-50"
-          style={{background:"rgba(0,255,156,0.08)",border:"1px solid rgba(0,255,156,0.28)",color:"#00FF9C",backdropFilter:"blur(12px)"}}>
+          style={{background:"var(--th-green-bg)",border:"1px solid rgba(0,255,156,0.28)",color:"var(--positive)",backdropFilter:"blur(12px)"}}>
           <CheckCircle size={10}/>
           ✓ AI ENHANCED
         </motion.div>
@@ -714,7 +715,7 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="min-h-screen" style={{background:"#050505"}}>
+    <div className="min-h-screen" style={{background:"var(--th-bg-page)"}}>
       <Navbar/>
       <MarketTicker/>
       <AiBadge status={aiStatus}/>
@@ -726,14 +727,14 @@ export default function AnalyzePage() {
         {state==="result"  && report && <motion.div key="result" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
           <AnalysisDisplay report={report} onReset={handleReset}/></motion.div>}
       </AnimatePresence>
-      <footer className="px-4 py-6 mt-8" style={{borderTop:"1px solid rgba(255,215,0,0.05)"}}>
+      <footer className="px-4 py-6 mt-8" style={{borderTop:"1px solid var(--th-border-subtle)"}}>
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <Link href="/ai" className="text-[8.5px] font-mono uppercase tracking-wider transition-colors" style={{color:"#1E1E1E"}}
-            onMouseEnter={e=>{(e.currentTarget as HTMLAnchorElement).style.color="#FFD700";}}
-            onMouseLeave={e=>{(e.currentTarget as HTMLAnchorElement).style.color="#1E1E1E";}}>
+          <Link href="/ai" className="text-[8.5px] font-mono uppercase tracking-wider transition-colors" style={{color:"var(--th-text-faint)"}}
+            onMouseEnter={e=>{(e.currentTarget as HTMLAnchorElement).style.color="var(--gold)";}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLAnchorElement).style.color="var(--th-text-faint)";}}>
             ← Intelligence Core
           </Link>
-          <div className="text-[8.5px] font-mono uppercase tracking-wider" style={{color:"#1E1E1E"}}>
+          <div className="text-[8.5px] font-mono uppercase tracking-wider" style={{color:"var(--th-text-ultra-faint)"}}>
             Live Data · AI Analysis · Not Investment Advice
           </div>
         </div>

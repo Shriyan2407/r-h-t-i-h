@@ -1,0 +1,573 @@
+"use client";
+import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
+import {
+  Star, Brain, Search, TrendingUp, Clock,
+  BarChart2, ArrowRight, RefreshCw, Zap,
+  Activity, ChevronRight, Cpu,
+} from "lucide-react";
+import { Navbar }       from "@/components/Navbar";
+import { MarketTicker } from "@/components/MarketTicker";
+import { useTheme }     from "@/lib/context/ThemeContext";
+
+interface DBWatchlistItem {
+  id: string; ticker: string; name: string;
+  exchange: string; sector?: string; addedAt: string;
+}
+
+interface UserProfile {
+  name: string | null;
+  email: string;
+  createdAt: string;
+  lastLogin: string | null;
+  subscriptionTier: string;
+  _count: { watchlist: number; aiHistory: number; searches: number };
+}
+
+function greeting(name: string | null | undefined) {
+  const hour = new Date().getHours();
+  const g    = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  return `${g}${name ? `, ${name.split(" ")[0]}` : ""}`;
+}
+
+const TIER_STYLES: Record<string, { bg: string; text: string; border: string; glow: string }> = {
+  free:          { bg: "rgba(255,255,255,0.04)", text: "#888888", border: "rgba(255,255,255,0.10)", glow: "none" },
+  pro:           { bg: "rgba(255,215,0,0.09)",  text: "#FFD700", border: "rgba(255,215,0,0.28)",  glow: "0 0 12px rgba(255,215,0,0.15)" },
+  institutional: { bg: "rgba(0,255,156,0.08)",  text: "#00FF9C", border: "rgba(0,255,156,0.28)",  glow: "0 0 12px rgba(0,255,156,0.12)" },
+};
+
+const MARKET_PULSE = [
+  { label: "NIFTY 50", value: "24,832", change: "+0.34%", up: true  },
+  { label: "SENSEX",   value: "81,547", change: "+0.28%", up: true  },
+  { label: "VIX",      value: "14.2",   change: "-2.1%",  up: false },
+  { label: "USD/INR",  value: "83.42",  change: "+0.05%", up: true  },
+];
+
+const TRENDING_AI = [
+  { ticker: "RELIANCE",  verdict: "BUY",        confidence: 78, color: "#34D399" },
+  { ticker: "HDFCBANK",  verdict: "STRONG BUY", confidence: 84, color: "#00FF9C" },
+  { ticker: "TCS",       verdict: "HOLD",       confidence: 62, color: "#FFB800" },
+  { ticker: "ICICIBANK", verdict: "BUY",        confidence: 71, color: "#34D399" },
+];
+
+export default function DashboardPage() {
+  const { data: session } = useSession();
+  const { theme }         = useTheme();
+  const isLight           = theme === "light";
+
+  const [profile,   setProfile]   = useState<UserProfile | null>(null);
+  const [watchlist, setWatchlist] = useState<DBWatchlistItem[]>([]);
+  const [loading,   setLoading]   = useState(true);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [pRes, wRes] = await Promise.all([
+        fetch("/api/user/profile"),
+        fetch("/api/user/watchlist"),
+      ]);
+      if (pRes.ok) setProfile(await pRes.json());
+      if (wRes.ok) setWatchlist(await wRes.json());
+    } catch { /* silent */ } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { if (session?.user) loadData(); }, [session, loadData]);
+
+  const tier      = profile?.subscriptionTier ?? "free";
+  const tierStyle = TIER_STYLES[tier] ?? TIER_STYLES.free;
+
+  return (
+    <div className="min-h-screen" style={{ background: "var(--th-bg-page)" }}>
+      <Navbar />
+      <MarketTicker />
+
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-7">
+
+        {/* ── Header ── */}
+        <div className="flex items-start justify-between gap-4 mb-7">
+          <div>
+            <div className="flex items-center gap-3 mb-1.5 flex-wrap">
+              <h1
+                className="font-bold"
+                style={{
+                  fontFamily: "var(--font-space-grotesk, sans-serif)",
+                  fontSize: "clamp(20px, 2.5vw, 28px)",
+                  color: "var(--th-text-primary)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {loading ? "Loading…" : greeting(session?.user?.name)}
+              </h1>
+              {!loading && (
+                <span
+                  className="text-[9px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                  style={{
+                    background: tierStyle.bg,
+                    color:      tierStyle.text,
+                    border:     `1px solid ${tierStyle.border}`,
+                    boxShadow:  tierStyle.glow,
+                  }}
+                >
+                  {tier}
+                </span>
+              )}
+            </div>
+            <p className="text-[12px] font-mono font-medium" style={{ color: "var(--th-text-muted)" }}>
+              {loading ? "" : "Your institutional AI intelligence dashboard"}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Market pulse strip */}
+            <div
+              className="hidden lg:flex items-center gap-4 px-4 py-2 rounded-xl"
+              style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}
+            >
+              {MARKET_PULSE.map(item => (
+                <div key={item.label} className="flex items-center gap-1.5">
+                  <span className="text-[8.5px] font-mono font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
+                    {item.label}
+                  </span>
+                  <span className="text-[10.5px] font-mono font-bold" style={{ color: "var(--th-text-secondary)" }}>
+                    {item.value}
+                  </span>
+                  <span className="text-[9px] font-mono font-semibold"
+                    style={{ color: item.up ? "var(--positive)" : "var(--negative)" }}>
+                    {item.change}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={loadData}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-mono font-semibold transition-all"
+              style={{
+                color:      "var(--th-text-secondary)",
+                background: "var(--th-bg-elevated)",
+                border:     "1px solid var(--th-border-subtle)",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border-accent)";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--gold)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border-subtle)";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-secondary)";
+              }}
+            >
+              <RefreshCw size={11} /> Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* ── Stats Strip ── */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[
+            { label: "Watchlist",   value: profile?._count.watchlist ?? 0, icon: Star,   color: "#FFD700", href: "/watchlist" },
+            { label: "AI Reports",  value: profile?._count.aiHistory ?? 0, icon: Brain,  color: "#38BDF8", href: "/history"   },
+            { label: "Searches",    value: profile?._count.searches  ?? 0, icon: Search, color: "#00FF9C", href: "/"          },
+          ].map(({ label, value, icon: Icon, color, href }, i) => (
+            <motion.div
+              key={label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+            >
+              <Link
+                href={href}
+                className="flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-200 block group"
+                style={{
+                  background: "var(--th-bg-card)",
+                  border:     "1px solid var(--th-border-subtle)",
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.borderColor = "var(--th-border-accent)";
+                  el.style.transform   = "translateY(-2px)";
+                  el.style.boxShadow   = "0 8px 30px rgba(0,0,0,0.4)";
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.borderColor = "var(--th-border-subtle)";
+                  el.style.transform   = "translateY(0)";
+                  el.style.boxShadow   = "none";
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${color}14`, border: `1px solid ${color}28` }}
+                >
+                  <Icon size={15} style={{ color }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[22px] font-bold font-mono leading-none mb-1" style={{ color: "var(--th-text-primary)" }}>
+                    {loading ? "—" : value}
+                  </div>
+                  <div className="text-[9.5px] font-mono font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
+                    {label}
+                  </div>
+                </div>
+                <ArrowRight size={13} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  style={{ color: "var(--th-text-faint)" }} />
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* ── Main Grid ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+          {/* ── Left: Watchlist + AI Signals ── */}
+          <div className="lg:col-span-2 flex flex-col gap-5">
+
+            {/* Watchlist panel */}
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-subtle)" }}
+            >
+              <div
+                className="flex items-center justify-between px-5 py-3.5"
+                style={{ borderBottom: "1px solid var(--th-border-subtle)" }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Star size={13} style={{ color: "var(--gold)" }} />
+                  <span className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
+                    My Watchlist
+                  </span>
+                  {watchlist.length > 0 && (
+                    <span
+                      className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: "rgba(255,215,0,0.09)", color: "#FFD700", border: "1px solid rgba(255,215,0,0.22)" }}
+                    >
+                      {watchlist.length}
+                    </span>
+                  )}
+                </div>
+                <Link
+                  href="/watchlist"
+                  className="flex items-center gap-1 text-[10px] font-mono font-semibold transition-all"
+                  style={{ color: "var(--th-text-muted)" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = "var(--gold)"}
+                  onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = "var(--th-text-muted)"}
+                >
+                  View all <ArrowRight size={9} />
+                </Link>
+              </div>
+
+              {loading ? (
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-14 rounded-lg skeleton" />
+                  ))}
+                </div>
+              ) : watchlist.length === 0 ? (
+                <div className="p-10 text-center flex flex-col items-center gap-3">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-1"
+                    style={{ background: "var(--th-gold-bg-strong)", border: "1px solid var(--th-border-accent)" }}
+                  >
+                    <Star size={18} style={{ color: "var(--gold)" }} />
+                  </div>
+                  <p className="text-[12px] font-semibold" style={{ color: "var(--th-text-secondary)" }}>
+                    Your watchlist is empty
+                  </p>
+                  <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                    Search any NSE or BSE stock to add it
+                  </p>
+                  <Link
+                    href="/"
+                    className="mt-1 text-[11px] font-mono font-bold px-4 py-2 rounded-lg transition-all"
+                    style={{ background: "var(--th-gold-bg-strong)", border: "1px solid var(--th-border-accent)", color: "var(--gold)" }}
+                  >
+                    + Add Stocks
+                  </Link>
+                </div>
+              ) : (
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {watchlist.slice(0, 6).map((item, i) => (
+                    <motion.div
+                      key={item.ticker}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                    >
+                      <Link
+                        href={`/stock/${item.ticker}`}
+                        className="flex items-center gap-2.5 px-3 py-3 rounded-xl transition-all duration-150 group block"
+                        style={{
+                          background: "var(--th-bg-elevated)",
+                          border:     "1px solid var(--th-border-subtle)",
+                        }}
+                        onMouseEnter={e => {
+                          const el = e.currentTarget as HTMLAnchorElement;
+                          el.style.borderColor = "var(--th-border-accent)";
+                          el.style.background  = "var(--th-bg-card-hover)";
+                          el.style.transform   = "translateY(-1px)";
+                        }}
+                        onMouseLeave={e => {
+                          const el = e.currentTarget as HTMLAnchorElement;
+                          el.style.borderColor = "var(--th-border-subtle)";
+                          el.style.background  = "var(--th-bg-elevated)";
+                          el.style.transform   = "translateY(0)";
+                        }}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-[8px] font-mono font-bold"
+                          style={{ background: "var(--th-gold-bg-strong)", color: "var(--gold)", border: "1px solid var(--th-border-accent)" }}
+                        >
+                          {item.ticker.slice(0, 3)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[12px] font-mono font-bold truncate" style={{ color: "var(--th-text-primary)" }}>
+                            {item.ticker}
+                          </div>
+                          <div className="text-[9px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
+                            {item.exchange} · {item.sector ?? "Stock"}
+                          </div>
+                        </div>
+                        <ChevronRight size={10} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          style={{ color: "var(--th-text-faint)" }} />
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* AI Signal Preview */}
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-subtle)" }}
+            >
+              <div
+                className="flex items-center justify-between px-5 py-3.5"
+                style={{ borderBottom: "1px solid var(--th-border-subtle)" }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Cpu size={12} style={{ color: "var(--gold)" }} />
+                  <span className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
+                    AI Signal Radar
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full animate-live-dot" style={{ background: "var(--positive)" }} />
+                </div>
+                <Link
+                  href="/ai"
+                  className="flex items-center gap-1 text-[10px] font-mono font-semibold transition-all"
+                  style={{ color: "var(--th-text-muted)" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = "var(--gold)"}
+                  onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = "var(--th-text-muted)"}
+                >
+                  Run Analysis <ArrowRight size={9} />
+                </Link>
+              </div>
+              <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {TRENDING_AI.map((sig, i) => (
+                  <motion.div
+                    key={sig.ticker}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                  >
+                    <Link
+                      href={`/stock/${sig.ticker}`}
+                      className="flex flex-col gap-2.5 p-3 rounded-xl transition-all duration-200 group block"
+                      style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}
+                      onMouseEnter={e => {
+                        const el = e.currentTarget as HTMLAnchorElement;
+                        el.style.borderColor = `${sig.color}40`;
+                        el.style.background  = `${sig.color}08`;
+                        el.style.transform   = "translateY(-2px)";
+                      }}
+                      onMouseLeave={e => {
+                        const el = e.currentTarget as HTMLAnchorElement;
+                        el.style.borderColor = "var(--th-border-subtle)";
+                        el.style.background  = "var(--th-bg-elevated)";
+                        el.style.transform   = "translateY(0)";
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
+                          {sig.ticker}
+                        </span>
+                        <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded"
+                          style={{ color: sig.color, background: `${sig.color}18`, border: `1px solid ${sig.color}30` }}>
+                          {sig.verdict}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="h-1 rounded-full overflow-hidden mb-1" style={{ background: "rgba(255,255,255,0.06)" }}>
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${sig.confidence}%`, background: sig.color }}
+                          />
+                        </div>
+                        <div className="text-[9px] font-mono font-semibold" style={{ color: "var(--th-text-muted)" }}>
+                          {sig.confidence}% confidence
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Right: Quick Actions + Account ── */}
+          <div className="flex flex-col gap-4">
+
+            {/* Quick Actions */}
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-subtle)" }}
+            >
+              <div
+                className="flex items-center gap-2.5 px-5 py-3.5"
+                style={{ borderBottom: "1px solid var(--th-border-subtle)" }}
+              >
+                <Zap size={12} style={{ color: "var(--gold)" }} />
+                <span className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
+                  Quick Access
+                </span>
+              </div>
+              <div className="p-3 flex flex-col gap-1">
+                {[
+                  { icon: Search,    label: "Search Stocks",  href: "/",         desc: "Any NSE/BSE stock"        },
+                  { icon: Brain,     label: "AI Analysis",    href: "/ai",       desc: "Multi-agent intelligence" },
+                  { icon: TrendingUp,label: "Markets",        href: "/",         desc: "Live market overview"     },
+                  { icon: BarChart2, label: "History",        href: "/history",  desc: "Price & event history"    },
+                  { icon: Star,      label: "Watchlist",      href: "/watchlist",desc: "Your tracked stocks"      },
+                ].map(({ icon: Icon, label, href, desc }) => (
+                  <Link
+                    key={href + label}
+                    href={href}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group"
+                    style={{ border: "1px solid transparent" }}
+                    onMouseEnter={e => {
+                      const el = e.currentTarget as HTMLAnchorElement;
+                      el.style.background   = "var(--th-gold-bg)";
+                      el.style.borderColor  = "var(--th-border-subtle)";
+                    }}
+                    onMouseLeave={e => {
+                      const el = e.currentTarget as HTMLAnchorElement;
+                      el.style.background  = "transparent";
+                      el.style.borderColor = "transparent";
+                    }}
+                  >
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: "var(--th-gold-bg-strong)", border: "1px solid var(--th-border-accent)" }}
+                    >
+                      <Icon size={11} style={{ color: "var(--gold)" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[12px] font-semibold" style={{ color: "var(--th-text-primary)" }}>{label}</div>
+                      <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{desc}</div>
+                    </div>
+                    <ChevronRight size={10} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                      style={{ color: "var(--th-text-faint)" }} />
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Account info */}
+            {profile && (
+              <div
+                className="rounded-xl overflow-hidden"
+                style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-subtle)" }}
+              >
+                <div
+                  className="flex items-center gap-2.5 px-5 py-3.5"
+                  style={{ borderBottom: "1px solid var(--th-border-subtle)" }}
+                >
+                  <Activity size={11} style={{ color: "var(--th-text-muted)" }} />
+                  <span className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
+                    Account
+                  </span>
+                </div>
+                <div className="p-4 flex flex-col gap-2.5">
+                  {[
+                    { label: "Email",        value: profile.email },
+                    { label: "Member Since", value: new Date(profile.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" }) },
+                    { label: "Last Login",   value: profile.lastLogin ? new Date(profile.lastLogin).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "Now" },
+                    { label: "Plan",         value: tier.charAt(0).toUpperCase() + tier.slice(1) },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{label}</span>
+                      <span className="text-[11px] font-mono font-semibold truncate max-w-[140px] text-right" style={{ color: "var(--th-text-secondary)" }}>
+                        {value}
+                      </span>
+                    </div>
+                  ))}
+                  <Link
+                    href="/profile"
+                    className="mt-1 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[11px] font-mono font-bold transition-all"
+                    style={{
+                      background: "var(--th-bg-elevated)",
+                      border:     "1px solid var(--th-border-subtle)",
+                      color:      "var(--th-text-muted)",
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLAnchorElement).style.color       = "var(--gold)";
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--th-border-accent)";
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLAnchorElement).style.color       = "var(--th-text-muted)";
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--th-border-subtle)";
+                    }}
+                  >
+                    Edit Profile <ArrowRight size={10} />
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* Intelligence CTA */}
+            <Link
+              href="/ai/analyze"
+              className="rounded-xl p-5 flex flex-col gap-3 transition-all duration-200 relative overflow-hidden group block"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,215,0,0.07) 0%, rgba(201,162,39,0.04) 100%)",
+                border:     "1px solid rgba(255,215,0,0.18)",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,215,0,0.35)";
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow   = "0 8px 32px rgba(0,0,0,0.4), 0 0 24px rgba(255,215,0,0.08)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,215,0,0.18)";
+                (e.currentTarget as HTMLAnchorElement).style.boxShadow   = "none";
+              }}
+            >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: "radial-gradient(ellipse 60% 60% at 50% 0%, rgba(255,215,0,0.06) 0%, transparent 60%)" }}
+              />
+              <div className="relative flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.28)" }}
+                >
+                  <Brain size={14} style={{ color: "var(--gold)" }} />
+                </div>
+                <div>
+                  <div className="text-[12px] font-bold" style={{ color: "var(--gold)" }}>Run AI Analysis</div>
+                  <div className="text-[9.5px] font-mono" style={{ color: "rgba(255,215,0,0.55)" }}>7 agents · Full report in &lt;30s</div>
+                </div>
+              </div>
+              <div className="relative flex items-center gap-1.5 text-[10px] font-mono font-bold"
+                style={{ color: "var(--gold)" }}>
+                Start now <ArrowRight size={11} />
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

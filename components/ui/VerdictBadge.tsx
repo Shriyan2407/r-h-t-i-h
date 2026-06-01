@@ -115,14 +115,14 @@ export function ConfidenceMeter({ confidence, verdict }: ConfidenceMeterProps) {
     <div className="flex flex-col gap-1.5">
       <div className="flex justify-between items-center">
         <span
-          className="text-[9.5px] font-mono uppercase tracking-[0.12em]"
-          style={{ color: "#4A4A4A" }}
+          className="text-[9.5px] font-mono font-semibold uppercase tracking-[0.10em]"
+          style={{ color: "var(--th-text-muted)" }}
         >
           AI Confidence
         </span>
         <span
-          className="text-[11px] font-mono font-bold"
-          style={{ color: cfg?.color ?? "#F5F5F5" }}
+          className="text-[13px] font-mono font-bold"
+          style={{ color: cfg?.color ?? "var(--th-text-primary)" }}
         >
           {confidence}%
         </span>

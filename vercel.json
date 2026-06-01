@@ -1,6 +1,7 @@
 {
-  "name": "r-h-t-i-h",
+  "name": "market-ka-baadshah",
   "framework": "nextjs",
+  "alias": ["market-ka-baadshah.vercel.app"],
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm install",

@@ -12,7 +12,7 @@ export async function GET(
     const news = await getStockNews(T);
     return NextResponse.json(
       { ticker: T, count: news.length, items: news, fetchedAt: new Date().toISOString() },
-      { headers: { "Cache-Control": "s-maxage=600, stale-while-revalidate=1200" } },
+      { headers: { "Cache-Control": "no-store, no-cache" } },
     );
   } catch (err) {
     return NextResponse.json(

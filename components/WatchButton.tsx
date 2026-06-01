@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { useWatchlistStore } from "@/store/watchlistStore";
@@ -42,33 +42,33 @@ export function WatchButton({
       title={watched ? "Remove from watchlist" : "Add to watchlist"}
       className={cn("flex items-center gap-1.5 font-mono rounded-lg border transition-all duration-200", sizeClass, className)}
       style={watched ? {
-        color: "#FFD700",
-        background: "rgba(255,215,0,0.08)",
-        border: "1px solid rgba(255,215,0,0.35)",
+        color: "var(--gold)",
+        background: "var(--th-border-card)",
+        border: "1px solid var(--th-border-strong)",
         boxShadow: "0 0 12px rgba(255,215,0,0.12)",
       } : {
-        color: "#6A6A6A",
+        color: "var(--th-text-muted)",
         background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,215,0,0.1)",
+        border: "1px solid var(--th-border-normal)",
       }}
       onMouseEnter={e => {
         if (!watched) {
-          (e.currentTarget as HTMLButtonElement).style.color       = "#F5F5F5";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,215,0,0.25)";
+          (e.currentTarget as HTMLButtonElement).style.color       = "var(--th-text-primary)";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border-accent)";
         }
       }}
       onMouseLeave={e => {
         if (!watched) {
-          (e.currentTarget as HTMLButtonElement).style.color       = "#6A6A6A";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,215,0,0.1)";
+          (e.currentTarget as HTMLButtonElement).style.color       = "var(--th-text-muted)";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border-normal)";
         }
       }}
     >
       <Star
         size={size === "sm" ? 10 : 12}
         style={{
-          fill: watched ? "#FFD700" : "none",
-          color: watched ? "#FFD700" : "currentColor",
+          fill: watched ? "var(--gold)" : "none",
+          color: watched ? "var(--gold)" : "currentColor",
           transition: "all 0.2s",
         }}
       />

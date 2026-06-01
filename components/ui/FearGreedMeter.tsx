@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * R.H.T.I.H — Institutional Fear & Greed Meter
@@ -119,7 +119,7 @@ export function FearGreedMeter({
           {/* Metallic hub gradient */}
           <radialGradient id="fgm-hub" cx="36%" cy="28%" r="70%">
             <stop offset="0%"   stopColor="#FFF176"/>
-            <stop offset="38%"  stopColor="#FFD700"/>
+            <stop offset="38%"  stopColor="var(--gold)"/>
             <stop offset="100%" stopColor="#5A3E00"/>
           </radialGradient>
 
@@ -295,7 +295,7 @@ export function FearGreedMeter({
         <div className="w-full mt-3.5">
           <div className="flex justify-between items-center mb-1.5">
             <span className="text-[8px] font-mono uppercase tracking-wider"
-              style={{ color:"#2A2A2A" }}>
+              style={{ color:"var(--th-text-ultra-faint)" }}>
               AI Confidence
             </span>
             <span className="text-[10px] font-mono font-bold"
