@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, TrendingUp, Star, Menu, X, Activity, Brain, Target, Newspaper, BookOpen, LayoutDashboard, User, LogOut, ChevronDown, PieChart } from "lucide-react";
+import { Search, TrendingUp, Star, Menu, X, Activity, Brain, Target, Newspaper, LayoutDashboard, User, LogOut, ChevronDown, PieChart } from "lucide-react";
 import { useWatchlistStore } from "@/store/watchlistStore";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,15 +39,24 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const count = useWatchlistStore((s) => s.items.length);
+  const count      = useWatchlistStore(s => s.items.length);
+  const loadFromDB = useWatchlistStore(s => s.loadFromDB);
+  const wlLoaded   = useWatchlistStore(s => s.loaded);
+
+  // Single trigger: load watchlist from DB once per authenticated session
+  useEffect(() => {
+    if (session?.user && !wlLoaded) {
+      loadFromDB();
+    }
+  }, [session?.user, wlLoaded, loadFromDB]);
 
   const navLinks = [
-    { label: "Markets",      href: "/",           icon: TrendingUp },
+    { label: "Markets",      href: "/",            icon: TrendingUp },
     { label: "Intelligence", href: "/ai",          icon: Brain      },
     { label: "Analyze",      href: "/ai/analyze",  icon: Target     },
-    { label: "News",         href: "/news",         icon: Newspaper  },
-    { label: "Portfolio",    href: "/portfolio",    icon: PieChart   },
-    { label: "Watchlist",    href: "/watchlist",    icon: Star       },
+    { label: "News",         href: "/news",        icon: Newspaper  },
+    { label: "Portfolio",    href: "/portfolio",   icon: PieChart   },
+    { label: "Watchlist",    href: "/watchlist",   icon: Star       },
   ];
 
   /* Dynamic colours based on theme */

@@ -11,11 +11,7 @@ import {
 import { Navbar }       from "@/components/Navbar";
 import { MarketTicker } from "@/components/MarketTicker";
 import { useTheme }     from "@/lib/context/ThemeContext";
-
-interface DBWatchlistItem {
-  id: string; ticker: string; name: string;
-  exchange: string; sector?: string; addedAt: string;
-}
+import { useWatchlistStore } from "@/store/watchlistStore";
 
 interface UserProfile {
   name: string | null;
@@ -57,19 +53,18 @@ export default function DashboardPage() {
   const { theme }         = useTheme();
   const isLight           = theme === "light";
 
-  const [profile,   setProfile]   = useState<UserProfile | null>(null);
-  const [watchlist, setWatchlist] = useState<DBWatchlistItem[]>([]);
-  const [loading,   setLoading]   = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Single source of truth — same store the watchlist page and WatchButton use
+  const watchlist        = useWatchlistStore(s => s.items);
+  const watchlistLoaded  = useWatchlistStore(s => s.loaded);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [pRes, wRes] = await Promise.all([
-        fetch("/api/user/profile"),
-        fetch("/api/user/watchlist"),
-      ]);
+      const pRes = await fetch("/api/user/profile");
       if (pRes.ok) setProfile(await pRes.json());
-      if (wRes.ok) setWatchlist(await wRes.json());
     } catch { /* silent */ } finally {
       setLoading(false);
     }
@@ -168,7 +163,7 @@ export default function DashboardPage() {
         {/* ── Stats Strip ── */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { label: "Watchlist",   value: profile?._count.watchlist ?? 0, icon: Star,   color: "#FFD700", href: "/watchlist" },
+            { label: "Watchlist",   value: watchlist.length,               icon: Star,   color: "#FFD700", href: "/watchlist" },
             { label: "AI Reports",  value: profile?._count.aiHistory ?? 0, icon: Brain,  color: "#38BDF8", href: "/history"   },
             { label: "Searches",    value: profile?._count.searches  ?? 0, icon: Search, color: "#00FF9C", href: "/"          },
           ].map(({ label, value, icon: Icon, color, href }, i) => (
@@ -259,7 +254,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
 
-              {loading ? (
+              {!watchlistLoaded ? (
                 <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[...Array(6)].map((_, i) => (
                     <div key={i} className="h-14 rounded-lg skeleton" />
@@ -280,7 +275,7 @@ export default function DashboardPage() {
                     Search any NSE or BSE stock to add it
                   </p>
                   <Link
-                    href="/"
+                    href="/watchlist"
                     className="mt-1 text-[11px] font-mono font-bold px-4 py-2 rounded-lg transition-all"
                     style={{ background: "var(--th-gold-bg-strong)", border: "1px solid var(--th-border-accent)", color: "var(--gold)" }}
                   >

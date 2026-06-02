@@ -9,11 +9,12 @@ import {
   TrendingDown, Activity, Globe, Search, Wallet, PieChart,
   BarChart2, SlidersHorizontal, Star, Info, ArrowUpRight,
   ArrowDownRight, Target, Cpu, Droplets, DollarSign,
-  Building2, Flame, Eye, ChevronRight, Package,
+  Building2, Flame, Eye, ChevronRight, Package, Scan,
 } from "lucide-react";
 import { Navbar }              from "@/components/Navbar";
 import { MarketTicker }        from "@/components/MarketTicker";
 import { TickerSearchInput, SelectedStockChip } from "@/components/TickerSearch";
+import { PortfolioScanner, type ImportedHolding } from "@/components/PortfolioScanner";
 import { usePortfolioStore, type PortfolioHolding } from "@/store/portfolioStore";
 import { useTheme }            from "@/lib/context/ThemeContext";
 import { cn }                  from "@/lib/utils";
@@ -763,6 +764,7 @@ export default function PortfolioPage() {
   const [liveData,     setLiveData]     = useState<Record<string, LiveData>>({});
   const [refreshing,   setRefreshing]   = useState(false);
   const [showModal,    setShowModal]    = useState(false);
+  const [showScanner,  setShowScanner]  = useState(false);
   const [editHolding,  setEditHolding]  = useState<PortfolioHolding | null>(null);
   const [sortBy,       setSortBy]       = useState<"pnl"|"value"|"alloc"|"change">("value");
   const [sortDir,      setSortDir]      = useState<"asc"|"desc">("desc");
@@ -1000,6 +1002,25 @@ export default function PortfolioPage() {
               Refresh
             </button>
             <button
+              onClick={() => setShowScanner(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all"
+              style={{
+                color:      "#FFD700",
+                background: "rgba(255,215,0,0.08)",
+                border:     "1px solid rgba(255,215,0,0.28)",
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,215,0,0.14)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow  = "0 0 16px rgba(255,215,0,0.12)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,215,0,0.08)";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow  = "none";
+              }}
+            >
+              <Scan size={11} /> Scan Portfolio
+            </button>
+            <button
               onClick={() => { setEditHolding(null); setShowModal(true); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all"
               style={{
@@ -1077,16 +1098,32 @@ export default function PortfolioPage() {
                 Add your first holding to unlock AI-powered portfolio intelligence
               </p>
             </div>
-            <button
-              onClick={() => { setEditHolding(null); setShowModal(true); }}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl text-[12px] font-mono font-bold transition-all"
-              style={{
-                background: "linear-gradient(135deg, #FFD700, #C9A227)",
-                color: "#050505",
-                boxShadow: "0 8px 32px rgba(255,215,0,0.3)",
-              }}>
-              <Plus size={14} /> Add Your First Holding
-            </button>
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              <button
+                onClick={() => setShowScanner(true)}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-[12px] font-mono font-bold transition-all"
+                style={{
+                  color:      "#FFD700",
+                  background: "rgba(255,215,0,0.09)",
+                  border:     "1px solid rgba(255,215,0,0.30)",
+                  boxShadow:  "0 4px 24px rgba(255,215,0,0.10)",
+                }}
+                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,215,0,0.15)"}
+                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,215,0,0.09)"}
+              >
+                <Scan size={14} /> Scan Portfolio Image
+              </button>
+              <button
+                onClick={() => { setEditHolding(null); setShowModal(true); }}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-[12px] font-mono font-bold transition-all"
+                style={{
+                  background: "linear-gradient(135deg, #FFD700, #C9A227)",
+                  color: "#050505",
+                  boxShadow: "0 8px 32px rgba(255,215,0,0.3)",
+                }}>
+                <Plus size={14} /> Add Manually
+              </button>
+            </div>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-4">
@@ -1538,6 +1575,20 @@ export default function PortfolioPage() {
                 update(editHolding.id, { quantity: h.quantity, avgPrice: h.avgPrice, notes: h.notes });
               } else {
                 add(h);
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showScanner && (
+          <PortfolioScanner
+            isLight={isLight}
+            onClose={() => setShowScanner(false)}
+            onImport={async (imported: ImportedHolding[]) => {
+              for (const h of imported) {
+                await add(h);
               }
             }}
           />
