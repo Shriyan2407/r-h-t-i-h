@@ -66,6 +66,16 @@ export const metadata: Metadata = {
 
 /* No-FOUC script: reads localStorage before first paint and sets data-theme
    so the correct theme is applied before React hydrates. */
+const swScript = `
+(function(){
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js').catch(function(){});
+    });
+  }
+})();
+`;
+
 const noFOUCScript = `
 (function(){
   try {
@@ -87,6 +97,8 @@ export default function RootLayout({
       <head>
         {/* No-FOUC: must run before any CSS/render */}
         <script dangerouslySetInnerHTML={{ __html: noFOUCScript }} />
+        {/* Service worker registration for push notifications */}
+        <script dangerouslySetInnerHTML={{ __html: swScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <meta name="theme-color" content="#050505" />

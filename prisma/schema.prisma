@@ -20,14 +20,18 @@ model User {
   lastLogin        DateTime?
   subscriptionTier String    @default("free")
 
-  accounts    Account[]
-  sessions    Session[]
-  watchlist   WatchlistItem[]
-  preferences UserPreferences?
-  searches    RecentSearch[]
-  aiHistory   AIHistoryEntry[]
-  resetTokens PasswordResetToken[]
-  portfolio   Portfolio?
+  accounts           Account[]
+  sessions           Session[]
+  watchlist          WatchlistItem[]
+  preferences        UserPreferences?
+  searches           RecentSearch[]
+  aiHistory          AIHistoryEntry[]
+  resetTokens        PasswordResetToken[]
+  portfolio          Portfolio?
+  telegramConnection TelegramConnection?
+  alertPreferences   AlertPreference?
+  alerts             AlertHistory[]
+  pushSubscriptions  PushSubscription[]
 
   @@map("users")
 }
@@ -171,3 +175,74 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
+model TelegramConnection {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  chatId       String?   @unique
+  username     String?
+  firstName    String?
+  connectedAt  DateTime?
+  isActive     Boolean   @default(false)
+  connectToken String?   @unique
+  tokenExpiry  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("telegram_connections")
+}
+
+model AlertPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  breakoutAlerts  Boolean  @default(true)
+  breakdownAlerts Boolean  @default(true)
+  volumeAlerts    Boolean  @default(false)
+  aiBuySignals    Boolean  @default(true)
+  aiSellSignals   Boolean  @default(true)
+  slHitAlerts     Boolean  @default(true)
+  targetAlerts    Boolean  @default(true)
+  earningsAlerts  Boolean  @default(true)
+  marketSummary   Boolean  @default(true)
+  macroNews       Boolean  @default(false)
+  telegramEnabled Boolean  @default(true)
+  pushEnabled     Boolean  @default(true)
+  emailEnabled    Boolean  @default(false)
+  tier            String   @default("free")
+  watchlistOnly   Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("alert_preferences")
+}
+
+model AlertHistory {
+  id      String   @id @default(cuid())
+  userId  String
+  type    String
+  ticker  String?
+  title   String
+  message String   @db.Text
+  channel String
+  sentAt  DateTime @default(now())
+  read    Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sentAt])
+  @@map("alert_history")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  auth      String
+  p256dh    String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
+}

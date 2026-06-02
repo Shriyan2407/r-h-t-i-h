@@ -6,11 +6,24 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "functions": {
-    "app/api/ai-analysis/[ticker]/route.ts": { "maxDuration": 60 },
-    "app/api/intelligence/[ticker]/route.ts": { "maxDuration": 60 },
-    "app/api/history/[ticker]/route.ts":      { "maxDuration": 60 },
-    "app/api/technicals/[ticker]/route.ts":   { "maxDuration": 30 },
-    "app/api/fundamentals/[ticker]/route.ts": { "maxDuration": 30 },
-    "app/api/news/[ticker]/route.ts":         { "maxDuration": 30 }
-  }
+    "app/api/ai-analysis/[ticker]/route.ts":   { "maxDuration": 60 },
+    "app/api/intelligence/[ticker]/route.ts":  { "maxDuration": 60 },
+    "app/api/history/[ticker]/route.ts":       { "maxDuration": 60 },
+    "app/api/technicals/[ticker]/route.ts":    { "maxDuration": 30 },
+    "app/api/fundamentals/[ticker]/route.ts":  { "maxDuration": 30 },
+    "app/api/news/[ticker]/route.ts":          { "maxDuration": 30 },
+    "app/api/telegram/webhook/route.ts":       { "maxDuration": 30 },
+    "app/api/cron/daily-briefing/route.ts":    { "maxDuration": 60 },
+    "app/api/cron/market-alerts/route.ts":     { "maxDuration": 60 }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/daily-briefing",
+      "schedule": "45 3 * * 1-5"
+    },
+    {
+      "path": "/api/cron/market-alerts",
+      "schedule": "*/15 4-10 * * 1-5"
+    }
+  ]
 }
