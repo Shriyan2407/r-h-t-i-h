@@ -6,6 +6,82 @@ import {
   Plus, Trash2, FileText, Cpu,
 } from "lucide-react";
 
+/* ── Image preprocessing ────────────────────────────────────────────────── */
+
+async function preprocessImage(file: File): Promise<File> {
+  // PDFs skip preprocessing
+  if (file.type === "application/pdf") return file;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      // Cap size at 2400px on longest side for faster upload + better OCR
+      const MAX = 2400;
+      let { width, height } = img;
+      if (width > MAX || height > MAX) {
+        const ratio = Math.min(MAX / width, MAX / height);
+        width  = Math.round(width  * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width  = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+
+      // Sample brightness on a grid to detect dark mode
+      let totalBrightness = 0;
+      const step = Math.max(1, Math.floor(data.length / (4 * 2000)));
+      let samples = 0;
+      for (let i = 0; i < data.length; i += 4 * step) {
+        totalBrightness += (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+        samples++;
+      }
+      const avgBrightness = totalBrightness / samples;
+      const isDark = avgBrightness < 100;
+
+      // Contrast factor: dark screenshots need more boost
+      const contrast  = isDark ? 1.6 : 1.25;
+      const brightness = isDark ? 35 : 10;
+
+      for (let i = 0; i < data.length; i += 4) {
+        let r = data[i], g = data[i + 1], b = data[i + 2];
+
+        // Contrast stretch around midpoint
+        r = Math.min(255, Math.max(0, (r - 128) * contrast + 128 + brightness));
+        g = Math.min(255, Math.max(0, (g - 128) * contrast + 128 + brightness));
+        b = Math.min(255, Math.max(0, (b - 128) * contrast + 128 + brightness));
+
+        data[i]     = r;
+        data[i + 1] = g;
+        data[i + 2] = b;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        0.92
+      );
+    };
+
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
 interface ScannedHolding {
@@ -645,12 +721,13 @@ function ReviewPhase({
 /* ── PortfolioScanner (main) ─────────────────────────────────────────────── */
 
 export function PortfolioScanner({ isLight, onClose, onImport }: PortfolioScannerProps) {
-  const [phase,     setPhase]     = useState<"upload" | "scanning" | "reviewing">("upload");
-  const [file,      setFile]      = useState<File | null>(null);
-  const [scanStep,  setScanStep]  = useState(0);
-  const [holdings,  setHoldings]  = useState<ScannedHolding[]>([]);
-  const [apiError,  setApiError]  = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
+  const [phase,      setPhase]     = useState<"upload" | "scanning" | "reviewing">("upload");
+  const [file,       setFile]      = useState<File | null>(null);
+  const [scanStep,   setScanStep]  = useState(0);
+  const [holdings,   setHoldings]  = useState<ScannedHolding[]>([]);
+  const [apiError,   setApiError]  = useState<string | null>(null);
+  const [debugReason, setDebugReason] = useState<string | null>(null);
+  const [importing,  setImporting] = useState(false);
 
   /* Advance scan step every 800 ms */
   useEffect(() => {
@@ -666,14 +743,18 @@ export function PortfolioScanner({ isLight, onClose, onImport }: PortfolioScanne
     setApiError(null);
 
     try {
+      // Preprocess image: enhance contrast for dark-mode broker screenshots
+      const processed = await preprocessImage(f);
+
       const fd = new FormData();
-      fd.append("file", f);
+      fd.append("file", processed);
 
       const res  = await fetch("/api/portfolio/scan", { method: "POST", body: fd });
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setApiError(data.error ?? "Scan failed — please try again.");
+        const msg = data.error ?? "Scan failed — please try again.";
+        setApiError(msg);
         setPhase("upload");
         return;
       }
@@ -689,10 +770,12 @@ export function PortfolioScanner({ isLight, onClose, onImport }: PortfolioScanne
         sector:        String(h.sector   ?? "Other"),
       }));
 
+      setDebugReason(data.debug_reason ?? null);
       setHoldings(parsed);
       setPhase("reviewing");
-    } catch {
-      setApiError("Network error — please check your connection and try again.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Network error";
+      setApiError(`${msg} — check your connection and try again.`);
       setPhase("upload");
     }
   }, []);
@@ -881,11 +964,14 @@ export function PortfolioScanner({ isLight, onClose, onImport }: PortfolioScanne
                         No holdings detected
                       </p>
                       <p className="text-[11px] font-mono max-w-xs mx-auto" style={{ color: "var(--th-text-muted)" }}>
-                        The image may not contain a recognisable portfolio table. Try a higher-resolution screenshot with the holdings clearly visible.
+                        {debugReason ?? "The image may not contain a recognisable portfolio table. Try a full-screen, high-resolution screenshot with holdings clearly visible."}
+                      </p>
+                      <p className="text-[10px] font-mono mt-2 max-w-xs mx-auto" style={{ color: "var(--th-text-faint)" }}>
+                        Tips: scroll to show all holdings, take screenshot at 100% zoom, avoid cropping the table.
                       </p>
                     </div>
                     <button
-                      onClick={() => { setApiError(null); setPhase("upload"); }}
+                      onClick={() => { setApiError(null); setDebugReason(null); setPhase("upload"); }}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-mono font-bold transition-all"
                       style={{
                         background: "rgba(255,215,0,0.09)",
