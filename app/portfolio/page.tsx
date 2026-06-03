@@ -27,7 +27,10 @@ import {
 import {
   AIScoreRing, RadarChart, HoldingHeatmap, StressTestPanel,
   AICommandCenter, OpportunitiesPanel, AIChatPanel, DimensionBars,
+  SectorIntelligencePanel,
 } from "@/components/PortfolioIntelligence";
+import type { EnrichedSectorData } from "@/components/PortfolioIntelligence";
+import { classifyTicker, getSectorRiskLevel } from "@/lib/sectorMap";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TYPES
@@ -787,7 +790,7 @@ export default function PortfolioPage() {
   const [sortBy,       setSortBy]       = useState<"pnl"|"value"|"alloc"|"change">("value");
   const [sortDir,      setSortDir]      = useState<"asc"|"desc">("desc");
   const [filter,       setFilter]       = useState<"all"|"gainers"|"losers">("all");
-  const [activePanel,  setActivePanel]  = useState<"performance"|"ai"|"radar">("performance");
+  const [activePanel,  setActivePanel]  = useState<"performance"|"ai"|"radar"|"sectors">("performance");
   const [viewMode,     setViewMode]     = useState<"table"|"heatmap">("table");
   const [chatOpen,     setChatOpen]     = useState(false);
   const [mounted,      setMounted]      = useState(false);
@@ -851,7 +854,11 @@ export default function PortfolioPage() {
       const pnlPct        = investedValue > 0 ? (pnl / investedValue) * 100 : 0;
       const dayPnl        = h.quantity * liveChange;
       const allocationPct = total > 0 ? (currentValue / total) * 100 : 0;
-      return { ...h, livePrice, liveChange, liveChangePct, currentValue, investedValue, pnl, pnlPct, dayPnl, allocationPct, loading: live?.loading ?? false };
+      // Auto-classify sector from map when missing or "Other"
+      const sector        = (!h.sector || h.sector === "Other" || h.sector === "Unknown")
+        ? classifyTicker(h.ticker, h.name)
+        : h.sector;
+      return { ...h, sector, livePrice, liveChange, liveChangePct, currentValue, investedValue, pnl, pnlPct, dayPnl, allocationPct, loading: live?.loading ?? false };
     });
   }, [holdings, liveData]);
 
@@ -905,16 +912,44 @@ export default function PortfolioPage() {
     });
   }, [holdingsWithLive, sortBy, sortDir, filter]);
 
-  /* ── Sector data ──────────────────────────────────────────────── */
+  /* ── Sector data (enriched) ───────────────────────────────────── */
 
-  const sectorData = useMemo(() => {
-    const map = new Map<string, number>();
+  const sectorData = useMemo((): EnrichedSectorData[] => {
+    interface Acc {
+      alloc:    number;
+      invested: number;
+      current:  number;
+      pnl:      number;
+      holdings: { ticker: string; alloc: number }[];
+    }
+    const map = new Map<string, Acc>();
     holdingsWithLive.forEach(h => {
-      const s = h.sector || "Other";
-      map.set(s, (map.get(s) ?? 0) + h.allocationPct);
+      const s   = h.sector || "Other";
+      const acc = map.get(s) ?? { alloc: 0, invested: 0, current: 0, pnl: 0, holdings: [] };
+      acc.alloc    += h.allocationPct;
+      acc.invested += h.investedValue;
+      acc.current  += h.currentValue;
+      acc.pnl      += h.pnl;
+      acc.holdings.push({ ticker: h.ticker, alloc: h.allocationPct });
+      map.set(s, acc);
     });
-    return [...map.entries()].sort((a, b) => b[1] - a[1])
-      .map(([label, value]) => ({ label, value, color: sectorColor(label) }));
+    return [...map.entries()]
+      .sort((a, b) => b[1].alloc - a[1].alloc)
+      .map(([label, acc]) => {
+        const topH   = acc.holdings.sort((a, b) => b.alloc - a.alloc)[0]?.ticker ?? "";
+        const pnlPct = acc.invested > 0 ? (acc.pnl / acc.invested) * 100 : 0;
+        return {
+          label,
+          value:        acc.alloc,
+          color:        sectorColor(label),
+          holdingCount: acc.holdings.length,
+          investedValue: acc.invested,
+          currentValue:  acc.current,
+          pnlPct,
+          topHolding:   topH,
+          riskLevel:    getSectorRiskLevel(label, acc.alloc),
+        };
+      });
   }, [holdingsWithLive]);
 
   /* ── Macro exposure ───────────────────────────────────────────── */
@@ -1228,32 +1263,58 @@ export default function PortfolioPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <PieChart size={11} style={{ color: "var(--gold)" }} />
                   <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>
-                    Sector Allocation
+                    Sectors
                   </span>
+                  <button
+                    onClick={() => setActivePanel("sectors")}
+                    className="ml-auto text-[7.5px] font-mono px-1.5 py-0.5 rounded transition-all"
+                    style={{ background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.20)", color: "rgba(255,215,0,0.65)" }}>
+                    AI View →
+                  </button>
                 </div>
                 <div className="flex justify-center mb-3">
                   <DonutChart sectors={sectorData} />
                 </div>
                 <div className="space-y-1.5">
-                  {sectorData.map(s => (
-                    <div key={s.label} className="flex items-center gap-2">
+                  {sectorData.map((s, i) => (
+                    <motion.div key={s.label}
+                      initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
-                      <span className="text-[9.5px] font-mono flex-1 truncate" style={{ color: "var(--th-text-secondary)" }}>
+                      <span className="text-[9px] font-mono flex-1 truncate" style={{ color: "var(--th-text-secondary)" }}>
                         {s.label}
                       </span>
-                      <div className="flex-1 mx-1 h-0.5 rounded-full overflow-hidden"
+                      <span className="text-[8px] font-mono"
+                        style={{ color: s.pnlPct >= 0 ? "var(--positive)" : "var(--negative)" }}>
+                        {s.pnlPct >= 0 ? "+" : ""}{s.pnlPct.toFixed(0)}%
+                      </span>
+                      <div className="w-12 mx-1 h-0.5 rounded-full overflow-hidden"
                         style={{ background: "rgba(255,255,255,0.05)" }}>
                         <motion.div className="h-full rounded-full"
-                          initial={{ width: 0 }} animate={{ width: `${s.value}%` }}
-                          transition={{ duration: 0.8, delay: 0.2 }}
-                          style={{ background: s.color }} />
+                          initial={{ width: 0 }} animate={{ width: `${Math.min(s.value, 100)}%` }}
+                          transition={{ duration: 0.8, delay: 0.2 + i * 0.04 }}
+                          style={{ background: s.color, boxShadow: `0 0 4px ${s.color}60` }} />
                       </div>
-                      <span className="text-[9px] font-mono w-8 text-right" style={{ color: s.color }}>
+                      <span className="text-[9px] font-mono w-7 text-right" style={{ color: s.color }}>
                         {s.value.toFixed(0)}%
                       </span>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
+                {/* AI sector insight teaser */}
+                {sectorData.length > 0 && (
+                  <div className="mt-3 pt-2.5" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    <p className="text-[8.5px] font-mono leading-relaxed"
+                      style={{ color: "rgba(255,255,255,0.38)" }}>
+                      {sectorData[0].value > 50
+                        ? `⚠ ${sectorData[0].label} dominates at ${sectorData[0].value.toFixed(0)}% — sector concentration risk`
+                        : sectorData.length >= 4
+                          ? `✓ ${sectorData.length} sectors — diversification healthy`
+                          : `Add more sector diversity for lower risk`}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Portfolio Summary */}
@@ -1396,9 +1457,10 @@ export default function PortfolioPage() {
                 style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-card)" }}>
                 <div className="flex" style={{ borderBottom: "1px solid var(--th-border-subtle)" }}>
                   {([
-                    { key: "performance", label: "Performance",     icon: Activity },
-                    { key: "radar",       label: "Dimensions",      icon: Target   },
-                    { key: "ai",          label: "AI Intelligence", icon: Brain    },
+                    { key: "performance", label: "Performance",     icon: Activity  },
+                    { key: "sectors",     label: "Sectors",         icon: PieChart  },
+                    { key: "radar",       label: "Dimensions",      icon: Target    },
+                    { key: "ai",          label: "AI Intelligence", icon: Brain     },
                   ] as const).map(({ key, label, icon: Icon }) => (
                     <button key={key} onClick={() => setActivePanel(key as typeof activePanel)}
                       className="flex items-center gap-1.5 px-4 py-2.5 text-[10px] font-mono transition-all relative"
@@ -1446,6 +1508,13 @@ export default function PortfolioPage() {
                         ))}
                       </div>
                     </div>
+                  )}
+
+                  {activePanel === "sectors" && (
+                    <SectorIntelligencePanel
+                      sectorData={sectorData}
+                      totalValue={metrics.totalValue}
+                    />
                   )}
 
                   {activePanel === "radar" && (

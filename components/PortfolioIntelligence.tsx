@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Zap, AlertTriangle, MessageSquare, Send, X, Activity } from "lucide-react";
+import { Brain, Zap, AlertTriangle, MessageSquare, Send, X, Activity, PieChart } from "lucide-react";
+import type { EnrichedSectorData } from "@/lib/sectorMap";
+import { getSectorInsight, generateSectorNarrative } from "@/lib/sectorMap";
+export type { EnrichedSectorData };
 import type {
   HoldingData, PortfolioData, DNAResult, StressTest,
   PortfolioDimensions, ChatMessage,
@@ -808,4 +811,427 @@ export function DimensionBars({ dims, color }: { dims: PortfolioDimensions; colo
       })}
     </div>
   );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTOR INTELLIGENCE PANEL
+═══════════════════════════════════════════════════════════════════════════ */
+
+const RISK_COLOR: Record<string, string> = {
+  LOW: "#00FF9C", MODERATE: "#FFD700", HIGH: "#FF8C42", EXTREME: "#FF4D4D",
+};
+const SECTOR_EMOJI: Record<string, string> = {
+  IT: "💻", Banking: "🏦", "Financial Services": "💰",
+  Energy: "⚡", Power: "🔋", Defense: "🛡️",
+  FMCG: "🛒", Auto: "🚗", Pharma: "💊",
+  Healthcare: "🏥", Metals: "⛏️", Telecom: "📡",
+  Infra: "🏗️", "Real Estate": "🏘️", Chemicals: "🧪",
+  Consumer: "🛍️", ETF: "📊", Other: "📦",
+};
+
+function PremiumSectorDonut({
+  sectors, hovered, onHover,
+}: {
+  sectors: EnrichedSectorData[];
+  hovered: string | null;
+  onHover: (label: string | null) => void;
+}) {
+  const total = sectors.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return null;
+
+  const R = 64, CX = 84, CY = 84, circ = 2 * Math.PI * R;
+  let cumulative = 0;
+
+  const segs = sectors.map(seg => {
+    const pct   = seg.value / total;
+    const start = cumulative;
+    cumulative += pct;
+    const dash   = pct * circ;
+    const gap    = circ - dash;
+    const offset = circ * (1 - start) - circ * 0.25;
+    return { ...seg, pct, dash, gap, offset };
+  });
+
+  const hovSeg = hovered ? segs.find(s => s.label === hovered) : null;
+
+  return (
+    <svg width="168" height="168" style={{ overflow: "visible" }}>
+      <defs>
+        {segs.map(s => (
+          <filter key={`glow-${s.label}`} id={`glow-${s.label.replace(/\s/g, "")}`} x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation={hovered === s.label ? "4" : "2"} result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        ))}
+      </defs>
+
+      {/* Track */}
+      <circle cx={CX} cy={CY} r={R} fill="none"
+        stroke="rgba(255,255,255,0.04)" strokeWidth="18" />
+
+      {/* Segments */}
+      {segs.map((seg, i) => {
+        const isHov = hovered === seg.label;
+        return (
+          <motion.circle key={seg.label} cx={CX} cy={CY} r={R}
+            fill="none" stroke={seg.color}
+            strokeWidth={isHov ? 20 : 16}
+            strokeLinecap="butt"
+            strokeDasharray={`${seg.dash} ${seg.gap}`}
+            strokeDashoffset={seg.offset}
+            initial={{ strokeDasharray: "0 10000" }}
+            animate={{ strokeDasharray: `${seg.dash} ${seg.gap}` }}
+            transition={{ duration: 1, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              filter: `drop-shadow(0 0 ${isHov ? 10 : 4}px ${seg.color}${isHov ? "cc" : "50"})`,
+              cursor: "pointer",
+              transition: "stroke-width 0.2s, filter 0.2s",
+            }}
+            onMouseEnter={() => onHover(seg.label)}
+            onMouseLeave={() => onHover(null)}
+          />
+        );
+      })}
+
+      {/* Center content */}
+      {hovSeg ? (
+        <>
+          <text x={CX} y={CY - 12} textAnchor="middle"
+            fill={hovSeg.color} fontSize="18" fontWeight="bold" fontFamily="monospace">
+            {hovSeg.value.toFixed(0)}%
+          </text>
+          <text x={CX} y={CY + 5} textAnchor="middle"
+            fill={hovSeg.color} fontSize="8.5" fontFamily="monospace" opacity="0.85">
+            {hovSeg.label}
+          </text>
+          <text x={CX} y={CY + 19} textAnchor="middle"
+            fill="rgba(255,255,255,0.3)" fontSize="7.5" fontFamily="monospace">
+            {hovSeg.holdingCount}h
+          </text>
+        </>
+      ) : (
+        <>
+          <text x={CX} y={CY - 6} textAnchor="middle"
+            fill="var(--th-text-primary)" fontSize="20" fontWeight="bold" fontFamily="monospace">
+            {sectors.length}
+          </text>
+          <text x={CX} y={CY + 11} textAnchor="middle"
+            fill="rgba(255,255,255,0.3)" fontSize="7.5" fontFamily="monospace" letterSpacing="1.5">
+            SECTORS
+          </text>
+        </>
+      )}
+    </svg>
+  );
+}
+
+function SectorHeatmap({ sectors }: { sectors: EnrichedSectorData[] }) {
+  const [hovered, setHovered] = useState<string | null>(null);
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "3px", minHeight: "80px" }}>
+      {sectors.map(s => {
+        const isHov = hovered === s.label;
+        return (
+          <motion.div key={s.label}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{
+              flex:           `${Math.max(s.value, 6)} 0 ${Math.max(60, s.value * 3.8)}px`,
+              background:     `${s.color}18`,
+              border:         `1px solid ${s.color}${isHov ? "70" : "30"}`,
+              borderRadius:   "7px",
+              padding:        "7px 6px",
+              minHeight:      "58px",
+              display:        "flex",
+              flexDirection:  "column",
+              justifyContent: "space-between",
+              cursor:         "default",
+              transition:     "box-shadow 0.2s",
+              boxShadow:      isHov ? `0 0 16px ${s.color}30` : "none",
+            }}
+            onMouseEnter={() => setHovered(s.label)}
+            onMouseLeave={() => setHovered(null)}>
+            <div style={{ fontSize: "9px", fontFamily: "monospace", fontWeight: 700, color: s.color, letterSpacing: "0.05em" }}>
+              {SECTOR_EMOJI[s.label] || "◆"} {s.label}
+            </div>
+            <div>
+              <div style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: 700, color: s.color }}>
+                {s.value.toFixed(0)}%
+              </div>
+              <div style={{ fontSize: "7px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>
+                {s.holdingCount} holding{s.holdingCount !== 1 ? "s" : ""}
+              </div>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function SectorIntelligencePanel({
+  sectorData, totalValue,
+}: {
+  sectorData:  EnrichedSectorData[];
+  totalValue:  number;
+}) {
+  const [hovered,  setHovered]  = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "heatmap">("cards");
+
+  const narrative    = useMemo(() => generateSectorNarrative(sectorData), [sectorData]);
+  const hoveredSector = sectorData.find(s => s.label === hovered) ?? null;
+
+  if (sectorData.length === 0) {
+    return (
+      <div className="text-center py-8 text-[10px] font-mono"
+        style={{ color: "rgba(255,255,255,0.2)" }}>
+        Add holdings to unlock sector intelligence
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+
+      {/* AI Narrative */}
+      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+        className="p-3 rounded-xl"
+        style={{ background: "rgba(255,215,0,0.05)", border: "1px solid rgba(255,215,0,0.15)" }}>
+        <div className="flex items-center gap-2 mb-1.5">
+          <Brain size={9} style={{ color: "#FFD700" }} />
+          <span className="text-[8px] font-mono uppercase tracking-widest"
+            style={{ color: "rgba(255,215,0,0.6)" }}>AI Sector Intelligence</span>
+        </div>
+        <p className="text-[10.5px] font-mono leading-relaxed"
+          style={{ color: "rgba(255,255,255,0.72)" }}>
+          {narrative}
+        </p>
+      </motion.div>
+
+      {/* Donut + active sector detail */}
+      <div className="flex gap-4 items-center">
+        <div className="flex-shrink-0">
+          <PremiumSectorDonut
+            sectors={sectorData}
+            hovered={hovered}
+            onHover={setHovered}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <AnimatePresence mode="wait">
+            {hoveredSector ? (
+              <motion.div key={hoveredSector.label}
+                initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.18 }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[16px]">{SECTOR_EMOJI[hoveredSector.label] || "◆"}</span>
+                  <div>
+                    <div className="text-[12px] font-bold font-mono"
+                      style={{ color: hoveredSector.color }}>{hoveredSector.label}</div>
+                    <div className="text-[8px] font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      {hoveredSector.holdingCount} holding{hoveredSector.holdingCount !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                  <div className="ml-auto px-1.5 py-0.5 rounded text-[7.5px] font-mono font-bold"
+                    style={{ background: `${RISK_COLOR[hoveredSector.riskLevel]}15`,
+                      border: `1px solid ${RISK_COLOR[hoveredSector.riskLevel]}35`,
+                      color: RISK_COLOR[hoveredSector.riskLevel] }}>
+                    {hoveredSector.riskLevel}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  {[
+                    { k: "Allocation",  v: `${hoveredSector.value.toFixed(1)}%`, c: hoveredSector.color },
+                    { k: "P&L",         v: `${hoveredSector.pnlPct >= 0 ? "+" : ""}${hoveredSector.pnlPct.toFixed(1)}%`, c: hoveredSector.pnlPct >= 0 ? "#00FF9C" : "#FF4D4D" },
+                    { k: "Invested",    v: fmtVal(hoveredSector.investedValue), c: "rgba(255,255,255,0.6)" },
+                    { k: "Current",     v: fmtVal(hoveredSector.currentValue),  c: "rgba(255,255,255,0.8)" },
+                  ].map(m => (
+                    <div key={m.k} className="p-1.5 rounded-lg"
+                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div className="text-[7.5px] font-mono uppercase mb-0.5"
+                        style={{ color: "rgba(255,255,255,0.28)" }}>{m.k}</div>
+                      <div className="text-[11px] font-mono font-bold" style={{ color: m.c }}>{m.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[8.5px] font-mono leading-relaxed"
+                  style={{ color: "rgba(255,255,255,0.45)" }}>
+                  {getSectorInsight(hoveredSector.label, hoveredSector.value, hoveredSector.topHolding)}
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div key="default"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="text-[8.5px] font-mono uppercase tracking-widest mb-2"
+                  style={{ color: "rgba(255,255,255,0.25)" }}>Hover a segment for detail</div>
+                <div className="space-y-1.5">
+                  {sectorData.slice(0, 4).map(s => (
+                    <div key={s.label} className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
+                      <span className="text-[9px] font-mono flex-1 truncate"
+                        style={{ color: "rgba(255,255,255,0.55)" }}>{s.label}</span>
+                      <span className="text-[9px] font-mono font-bold"
+                        style={{ color: s.color }}>{s.value.toFixed(1)}%</span>
+                    </div>
+                  ))}
+                  {sectorData.length > 4 && (
+                    <div className="text-[8px] font-mono"
+                      style={{ color: "rgba(255,255,255,0.2)" }}>
+                      +{sectorData.length - 4} more sectors
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* View toggle: Cards / Heatmap */}
+      <div className="flex items-center gap-1 mb-2">
+        {(["cards", "heatmap"] as const).map(v => (
+          <button key={v} onClick={() => setViewMode(v)}
+            className="px-2.5 py-1 rounded-lg text-[8.5px] font-mono uppercase transition-all"
+            style={{
+              background: viewMode === v ? "rgba(255,215,0,0.12)" : "transparent",
+              border: `1px solid ${viewMode === v ? "rgba(255,215,0,0.30)" : "rgba(255,255,255,0.07)"}`,
+              color: viewMode === v ? "#FFD700" : "rgba(255,255,255,0.35)",
+            }}>
+            {v === "cards" ? "▦ Cards" : "⬛ Heatmap"}
+          </button>
+        ))}
+        <span className="ml-auto text-[8px] font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>
+          {sectorData.length} sector{sectorData.length !== 1 ? "s" : ""} detected
+        </span>
+      </div>
+
+      {/* Sector cards or heatmap */}
+      {viewMode === "heatmap" ? (
+        <SectorHeatmap sectors={sectorData} />
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {sectorData.map((s, i) => {
+            const riskCol = RISK_COLOR[s.riskLevel];
+            return (
+              <motion.div key={s.label}
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="p-3 rounded-xl cursor-default"
+                style={{
+                  background:  `${s.color}08`,
+                  border:      `1px solid ${s.color}25`,
+                  borderLeft:  `3px solid ${s.color}`,
+                  transition:  "box-shadow 0.2s",
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 0 18px ${s.color}20`;
+                  setHovered(s.label);
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = "none";
+                  setHovered(null);
+                }}>
+                {/* Header */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span style={{ fontSize: "12px" }}>{SECTOR_EMOJI[s.label] || "◆"}</span>
+                    <span className="text-[9.5px] font-mono font-bold truncate max-w-[70px]"
+                      style={{ color: s.color }}>{s.label}</span>
+                  </div>
+                  <div className="px-1 py-0.5 rounded text-[6.5px] font-mono font-bold flex-shrink-0"
+                    style={{ background: `${riskCol}15`, color: riskCol, border: `1px solid ${riskCol}25` }}>
+                    {s.riskLevel}
+                  </div>
+                </div>
+
+                {/* Animated bar */}
+                <div className="h-1 rounded-full overflow-hidden mb-1.5"
+                  style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <motion.div className="h-full rounded-full"
+                    initial={{ width: 0 }} animate={{ width: `${Math.min(s.value, 100)}%` }}
+                    transition={{ duration: 0.9, delay: i * 0.05 }}
+                    style={{ background: s.color, boxShadow: `0 0 6px ${s.color}60` }} />
+                </div>
+
+                {/* Stats */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[13px] font-mono font-bold" style={{ color: s.color }}>
+                      {s.value.toFixed(1)}%
+                    </div>
+                    <div className="text-[7.5px] font-mono" style={{ color: "rgba(255,255,255,0.28)" }}>
+                      {s.holdingCount}h · {fmtVal(s.currentValue)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] font-mono font-semibold"
+                      style={{ color: s.pnlPct >= 0 ? "#00FF9C" : "#FF4D4D" }}>
+                      {s.pnlPct >= 0 ? "+" : ""}{s.pnlPct.toFixed(1)}%
+                    </div>
+                    <div className="text-[7px] font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>
+                      sector P&L
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Sector impact analysis */}
+      <div>
+        <div className="text-[8.5px] font-mono uppercase tracking-widest mb-2"
+          style={{ color: "rgba(255,255,255,0.28)" }}>
+          Sector Impact Analysis — If sector falls 10%
+        </div>
+        <div className="space-y-1.5">
+          {sectorData.map((s, i) => {
+            const impact    = -(s.value / 100) * 10;
+            const impactAbs = (totalValue * Math.abs(impact)) / 100;
+            const col       = Math.abs(impact) >= 4 ? "#FF4D4D" : Math.abs(impact) >= 2 ? "#FF8C42" : "#FFD700";
+            return (
+              <motion.div key={s.label}
+                initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.04 }}>
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
+                    <span className="text-[9px] font-mono truncate" style={{ color: "rgba(255,255,255,0.5)" }}>
+                      {s.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-mono font-bold" style={{ color: col }}>
+                      {impact.toFixed(1)}%
+                    </span>
+                    <span className="text-[7.5px] font-mono" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      {impactAbs >= 100_000
+                        ? `₹${(impactAbs / 100_000).toFixed(1)}L`
+                        : `₹${impactAbs.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
+                    </span>
+                  </div>
+                </div>
+                <div className="h-0.5 rounded-full overflow-hidden"
+                  style={{ background: "rgba(255,255,255,0.04)" }}>
+                  <motion.div className="h-full rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, Math.abs(impact) * 10)}%` }}
+                    transition={{ duration: 0.7, delay: i * 0.05 }}
+                    style={{ background: col }} />
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+    </div>
+  );
+
+  function fmtVal(n: number): string {
+    if (n >= 10_000_000) return `₹${(n / 10_000_000).toFixed(1)}Cr`;
+    if (n >= 100_000)    return `₹${(n / 100_000).toFixed(1)}L`;
+    return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+  }
 }
