@@ -5,82 +5,7 @@ import {
   Upload, X, Scan, Check, RefreshCw, AlertCircle,
   Plus, Trash2, FileText, Cpu,
 } from "lucide-react";
-
-/* ── Image preprocessing ────────────────────────────────────────────────── */
-
-async function preprocessImage(file: File): Promise<File> {
-  // PDFs skip preprocessing
-  if (file.type === "application/pdf") return file;
-
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-
-      // Cap size at 2400px on longest side for faster upload + better OCR
-      const MAX = 2400;
-      let { width, height } = img;
-      if (width > MAX || height > MAX) {
-        const ratio = Math.min(MAX / width, MAX / height);
-        width  = Math.round(width  * ratio);
-        height = Math.round(height * ratio);
-      }
-
-      const canvas = document.createElement("canvas");
-      canvas.width  = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0, width, height);
-
-      const imageData = ctx.getImageData(0, 0, width, height);
-      const data = imageData.data;
-
-      // Sample brightness on a grid to detect dark mode
-      let totalBrightness = 0;
-      const step = Math.max(1, Math.floor(data.length / (4 * 2000)));
-      let samples = 0;
-      for (let i = 0; i < data.length; i += 4 * step) {
-        totalBrightness += (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-        samples++;
-      }
-      const avgBrightness = totalBrightness / samples;
-      const isDark = avgBrightness < 100;
-
-      // Contrast factor: dark screenshots need more boost
-      const contrast  = isDark ? 1.6 : 1.25;
-      const brightness = isDark ? 35 : 10;
-
-      for (let i = 0; i < data.length; i += 4) {
-        let r = data[i], g = data[i + 1], b = data[i + 2];
-
-        // Contrast stretch around midpoint
-        r = Math.min(255, Math.max(0, (r - 128) * contrast + 128 + brightness));
-        g = Math.min(255, Math.max(0, (g - 128) * contrast + 128 + brightness));
-        b = Math.min(255, Math.max(0, (b - 128) * contrast + 128 + brightness));
-
-        data[i]     = r;
-        data[i + 1] = g;
-        data[i + 2] = b;
-      }
-
-      ctx.putImageData(imageData, 0, 0);
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) { resolve(file); return; }
-          resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
-        },
-        "image/jpeg",
-        0.92
-      );
-    };
-
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
-    img.src = url;
-  });
-}
+import type { ParsedHolding } from "@/lib/ocrParser";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -117,15 +42,15 @@ const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif", "applica
 const MAX_MB   = 8;
 
 const SCAN_STEPS = [
-  "Reading image pixels…",
-  "Detecting portfolio layout…",
-  "Extracting holdings data…",
+  "Uploading image…",
+  "Enhancing contrast…",
+  "Preparing OCR engine…",
+  "Initialising Tesseract…",
+  "Detecting text regions…",
+  "Recognising characters…",
+  "Parsing table structure…",
   "Matching NSE/BSE symbols…",
   "Normalising ticker codes…",
-  "Parsing quantity values…",
-  "Calculating average prices…",
-  "Cross-referencing company names…",
-  "Verifying stock symbols…",
   "Finalising extraction…",
 ];
 
@@ -345,7 +270,7 @@ function UploadZone({
 
 /* ── ScanningPhase ──────────────────────────────────────────────────────── */
 
-function ScanningPhase({ file, step }: { file: File; step: number }) {
+function ScanningPhase({ file, step, ocrProgress, ocrStatus }: { file: File; step: number; ocrProgress: number; ocrStatus: string }) {
   const [preview, setPreview] = useState<string | null>(null);
   const isPDF = file.type === "application/pdf";
 
@@ -449,42 +374,66 @@ function ScanningPhase({ file, step }: { file: File; step: number }) {
           />
         </div>
 
-        {/* Cycling step text */}
-        <div className="text-center">
+        {/* Step text */}
+        <div className="text-center w-full px-4">
           <AnimatePresence mode="wait">
             <motion.p
-              key={step}
+              key={ocrStatus || step}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.22 }}
-              className="text-[13px] font-mono font-semibold mb-1"
+              className="text-[12px] font-mono font-semibold mb-1"
               style={{ color: "var(--th-text-secondary)" }}
             >
-              {SCAN_STEPS[step % SCAN_STEPS.length]}
+              {ocrStatus || SCAN_STEPS[step % SCAN_STEPS.length]}
             </motion.p>
           </AnimatePresence>
           <p className="text-[10px] font-mono" style={{ color: "var(--th-text-faint)" }}>
-            Claude AI · Multi-agent portfolio extraction
+            Tesseract.js · Local OCR · No API calls
           </p>
         </div>
 
-        {/* Animated progress strip */}
-        <div className="flex items-center gap-1.5">
-          {[0, 1, 2, 3, 4].map(i => (
+        {/* Progress bar (shows during OCR) */}
+        {ocrProgress > 0 && (
+          <div className="w-full px-4">
             <div
-              key={i}
-              className="rounded-full transition-all duration-400"
-              style={{
-                width:      i === step % 5 ? 18 : 5,
-                height:     5,
-                background: i === step % 5 ? "#FFD700" : "rgba(255,215,0,0.18)",
-                boxShadow:  i === step % 5 ? "0 0 8px rgba(255,215,0,0.5)" : "none",
-                transition: "all 0.35s ease",
-              }}
-            />
-          ))}
-        </div>
+              className="w-full rounded-full overflow-hidden"
+              style={{ height: 4, background: "rgba(255,215,0,0.12)" }}
+            >
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width:      `${ocrProgress}%`,
+                  background: "linear-gradient(90deg, #FFD700, #FFF8DC)",
+                  boxShadow:  "0 0 8px rgba(255,215,0,0.5)",
+                }}
+              />
+            </div>
+            <p className="text-[9px] font-mono text-right mt-1" style={{ color: "var(--th-text-faint)" }}>
+              {ocrProgress}%
+            </p>
+          </div>
+        )}
+
+        {/* Animated dot strip */}
+        {ocrProgress === 0 && (
+          <div className="flex items-center gap-1.5">
+            {[0, 1, 2, 3, 4].map(i => (
+              <div
+                key={i}
+                className="rounded-full"
+                style={{
+                  width:      i === step % 5 ? 18 : 5,
+                  height:     5,
+                  background: i === step % 5 ? "#FFD700" : "rgba(255,215,0,0.18)",
+                  boxShadow:  i === step % 5 ? "0 0 8px rgba(255,215,0,0.5)" : "none",
+                  transition: "all 0.35s ease",
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -721,18 +670,20 @@ function ReviewPhase({
 /* ── PortfolioScanner (main) ─────────────────────────────────────────────── */
 
 export function PortfolioScanner({ isLight, onClose, onImport }: PortfolioScannerProps) {
-  const [phase,      setPhase]     = useState<"upload" | "scanning" | "reviewing">("upload");
-  const [file,       setFile]      = useState<File | null>(null);
-  const [scanStep,   setScanStep]  = useState(0);
-  const [holdings,   setHoldings]  = useState<ScannedHolding[]>([]);
-  const [apiError,   setApiError]  = useState<string | null>(null);
+  const [phase,       setPhase]       = useState<"upload" | "scanning" | "reviewing">("upload");
+  const [file,        setFile]        = useState<File | null>(null);
+  const [scanStep,    setScanStep]    = useState(0);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [ocrStatus,   setOcrStatus]   = useState("");
+  const [holdings,    setHoldings]    = useState<ScannedHolding[]>([]);
+  const [apiError,    setApiError]    = useState<string | null>(null);
   const [debugReason, setDebugReason] = useState<string | null>(null);
-  const [importing,  setImporting] = useState(false);
+  const [importing,   setImporting]   = useState(false);
 
-  /* Advance scan step every 800 ms */
+  /* Advance scan step display every 900 ms during scanning */
   useEffect(() => {
     if (phase !== "scanning") return;
-    const id = setInterval(() => setScanStep(s => s + 1), 800);
+    const id = setInterval(() => setScanStep(s => s + 1), 900);
     return () => clearInterval(id);
   }, [phase]);
 
@@ -740,42 +691,101 @@ export function PortfolioScanner({ isLight, onClose, onImport }: PortfolioScanne
     setFile(f);
     setPhase("scanning");
     setScanStep(0);
+    setOcrProgress(0);
+    setOcrStatus("Uploading…");
     setApiError(null);
+    setDebugReason(null);
 
     try {
-      // Preprocess image: enhance contrast for dark-mode broker screenshots
-      const processed = await preprocessImage(f);
-
+      // ── Step 1: Server-side preprocessing with Sharp ───────────────────────
+      setOcrStatus("Preprocessing with Sharp…");
       const fd = new FormData();
-      fd.append("file", processed);
-
-      const res  = await fetch("/api/portfolio/scan", { method: "POST", body: fd });
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        const msg = data.error ?? "Scan failed — please try again.";
-        setApiError(msg);
-        setPhase("upload");
-        return;
+      fd.append("file", f);
+      const prepRes = await fetch("/api/portfolio/scan", { method: "POST", body: fd });
+      if (!prepRes.ok) {
+        const err = await prepRes.json().catch(() => ({ error: "Preprocessing failed" }));
+        throw new Error(err.error ?? "Preprocessing failed");
       }
+      const prepData = await prepRes.json();
+      const preprocessedBase64: string = prepData.image;
+      const mimeType: string = prepData.mimeType ?? "image/png";
 
-      const parsed: ScannedHolding[] = (Array.isArray(data.holdings) ? data.holdings : []).map((h: Record<string, unknown>) => ({
+      // ── Step 2: Client-side Tesseract.js OCR ─────────────────────────────
+      setOcrStatus("Loading OCR engine…");
+      setScanStep(3);
+
+      const { createWorker, PSM, OEM } = await import("tesseract.js");
+
+      const worker = await createWorker("eng", OEM.LSTM_ONLY, {
+        logger: (m: { status: string; progress: number }) => {
+          if (m.status === "loading tesseract core") {
+            setOcrStatus("Loading Tesseract core…");
+            setScanStep(3);
+          } else if (m.status === "loading language traineddata") {
+            setOcrStatus("Loading English language data…");
+            setScanStep(4);
+          } else if (m.status === "initializing api") {
+            setOcrStatus("Initialising OCR API…");
+            setScanStep(4);
+          } else if (m.status === "recognizing text") {
+            const pct = Math.round(m.progress * 100);
+            setOcrProgress(pct);
+            setOcrStatus(`Recognising text… ${pct}%`);
+            setScanStep(5 + Math.floor(m.progress * 3));
+          }
+        },
+      });
+
+      await worker.setParameters({
+        tessedit_pageseg_mode: PSM.AUTO,
+        preserve_interword_spaces: "1",
+      });
+
+      setOcrStatus("Running OCR…");
+
+      // Convert base64 back to a Blob for Tesseract
+      const binaryStr = atob(preprocessedBase64);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+      const imgBlob = new Blob([bytes], { type: mimeType });
+      const imgUrl  = URL.createObjectURL(imgBlob);
+
+      const { data: { text, confidence } } = await worker.recognize(imgUrl);
+      URL.revokeObjectURL(imgUrl);
+      await worker.terminate();
+
+      setScanStep(8);
+      setOcrStatus(`OCR complete (${Math.round(confidence)}% confidence) — parsing…`);
+
+      // ── Step 3: Parse OCR text into holdings ──────────────────────────────
+      const { parseOCRText } = await import("@/lib/ocrParser");
+      const parsed: ParsedHolding[] = parseOCRText(text);
+
+      setScanStep(9);
+
+      const holdings: ScannedHolding[] = parsed.map(h => ({
         _id:           crypto.randomUUID(),
-        ticker:        String(h.ticker        ?? ""),
-        company_name:  String(h.company_name  ?? ""),
-        quantity:      Math.max(0, parseInt(String(h.quantity ?? "0")) || 0),
-        avg_price:     h.avg_price     != null ? parseFloat(String(h.avg_price))     : null,
-        current_price: h.current_price != null ? parseFloat(String(h.current_price)) : null,
-        exchange:      String(h.exchange ?? "NSE"),
-        sector:        String(h.sector   ?? "Other"),
+        ticker:        h.ticker,
+        company_name:  h.company_name,
+        quantity:      h.quantity,
+        avg_price:     h.avg_price,
+        current_price: h.current_price,
+        exchange:      h.exchange,
+        sector:        h.sector ?? "Other",
       }));
 
-      setDebugReason(data.debug_reason ?? null);
-      setHoldings(parsed);
+      if (holdings.length === 0) {
+        setDebugReason(
+          `OCR read the image (confidence: ${Math.round(confidence)}%) but found no recognisable stock rows. ` +
+          `Tips: ensure holdings are fully visible, try a light-mode screenshot, or zoom in before screenshotting.`
+        );
+      }
+
+      setHoldings(holdings);
       setPhase("reviewing");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Network error";
-      setApiError(`${msg} — check your connection and try again.`);
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setApiError(`Scan failed: ${msg}`);
       setPhase("upload");
     }
   }, []);
@@ -943,7 +953,7 @@ export function PortfolioScanner({ isLight, onClose, onImport }: PortfolioScanne
                 exit={{ opacity: 0, x: 12 }}
                 transition={{ duration: 0.18 }}
               >
-                <ScanningPhase file={file} step={scanStep} />
+                <ScanningPhase file={file} step={scanStep} ocrProgress={ocrProgress} ocrStatus={ocrStatus} />
               </motion.div>
             )}
 
@@ -971,7 +981,7 @@ export function PortfolioScanner({ isLight, onClose, onImport }: PortfolioScanne
                       </p>
                     </div>
                     <button
-                      onClick={() => { setApiError(null); setDebugReason(null); setPhase("upload"); }}
+                      onClick={() => { setApiError(null); setDebugReason(null); setOcrProgress(0); setOcrStatus(""); setPhase("upload"); }}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-mono font-bold transition-all"
                       style={{
                         background: "rgba(255,215,0,0.09)",
@@ -987,7 +997,7 @@ export function PortfolioScanner({ isLight, onClose, onImport }: PortfolioScanne
                     holdings={holdings}
                     setHoldings={setHoldings}
                     onConfirm={handleImport}
-                    onBack={() => { setApiError(null); setPhase("upload"); }}
+                    onBack={() => { setApiError(null); setDebugReason(null); setOcrProgress(0); setOcrStatus(""); setPhase("upload"); }}
                     isLight={isLight}
                     importing={importing}
                   />
