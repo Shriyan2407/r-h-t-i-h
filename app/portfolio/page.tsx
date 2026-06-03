@@ -19,6 +19,15 @@ import { usePortfolioStore, type PortfolioHolding } from "@/store/portfolioStore
 import { useTheme }            from "@/lib/context/ThemeContext";
 import { cn }                  from "@/lib/utils";
 import type { SearchResult as ApiSearchResult } from "@/lib/types";
+import {
+  classifyPortfolioDNA, generateNarrativeVerdict, runStressTests,
+  computePortfolioDimensions, computeFearScore, getStockAction,
+  type DNAResult, type StressTest, type StockActionResult,
+} from "@/lib/portfolioIntelligence";
+import {
+  AIScoreRing, RadarChart, HoldingHeatmap, StressTestPanel,
+  AICommandCenter, OpportunitiesPanel, AIChatPanel, DimensionBars,
+} from "@/components/PortfolioIntelligence";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TYPES
@@ -590,12 +599,13 @@ function HoldingModal({
 ═══════════════════════════════════════════════════════════════════════════ */
 
 function HoldingRow({
-  holding, onEdit, onRemove, isLight,
+  holding, onEdit, onRemove, isLight, action,
 }: {
   holding:  HoldingWithLive;
   onEdit:   () => void;
   onRemove: () => void;
   isLight:  boolean;
+  action?:  StockActionResult;
 }) {
   const [expanded, setExpanded] = useState(false);
   const isPos  = holding.pnl >= 0;
@@ -621,8 +631,16 @@ function HoldingRow({
               {holding.ticker.slice(0, 3)}
             </div>
             <div>
-              <div className="text-[11px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
-                {holding.ticker}
+              <div className="flex items-center gap-1.5">
+                <div className="text-[11px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
+                  {holding.ticker}
+                </div>
+                {action && (
+                  <span className="px-1 py-0.5 rounded text-[7px] font-mono font-bold"
+                    style={{ background: action.bg, border: `1px solid ${action.color}30`, color: action.color, lineHeight: 1 }}>
+                    {action.action}
+                  </span>
+                )}
               </div>
               <div className="text-[9px] truncate max-w-[100px]" style={{ color: "var(--th-text-faint)" }}>
                 {holding.name.split(" ").slice(0, 3).join(" ")}
@@ -769,7 +787,9 @@ export default function PortfolioPage() {
   const [sortBy,       setSortBy]       = useState<"pnl"|"value"|"alloc"|"change">("value");
   const [sortDir,      setSortDir]      = useState<"asc"|"desc">("desc");
   const [filter,       setFilter]       = useState<"all"|"gainers"|"losers">("all");
-  const [activePanel,  setActivePanel]  = useState<"allocation"|"performance"|"ai">("allocation");
+  const [activePanel,  setActivePanel]  = useState<"performance"|"ai"|"radar">("performance");
+  const [viewMode,     setViewMode]     = useState<"table"|"heatmap">("table");
+  const [chatOpen,     setChatOpen]     = useState(false);
   const [mounted,      setMounted]      = useState(false);
 
   useEffect(() => { setMounted(true); sync(); }, [sync]);
@@ -934,6 +954,34 @@ export default function PortfolioPage() {
     return { warnings, suggestions };
   }, [holdingsWithLive, macroExposure, metrics.sharpe]);
 
+  /* ── AI Intelligence Layer ───────────────────────────────────── */
+
+  const dna = useMemo(
+    () => classifyPortfolioDNA(holdingsWithLive, metrics),
+    [holdingsWithLive, metrics],
+  );
+  const narrative = useMemo(
+    () => generateNarrativeVerdict(holdingsWithLive, metrics, sectorData),
+    [holdingsWithLive, metrics, sectorData],
+  );
+  const stressTests = useMemo(
+    () => runStressTests(macroExposure, metrics),
+    [macroExposure, metrics],
+  );
+  const dimensions = useMemo(
+    () => computePortfolioDimensions(holdingsWithLive, metrics, macroExposure),
+    [holdingsWithLive, metrics, macroExposure],
+  );
+  const fearScore = useMemo(
+    () => computeFearScore(holdingsWithLive, metrics),
+    [holdingsWithLive, metrics],
+  );
+  const stockActions = useMemo(() => {
+    const m = new Map<string, StockActionResult>();
+    holdingsWithLive.forEach(h => m.set(h.ticker, getStockAction(h)));
+    return m;
+  }, [holdingsWithLive]);
+
   /* ── Formatters ───────────────────────────────────────────────── */
 
   const fmt = (n: number) => n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1001,6 +1049,18 @@ export default function PortfolioPage() {
               <RefreshCw size={10} style={{ animation: refreshing ? "spin 1s linear infinite" : "none" }} />
               Refresh
             </button>
+            {holdings.length > 0 && (
+              <button
+                onClick={() => setChatOpen(c => !c)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all"
+                style={{
+                  color:      chatOpen ? "#050505" : "#A78BFA",
+                  background: chatOpen ? "#A78BFA" : "rgba(167,139,250,0.10)",
+                  border:     "1px solid rgba(167,139,250,0.35)",
+                }}>
+                <Brain size={11} /> AI Advisor
+              </button>
+            )}
             <button
               onClick={() => setShowScanner(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all"
@@ -1126,12 +1186,41 @@ export default function PortfolioPage() {
             </div>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-4">
+          <>
+          {/* AI Command Center */}
+          <AICommandCenter
+            narrative={narrative}
+            dna={dna}
+            fearScore={fearScore}
+            stressTests={stressTests}
+            holdings={holdingsWithLive}
+            metrics={metrics}
+          />
+
+          <div className="grid grid-cols-1 xl:grid-cols-[220px_1fr_280px] gap-4">
 
             {/* ════════════════════════════════════════════════════════
                 LEFT SIDEBAR
             ════════════════════════════════════════════════════════ */}
             <div className="flex flex-col gap-4">
+
+              {/* AI Health Score Ring */}
+              <div className="rounded-xl p-4 flex flex-col items-center"
+                style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-card)" }}>
+                <div className="text-[8.5px] font-mono uppercase tracking-[0.18em] mb-2"
+                  style={{ color: "var(--th-text-faint)" }}>AI Health Score</div>
+                <AIScoreRing
+                  score={metrics.healthScore}
+                  color={metrics.verdictColor}
+                  label={metrics.verdict}
+                />
+                <div className="mt-2 text-center">
+                  <div className="text-[9px] font-mono" style={{ color: "var(--th-text-faint)" }}>
+                    Risk: <span style={{ color: metrics.riskColor }}>{metrics.riskLevel}</span>
+                    &nbsp;·&nbsp;β {metrics.beta.toFixed(2)}
+                  </div>
+                </div>
+              </div>
 
               {/* Sector Allocation */}
               <div className="rounded-xl p-4"
@@ -1208,8 +1297,23 @@ export default function PortfolioPage() {
                     Holdings ({displayHoldings.length})
                   </span>
 
+                  {/* View mode toggle */}
+                  <div className="flex items-center gap-0.5 ml-2">
+                    {(["table", "heatmap"] as const).map(v => (
+                      <button key={v} onClick={() => setViewMode(v)}
+                        className="px-2 py-0.5 rounded text-[8px] font-mono uppercase transition-all"
+                        style={{
+                          background: viewMode === v ? "var(--th-gold-bg-mid)" : "transparent",
+                          border: `1px solid ${viewMode === v ? "var(--th-border-accent)" : "transparent"}`,
+                          color: viewMode === v ? "var(--gold)" : "var(--th-text-faint)",
+                        }}>
+                        {v === "table" ? "≡ Table" : "⬛ Map"}
+                      </button>
+                    ))}
+                  </div>
+
                   {/* Filter chips */}
-                  <div className="flex items-center gap-1 ml-2">
+                  <div className="flex items-center gap-1 ml-1">
                     {(["all","gainers","losers"] as const).map(f => (
                       <button key={f} onClick={() => setFilter(f)}
                         className="px-2 py-0.5 rounded text-[8.5px] font-mono uppercase transition-all"
@@ -1234,50 +1338,57 @@ export default function PortfolioPage() {
                   </button>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-x-auto">
-                  <table className="w-full" style={{ borderCollapse: "collapse" }}>
-                    <thead>
-                      <tr style={{ borderBottom: "1px solid var(--th-border-subtle)" }}>
-                        {[
-                          { key: null,     label: "STOCK",      align: "left"  },
-                          { key: null,     label: "QTY",        align: "right" },
-                          { key: null,     label: "AVG COST",   align: "right" },
-                          { key: null,     label: "CMP",        align: "right" },
-                          { key: "change", label: "DAY%",       align: "right" },
-                          { key: "pnl",    label: "P&L",        align: "right" },
-                          { key: "alloc",  label: "ALLOC",      align: "left"  },
-                          { key: null,     label: "",           align: "left"  },
-                        ].map((col, i) => (
-                          <th key={i} style={{ ...thStyle, textAlign: col.align as "left"|"right" }}
-                            onClick={() => col.key && handleSort(col.key as typeof sortBy)}>
-                            <span className="flex items-center gap-1 justify-end" style={{ justifyContent: col.align === "left" ? "flex-start" : "flex-end" }}>
-                              {col.label}
-                              {col.key && sortBy === col.key && (
-                                sortDir === "desc"
-                                  ? <ChevronDown size={8} style={{ color: "var(--gold)" }} />
-                                  : <ChevronUp size={8} style={{ color: "var(--gold)" }} />
-                              )}
-                            </span>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <AnimatePresence>
-                        {displayHoldings.map(h => (
-                          <HoldingRow
-                            key={h.id}
-                            holding={h}
-                            isLight={isLight}
-                            onEdit={() => { setEditHolding(h); setShowModal(true); }}
-                            onRemove={() => remove(h.id)}
-                          />
-                        ))}
-                      </AnimatePresence>
-                    </tbody>
-                  </table>
-                </div>
+                {/* Table or Heatmap */}
+                {viewMode === "heatmap" ? (
+                  <div className="p-3">
+                    <HoldingHeatmap holdings={displayHoldings} />
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full" style={{ borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid var(--th-border-subtle)" }}>
+                          {[
+                            { key: null,     label: "STOCK",      align: "left"  },
+                            { key: null,     label: "QTY",        align: "right" },
+                            { key: null,     label: "AVG COST",   align: "right" },
+                            { key: null,     label: "CMP",        align: "right" },
+                            { key: "change", label: "DAY%",       align: "right" },
+                            { key: "pnl",    label: "P&L",        align: "right" },
+                            { key: "alloc",  label: "ALLOC",      align: "left"  },
+                            { key: null,     label: "",           align: "left"  },
+                          ].map((col, i) => (
+                            <th key={i} style={{ ...thStyle, textAlign: col.align as "left"|"right" }}
+                              onClick={() => col.key && handleSort(col.key as typeof sortBy)}>
+                              <span className="flex items-center gap-1 justify-end" style={{ justifyContent: col.align === "left" ? "flex-start" : "flex-end" }}>
+                                {col.label}
+                                {col.key && sortBy === col.key && (
+                                  sortDir === "desc"
+                                    ? <ChevronDown size={8} style={{ color: "var(--gold)" }} />
+                                    : <ChevronUp size={8} style={{ color: "var(--gold)" }} />
+                                )}
+                              </span>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <AnimatePresence>
+                          {displayHoldings.map(h => (
+                            <HoldingRow
+                              key={h.id}
+                              holding={h}
+                              isLight={isLight}
+                              action={stockActions.get(h.ticker)}
+                              onEdit={() => { setEditHolding(h); setShowModal(true); }}
+                              onRemove={() => remove(h.id)}
+                            />
+                          ))}
+                        </AnimatePresence>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
 
               {/* Panel tabs: Allocation | Performance | AI */}
@@ -1285,8 +1396,9 @@ export default function PortfolioPage() {
                 style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-card)" }}>
                 <div className="flex" style={{ borderBottom: "1px solid var(--th-border-subtle)" }}>
                   {([
-                    { key: "performance", label: "Performance",  icon: Activity },
-                    { key: "ai",          label: "AI Intelligence", icon: Brain   },
+                    { key: "performance", label: "Performance",     icon: Activity },
+                    { key: "radar",       label: "Dimensions",      icon: Target   },
+                    { key: "ai",          label: "AI Intelligence", icon: Brain    },
                   ] as const).map(({ key, label, icon: Icon }) => (
                     <button key={key} onClick={() => setActivePanel(key as typeof activePanel)}
                       className="flex items-center gap-1.5 px-4 py-2.5 text-[10px] font-mono transition-all relative"
@@ -1336,27 +1448,57 @@ export default function PortfolioPage() {
                     </div>
                   )}
 
+                  {activePanel === "radar" && (
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="text-[8.5px] font-mono uppercase tracking-widest mb-2 text-center"
+                          style={{ color: "var(--th-text-faint)" }}>Portfolio Dimensions</div>
+                        <RadarChart dims={dimensions} color={metrics.verdictColor} />
+                      </div>
+                      <div className="flex-1 w-full">
+                        <div className="text-[8.5px] font-mono uppercase tracking-widest mb-3"
+                          style={{ color: "var(--th-text-faint)" }}>Dimension Scores</div>
+                        <DimensionBars dims={dimensions} color={metrics.verdictColor} />
+                        <div className="mt-4 p-3 rounded-xl"
+                          style={{ background: `${metrics.verdictColor}08`, border: `1px solid ${metrics.verdictColor}18` }}>
+                          <div className="text-[8.5px] font-mono uppercase mb-1.5" style={{ color: "var(--th-text-faint)" }}>
+                            Weakest Dimension
+                          </div>
+                          {(() => {
+                            const entries: [string, number][] = [
+                              ["Quality", dimensions.quality], ["Momentum", dimensions.momentum],
+                              ["Stability", dimensions.stability], ["Diversification", dimensions.diversification],
+                              ["Growth", dimensions.growth], ["Defense", dimensions.defense],
+                            ];
+                            const worst = entries.reduce((a, b) => a[1] < b[1] ? a : b);
+                            return (
+                              <div className="text-[11px] font-mono font-bold" style={{ color: "#FF8C42" }}>
+                                {worst[0]}: {worst[1]}/100 — focus area for improvement
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {activePanel === "ai" && (
                     <div>
-                      {/* Verdict + health score */}
-                      <div className="flex items-center gap-4 p-3 rounded-xl mb-4"
+                      {/* Narrative */}
+                      <div className="p-3 rounded-xl mb-4"
                         style={{ background: `${metrics.verdictColor}08`, border: `1px solid ${metrics.verdictColor}22` }}>
-                        <div>
-                          <div className="text-[8.5px] font-mono uppercase tracking-wider mb-1" style={{ color: "var(--th-text-faint)" }}>
-                            Portfolio Verdict
+                        <div className="flex items-center gap-2 mb-2">
+                          <Brain size={10} style={{ color: metrics.verdictColor }} />
+                          <div className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
+                            AI Portfolio Analysis
                           </div>
-                          <div className="text-[22px] font-bold font-mono" style={{ color: metrics.verdictColor }}>
-                            {metrics.verdict}
-                          </div>
-                        </div>
-                        <div className="ml-auto text-right">
-                          <div className="text-[8.5px] font-mono uppercase tracking-wider mb-1" style={{ color: "var(--th-text-faint)" }}>
-                            Health Score
-                          </div>
-                          <div className="text-[30px] font-bold font-mono" style={{ color: metrics.verdictColor }}>
-                            {metrics.healthScore}
+                          <div className="ml-auto text-[8.5px] font-mono font-bold" style={{ color: metrics.verdictColor }}>
+                            Score: {metrics.healthScore}
                           </div>
                         </div>
+                        <p className="text-[10.5px] leading-relaxed font-mono" style={{ color: "rgba(255,255,255,0.72)" }}>
+                          {narrative}
+                        </p>
                       </div>
 
                       <div className="h-1.5 rounded-full overflow-hidden mb-4" style={{ background: "rgba(255,255,255,0.06)" }}>
@@ -1408,6 +1550,7 @@ export default function PortfolioPage() {
                       )}
                     </div>
                   )}
+
                 </div>
               </div>
             </div>
@@ -1416,6 +1559,18 @@ export default function PortfolioPage() {
                 RIGHT SIDEBAR
             ════════════════════════════════════════════════════════ */}
             <div className="flex flex-col gap-4">
+
+              {/* AI Opportunities */}
+              <div className="rounded-xl p-4"
+                style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-card)" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap size={11} style={{ color: "var(--gold)" }} />
+                  <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>
+                    AI Opportunities
+                  </span>
+                </div>
+                <OpportunitiesPanel holdings={holdingsWithLive} actions={stockActions} />
+              </div>
 
               {/* Risk Metrics */}
               <div className="rounded-xl p-4"
@@ -1440,6 +1595,18 @@ export default function PortfolioPage() {
                     <span className="text-[10px] font-mono font-semibold" style={{ color: m.c }}>{m.v}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Stress Tests */}
+              <div className="rounded-xl p-4"
+                style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-card)" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Activity size={11} style={{ color: "var(--gold)" }} />
+                  <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{ color: "var(--th-text-faint)" }}>
+                    Stress Tests
+                  </span>
+                </div>
+                <StressTestPanel tests={stressTests} totalValue={metrics.totalValue} />
               </div>
 
               {/* Macro Exposure Engine */}
@@ -1548,14 +1715,31 @@ export default function PortfolioPage() {
               </div>
             </div>
           </div>
+          </>
         )}
       </div>
+
+      {/* AI Chat Panel */}
+      <AnimatePresence>
+        {chatOpen && holdings.length > 0 && (
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 pb-4">
+            <AIChatPanel
+              holdings={holdingsWithLive}
+              metrics={metrics}
+              dna={dna}
+              stressTests={stressTests}
+              sectorData={sectorData}
+              onClose={() => setChatOpen(false)}
+            />
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Footer */}
       <footer className="px-4 sm:px-6 py-4 mt-4" style={{ borderTop: "1px solid var(--th-border-subtle)" }}>
         <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-ultra-faint)" }}>
-            MARKET KA BAADSHAH · Portfolio Intelligence v1.0 · AI-powered · Not investment advice
+            MARKET KA BAADSHAH · Portfolio Intelligence v2.0 · AI-powered · Not investment advice
           </span>
           <span className="text-[8.5px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>
             Live quotes update every 30s · Data from NSE via Yahoo Finance
