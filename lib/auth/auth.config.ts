@@ -13,8 +13,9 @@ export const authConfig: NextAuthConfig = {
       const isLoggedIn = !!auth?.user;
       const pathname   = nextUrl.pathname;
 
-      // Always allow NextAuth's own API routes
+      // Always allow NextAuth's own API routes and Telegram webhook
       if (pathname.startsWith("/api/auth")) return true;
+      if (pathname.startsWith("/api/telegram/webhook")) return true;
 
       // Block all other API routes for unauthenticated users — return 401 JSON
       if (pathname.startsWith("/api/")) {
