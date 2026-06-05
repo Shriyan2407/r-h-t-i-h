@@ -145,21 +145,37 @@ export async function POST(req: NextRequest) {
         if (res.ok) {
           const data: any = await res.json();
           const report = data.report ?? data;
+
+          // Map IntelligenceReport fields → fmtStockAnalysis fields
+          const parseRupee = (s?: string) => s ? parseFloat(s.replace(/[^\d.]/g, "")) || undefined : undefined;
+
+          const sentimentToVerdict = (s?: string) =>
+            s === "BULLISH" ? "BUY" : s === "BEARISH" ? "SELL/AVOID" : s === "MIXED" ? "WATCH" : "HOLD";
+
+          const scoreToRisk = (scores?: Record<string, number>) => {
+            if (!scores) return "MODERATE";
+            const avg = (scores.technical + scores.riskReward + scores.fundamental) / 3;
+            return avg >= 65 ? "LOW" : avg <= 40 ? "HIGH" : "MODERATE";
+          };
+
           await tgSend(chatId, fmtStockAnalysis(ticker, {
-            price: report.price ?? report.quote?.regularMarketPrice ?? 0,
-            verdict: report.verdict ?? report.recommendation ?? "HOLD",
-            confidence: report.confidence ?? 65,
-            summary: report.summary ?? report.analysis ?? "",
-            t1: report.target1 ?? report.priceTargets?.[0],
-            t2: report.target2 ?? report.priceTargets?.[1],
-            sl: report.stopLoss ?? report.sl,
-            riskLevel: report.riskLevel ?? report.risk,
-            newsSentiment: report.newsSentiment ?? report.sentiment?.news,
+            price: report._meta?.currentPrice ?? report.price ?? report.quote?.regularMarketPrice ?? 0,
+            verdict: sentimentToVerdict(report.currentSentiment) ?? report.verdict ?? "HOLD",
+            confidence: report.aiConfidence ?? report.confidence ?? 65,
+            summary: report.narrativeSummary ?? report.oneLiner ?? report.summary ?? "",
+            t1: parseRupee(report.entryZone?.target1) ?? report.target1,
+            t2: parseRupee(report.entryZone?.target2) ?? report.target2,
+            sl: parseRupee(report.entryZone?.stopLoss) ?? report.stopLoss,
+            riskLevel: scoreToRisk(report.scores) ?? report.riskLevel ?? "MODERATE",
+            newsSentiment: report.currentSentiment ?? report.newsSentiment ?? "NEUTRAL",
           }));
         } else {
+          const errBody = await res.text().catch(() => "");
+          console.error(`[TelegramBot] Intelligence API ${res.status} for ${ticker}:`, errBody.slice(0, 200));
           await tgSend(chatId, `❌ Could not fetch analysis for <b>${ticker}</b>. Please try again.`);
         }
-      } catch {
+      } catch (e) {
+        console.error(`[TelegramBot] fetch/parse error for ${ticker}:`, (e as Error).message);
         await tgSend(chatId, `❌ Analysis timed out for <b>${ticker}</b>. Try again in a moment.`);
       }
       return Response.json({ ok: true });

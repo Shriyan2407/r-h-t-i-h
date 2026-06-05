@@ -16,6 +16,8 @@ export const authConfig: NextAuthConfig = {
       // Always allow NextAuth's own API routes and Telegram webhook
       if (pathname.startsWith("/api/auth")) return true;
       if (pathname.startsWith("/api/telegram/webhook")) return true;
+      // Intelligence API is public — used by bot and public stock pages
+      if (pathname.startsWith("/api/intelligence/")) return true;
 
       // Block all other API routes for unauthenticated users — return 401 JSON
       if (pathname.startsWith("/api/")) {
