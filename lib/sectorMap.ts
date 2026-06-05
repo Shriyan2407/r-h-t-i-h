@@ -233,29 +233,57 @@ export const NSE_SECTOR_MAP: Record<string, string> = {
 // ── Keyword-based inference fallback ─────────────────────────────────────────
 
 export function classifyTicker(ticker: string, name?: string): string {
-  const t = ticker.toUpperCase().replace(/[-.]/, "");
-  const direct = NSE_SECTOR_MAP[t] || NSE_SECTOR_MAP[ticker.toUpperCase()];
+  // Normalize: uppercase, strip spaces/dots/hyphens for map lookup
+  const raw   = ticker.toUpperCase().trim();
+  const clean = raw.replace(/[\s./-]+/g, "");          // "M&M" → "M&M", "L&T" → "L&T"
+  const noAmp = clean.replace(/&/g, "AND");            // "M&M" → "MANDM"
+
+  // 1. Try cleaned ticker in map (most common path)
+  let direct = NSE_SECTOR_MAP[raw] ?? NSE_SECTOR_MAP[clean] ?? NSE_SECTOR_MAP[noAmp];
+
+  // 2. Also try stripping exchange suffix (.NS / .BO) before lookup
+  if (!direct) {
+    const stripped = raw.replace(/\.(NS|BO|NSE|BSE)$/i, "");
+    direct = NSE_SECTOR_MAP[stripped] ?? NSE_SECTOR_MAP[stripped.replace(/[\s./-]+/g, "")];
+  }
+
   if (direct) return direct;
 
-  const combined = (t + " " + (name || "").toUpperCase());
+  // 3. Keyword fallback — uses both ticker AND company name
+  const combined = (clean + " " + (name ?? "").toUpperCase());
 
-  if (/BANK/.test(t)) return "Banking";
-  if (/NBFC|FINANC|CREDIT|CAPITAL|INVEST|INSUR|LIFE|LENDING|HOUSING|MUTHOOT|BAJAJFIN/.test(combined)) return "Financial Services";
-  if (/TECH|INFOSY|INFRA|WIPRO|TATAELX|TATATECH|LTIMIND|HAPPS|LATENT|BIRLASOFT/.test(combined)) return "IT";
-  if (/PHARMA|DRUG|BIOL|ZYDUS|BIOC|SUNPH|LUPIN|NATCO|GRANUL/.test(combined)) return "Pharma";
-  if (/HEALTH|HOSP|MEDPLUS|APOLLOH|FORTIS|RAINBOW|KRSNAA|VIJAYA/.test(combined)) return "Healthcare";
-  if (/POWER|SOLAR|WIND|GREEN|RENEW|NTPC|NHPC|SJVN|SUZLON/.test(combined)) return "Power";
-  if (/PETRONET|PETROLEUM|PETRO|ONGC|OIL|GAS|GAIL|BPCL|HPCL|IOC|MRPL/.test(combined)) return "Energy";
-  if (/STEEL|METAL|ALUMIN|COPPER|ZINC|IRON|MINING|COAL|NMDC|SAIL|VEDL/.test(combined)) return "Metals";
-  if (/AUTO|MOTOR|TYRE|WHEEL|GEAR|BAJAJ|HERO|MARUTI|EICHER/.test(combined)) return "Auto";
-  if (/TELE|COMM|BHARTI|AIRTEL|TEJASNET|RAILTEL|STLTECH|HFCL/.test(combined)) return "Telecom";
-  if (/CEMENT|INFRA|CONSTRUCT|BUILD|ROAD|PORT|RAIL|AIRPORT|CONCOR/.test(combined)) return "Infra";
-  if (/REAL|ESTATE|PROPERTY|HOUSING DEVELOP|DLF|SOBHA|PRESTIGE/.test(combined)) return "Real Estate";
-  if (/DEFENSE|DEFENCE|AEROSPACE|BEL|HAL|MDL|BDL|BEML|GRSE|HAL/.test(combined)) return "Defense";
-  if (/FMCG|HINDUSTAN UNILEVER|NESTLE|BRITANNIA|DABUR|MARICO|COLPAL/.test(combined)) return "FMCG";
-  if (/CHEM|PAINT|PIGMENT|AGROCHEMICAL|SRF|NAVINFLUOR|PIDILITE/.test(combined)) return "Chemicals";
-  if (/ETF|BEES|NIFTY|SENSEX|INDEX FUND/.test(combined)) return "ETF";
-  if (/TRENT|TITAN|ZOMATO|DMART|BATA|CAMPUS|PVRINOX|NYKAA/.test(combined)) return "Consumer";
+  if (/BANK|BANDHAN|KOTAKBK/.test(combined))                                      return "Banking";
+  if (/BAJAJFIN|MUTHOOT|MANAPPURAM|SHRIRAM|LICHSG|PNBHOUSING|IBULHSG|IRFC|HUDCO|RECLTD|PFCLTD|CDSL|KFINTECH|CAMS|SBICARDS|HDFCAMC|STARHEALTH|ICICIGI|GICRE|NIACL|ANGELONE|MOTILALOFS/.test(combined)) return "Financial Services";
+  if (/FINANCE|FINSERV|LENDING|INSURANCE|INVEST|CAPITAL|CREDIT|HOUSING FINANCE/.test(combined)) return "Financial Services";
+  if (/TECHM|INFY|INFOSYS|WIPRO|HCLTECH|LTIMIND|TATAELX|TATATECH|PERSISTENT|COFORGE|KPITTECH|CYIENT|BIRLASOFT|HAPPSTMNDS|LATENTVIEW|TANLA|CMSINFO|ECLERX|TEAMLEASE|QUESS|DATAMATICS|LTTS/.test(combined)) return "IT";
+  if (/SOFTW|TECHNOL|DIGITAL|INFORMAT|SYSTEM|SOLUT|CONSULT|OUTSOURC/.test(combined)) return "IT";
+  if (/SUNPHARMA|DRREDDY|CIPLA|DIVISLAB|LUPIN|AUROPHARMA|TORNTPHARM|ALKEM|IPCA|NATCOPHARM|GRANULES|LAURUSLABS|BIOCON|GLENMARK|ZYDUSLIFE|MANKIND|AJANTPHARM/.test(combined)) return "Pharma";
+  if (/PHARMA|DRUGST|BIOLOG|MEDIC(?!AL)/.test(combined))                          return "Pharma";
+  if (/APOLLOHOSP|FORTIS|MAXHLT|RAINBCH|HCG|LALPATHLAB|THYROCARE|METROPOLIS|KRSNAA|VIJAYADIAG|MEDPLUS|ASTER|NH/.test(combined)) return "Healthcare";
+  if (/HOSPITAL|DIAGNOST|HEALTH(?:CARE)?|CLINIC|MEDIC(?:AL)?/.test(combined))     return "Healthcare";
+  if (/NTPCGREEN|ADANIGREEN|SUZLON|INOXWIND|SJVN|NHPC|JSWENERGY|RPOWER|JPPOWER|TORNTPOW|CESC|TATAPOWER|ADANIPOWER|POWERGRID|NTPC/.test(combined)) return "Power";
+  if (/SOLAR|WIND ENERGY|RENEWABLE|HYDROPOWER|THERMAL POWER/.test(combined))       return "Power";
+  if (/ONGC|BPCL|HPCL|GAIL|PETRONET|MRPL|HINDPETRO|CHENNPETRO|ATGL|GUJGAS|GSPL|IGL|MGL|AEGISLOG|CASTROLIND/.test(combined)) return "Energy";
+  if (/PETROLEUM|PETROCHEM|OIL GAS|NATURAL GAS|REFINER/.test(combined))            return "Energy";
+  if (/HAL|BEL|BEML|BDL|MDL|COCHINSHIP|GRSE|MIDHANI|MTAR|IDEAFORGE|SOLARINDS|APOLLOMICRO|DCX/.test(combined)) return "Defense";
+  if (/DEFENCE|DEFENSE|AEROSPACE|ORDNANCE|ARMAMENT|SHIPBUILD/.test(combined))      return "Defense";
+  if (/HINDUNILVR|NESTLEIND|BRITANNIA|DABUR|MARICO|GODREJCP|EMAMILTD|COLPAL|VARUNBEV|JUBLFOOD|BIKAJI|TATACONSUM|JYOTHYLAB|BAJAJCON|RADICO/.test(combined)) return "FMCG";
+  if (/FMCG|CONSUMER GOODS|HOUSEHOLD|BEVERAGE|TOBACCO|CONFECTION/.test(combined))  return "FMCG";
+  if (/TATAMOTORS|MARUTI|HEROMOTOCO|BAJAJ.AUTO|EICHERMOT|ASHOKLEY|TVSMOTORS|TVSMOTOR|ESCORTS|BALKRISIND|APOLLOTYRE|CEATLTD|SUNDRMFAST|MOTHERSON|BOSCHLTD|BHARATFORG|EXIDEIND|AMARARAJA/.test(combined)) return "Auto";
+  if (/AUTOMOBIL|AUTOCOMP|TYRE MANUF|ANCILLAR/.test(combined))                     return "Auto";
+  if (/TATASTEEL|JSWSTEEL|HINDALCO|VEDL|NMDC|COALINDIA|NATIONALUM|HINDCOPPER|SAIL|JINDALSAW|JSPL|WELCORP|RATNAMANI|KIOCL|MOIL|GRAVITA/.test(combined)) return "Metals";
+  if (/STEEL|METAL|ALUMINIUM|ZINC|COPPER|IRON ORE|MINING|SMELTER|ALLOY/.test(combined)) return "Metals";
+  if (/BHARTIARTL|VODAIDEA|VODAFONEIDEA|MTNL|RAILTEL|TATACOMM|TEJASNET|STLTECH|HFCL|GTPL|HATHWAY/.test(combined)) return "Telecom";
+  if (/TELECOM|WIRELESS|SPECTRUM|BROADBAND|CABLE NETWORK/.test(combined))          return "Telecom";
+  if (/ADANIENT|ADANIPORTS|IRCON|RITES|IRCTC|RVNL|NBCC|NCC|HCC|IRB|PNCINFRA|KNRCON|HAVELLS|POLYCAB|FINOLEX|KEI|SIEMENS|ABB|THERMAX|CUMMINSIND/.test(combined)) return "Infra";
+  if (/CEMENT|CONSTRUCT|INFRA(?:STRUCT)?|RAILWAY|AIRPORT|SEAPORT|HIGHWAY|ROAD BUILD|ELECTRICAL EQUIP/.test(combined)) return "Infra";
+  if (/DLF|GODREJPROP|OBEROIREAL|PRESTIGE|BRIGADE|SUNTECK|SOBHA|LODHA|MACROTECH|KOLTEPATIL|PHOENIX/.test(combined)) return "Real Estate";
+  if (/REAL ESTATE|PROPERTY DEV|REALTY|HOUSING DEV/.test(combined))                return "Real Estate";
+  if (/PIDILITIND|ASIANPAINT|BERGER|KANSAIPAINT|INDIGOPNTS|SRF|NAVINFLUOR|DEEPAKNTR|AARTIIND|VINATIORGA|COROMANDEL|PIIND|SUMICHEM|NOCIL|EPIGRAL|DEEPAKFERT/.test(combined)) return "Chemicals";
+  if (/SPECIALTY CHEM|AGROCHEM|FERTILISER|PAINT MANUF|PIGMENT|POLYMER|FLUOROCHEM/.test(combined)) return "Chemicals";
+  if (/DMART|TRENT|TITAN|KALYANKJIL|SENCO|PVRINOX|BATA|RELAXO|CAMPUS|PAGEIND|MANYAVAR|RAYMOND|ABFRL|NYKAA|ZOMATO/.test(combined)) return "Consumer";
+  if (/GOLDBEES|NIFTYBEES|BANKBEES|JUNIORBEES|LIQUIDBEES|SILVERBEES|CPSEETF|ITBEES|INFRABEES|PHARMBEES/.test(combined)) return "ETF";
+  if (/\bETF\b|INDEX FUND|EXCHANGE.TRADED/.test(combined))                         return "ETF";
 
   return "Other";
 }

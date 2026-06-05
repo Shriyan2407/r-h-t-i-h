@@ -855,9 +855,12 @@ export default function PortfolioPage() {
       const dayPnl        = h.quantity * liveChange;
       const allocationPct = total > 0 ? (currentValue / total) * 100 : 0;
       // Auto-classify sector from map when missing or "Other"
-      const sector        = (!h.sector || h.sector === "Other" || h.sector === "Unknown")
-        ? classifyTicker(h.ticker, h.name)
-        : h.sector;
+      const rawSector = h.sector?.trim() ?? "";
+      const needsClassification = !rawSector || rawSector === "Other" || rawSector === "Unknown" || rawSector === "other";
+      const classified = needsClassification ? classifyTicker(h.ticker, h.name) : rawSector;
+      const sector = classified;
+      // DEBUG — remove after confirming fix
+      console.log(`[SectorDebug] ${h.ticker} | stored="${rawSector}" | needsClassify=${needsClassification} | classified="${classified}"`);
       return { ...h, sector, livePrice, liveChange, liveChangePct, currentValue, investedValue, pnl, pnlPct, dayPnl, allocationPct, loading: live?.loading ?? false };
     });
   }, [holdings, liveData]);
@@ -933,6 +936,8 @@ export default function PortfolioPage() {
       acc.holdings.push({ ticker: h.ticker, alloc: h.allocationPct });
       map.set(s, acc);
     });
+    // DEBUG — remove after confirming fix
+    console.log("[SectorDebug] sectorData map:", Object.fromEntries(map.entries()));
     return [...map.entries()]
       .sort((a, b) => b[1].alloc - a[1].alloc)
       .map(([label, acc]) => {
