@@ -18,6 +18,8 @@ export const authConfig: NextAuthConfig = {
       if (pathname.startsWith("/api/telegram/webhook")) return true;
       // Intelligence API is public — used by bot and public stock pages
       if (pathname.startsWith("/api/intelligence/")) return true;
+      // Cron endpoints — authenticated via CRON_SECRET header, not session
+      if (pathname.startsWith("/api/cron/")) return true;
 
       // Block all other API routes for unauthenticated users — return 401 JSON
       if (pathname.startsWith("/api/")) {

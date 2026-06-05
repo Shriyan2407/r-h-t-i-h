@@ -239,6 +239,60 @@ Or just type: <i>Analyze INFY</i>
 <i>Market Ka Baadshah AI</i>`;
 }
 
+export function fmtNewsAlert(ticker: string, item: {
+  title: string;
+  summary: string;
+  url: string;
+  source: string;
+  sentiment: "positive" | "negative" | "neutral";
+}): string {
+  const emoji = item.sentiment === "positive" ? "🟢" : item.sentiment === "negative" ? "🔴" : "🟡";
+  const short = item.summary?.slice(0, 200).replace(/<[^>]+>/g, "") ?? "";
+  return `${emoji} <b>BREAKING: ${ticker}</b>
+━━━━━━━━━━━━━━━━━━━━━━
+
+📰 ${item.title}
+
+${short ? `📝 ${short}${item.summary.length > 200 ? "…" : ""}\n\n` : ""}🔗 Source: ${item.source}
+
+<i>Market Ka Baadshah AI</i>`;
+}
+
+export function fmtEarningsAlert(
+  ticker: string,
+  earningsDate: Date,
+  daysUntil: number,
+  earningsData?: any,
+): string {
+  const dateStr = earningsDate.toLocaleDateString("en-IN", {
+    day: "numeric", month: "short", year: "numeric",
+  });
+
+  const isReleased = daysUntil < 0;
+  const emoji = isReleased ? "📊" : "⏰";
+
+  let epsLine = "";
+  if (isReleased && earningsData?.earningsChart?.quarterly?.length) {
+    const latest = earningsData.earningsChart.quarterly.slice(-1)[0];
+    if (latest?.actual != null && latest?.estimate != null) {
+      const beat = latest.actual >= latest.estimate;
+      epsLine = `\n${beat ? "✅" : "❌"} EPS: ₹${latest.actual.toFixed(2)} vs Est ₹${latest.estimate.toFixed(2)} (${beat ? "Beat" : "Miss"})`;
+    }
+  }
+
+  return `${emoji} <b>${ticker} — EARNINGS ${isReleased ? "REPORTED" : "ALERT"}</b>
+━━━━━━━━━━━━━━━━━━━━━━
+
+📅 Date: ${dateStr}
+${isReleased ? "🔔 Results are out!" : `⏳ ${Math.ceil(daysUntil)} day(s) to go`}${epsLine}
+
+${isReleased
+    ? "📈 Check results for targets and guidance revision."
+    : "📌 Keep an eye out — earnings can cause large moves."}
+
+<i>Market Ka Baadshah AI</i>`;
+}
+
 export function fmtConnected(firstName?: string): string {
   return `✅ <b>Connected!</b>
 
