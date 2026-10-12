@@ -7,6 +7,7 @@ import {
 } from "./telegramService";
 import { sendPushToUser } from "./pushService";
 import { getStockNews } from "./newsAggregator";
+import { getMarketSnapshot } from "./marketSnapshot";
 import type { NewsItem } from "./newsAggregator";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -436,8 +437,16 @@ function deriveSimpleSignal(q: QuoteData): "BUY" | "SELL" | "HOLD" {
 
 // ── Daily briefing ────────────────────────────────────────────────────────────
 
-export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> {
-  const indices = await fetchIndices();
+export async function generateAndSendDailyBriefing(): Promise<{ sent: number; skipped?: string }> {
+  const snapshot = await getMarketSnapshot();
+
+  // Never send a briefing without real index data - skip instead of fabricating one.
+  if (!snapshot.nifty) {
+    console.warn("[alerts] daily briefing skipped: live NIFTY data unavailable");
+    return { sent: 0, skipped: "live market data unavailable" };
+  }
+  const nifty = snapshot.nifty;
+
   const prefs = await prisma.alertPreference.findMany({
     where: { marketSummary: true, OR: [{ telegramEnabled: true }, { pushEnabled: true }] },
   });
@@ -448,16 +457,11 @@ export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> 
 
   const briefingText = fmtDailyBriefing({
     date:       dateStr,
-    nifty:      indices.nifty,
-    banknifty:  indices.banknifty,
-    topGainers: indices.topGainers,
-    topLosers:  indices.topLosers,
-    aiPicks:    indices.aiPicks,
-    fii:        indices.fii,
-    dii:        indices.dii,
-    usdinr:     indices.usdinr,
-    riskLevel:  indices.riskLevel,
-    outlook:    indices.outlook,
+    nifty,
+    banknifty:  snapshot.banknifty,
+    usdinr:     snapshot.usdinr,
+    topGainers: snapshot.topGainers,
+    topLosers:  snapshot.topLosers,
   });
 
   let sent = 0;
@@ -470,8 +474,8 @@ export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> 
     }
     if (pref.pushEnabled) {
       await sendPushToUser(pref.userId, {
-        title: "📊 Market Ka Baadshah — Daily Briefing",
-        body:  `NIFTY ${indices.nifty.change >= 0 ? "▲" : "▼"} ${Math.abs(indices.nifty.change).toFixed(2)}% · ${dateStr}`,
+        title: "📊 Market Ka Baadshah — Market Briefing",
+        body:  `NIFTY ${nifty.change >= 0 ? "▲" : "▼"} ${Math.abs(nifty.change).toFixed(2)}% · ${dateStr}`,
         tag:   "daily-briefing",
         url:   "/alerts",
       }).catch(() => {});
@@ -480,7 +484,7 @@ export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> 
       data: {
         userId:  pref.userId,
         type:    "market_summary",
-        title:   `Daily Briefing — ${dateStr}`,
+        title:   `Market Briefing — ${dateStr}`,
         message: briefingText.replace(/<[^>]+>/g, ""),
         channel: [pref.telegramEnabled ? "telegram" : "", pref.pushEnabled ? "push" : ""].filter(Boolean).join(","),
       },
@@ -489,62 +493,4 @@ export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> 
   }
 
   return { sent };
-}
-
-// ── Index data fetcher ────────────────────────────────────────────────────────
-
-async function fetchIndices() {
-  const fallback = {
-    nifty:      { price: 24000, change: 0.15 },
-    banknifty:  { price: 51500, change: 0.08 },
-    topGainers: [{ ticker: "RELIANCE", change: 1.8 }, { ticker: "INFY", change: 1.2 }],
-    topLosers:  [{ ticker: "WIPRO", change: -1.5 }, { ticker: "HCLTECH", change: -0.9 }],
-    aiPicks: [
-      { ticker: "HDFCBANK", verdict: "ACCUMULATE", note: "Near support with FII buying" },
-      { ticker: "TCS",      verdict: "HOLD",       note: "Near resistance, await breakout" },
-    ],
-    fii:       "Data unavailable",
-    dii:       "Data unavailable",
-    usdinr:    "83.50",
-    riskLevel: 5,
-    outlook:   "Markets in consolidation phase.",
-  };
-
-  try {
-    const YFClass = (await import("yahoo-finance2")).default;
-    const yf = new (YFClass as any)();
-    const [niftyQ, bnQ, usdinrQ] = await Promise.allSettled([
-      yf.quote("^NSEI"),
-      yf.quote("^NSEBANK"),
-      yf.quote("USDINR=X"),
-    ]);
-
-    const nd = niftyQ.status === "fulfilled" ? niftyQ.value : null;
-    const bd = bnQ.status   === "fulfilled" ? bnQ.value   : null;
-    const ud = usdinrQ.status === "fulfilled" ? usdinrQ.value : null;
-
-    const niftyChange = (nd as any)?.regularMarketChangePercent ?? 0;
-    const riskLevel = Math.min(10, Math.max(1,
-      5 + Math.round(Math.abs(niftyChange) * -2 * Math.sign(niftyChange))
-    ));
-
-    return {
-      nifty:     { price: (nd as any)?.regularMarketPrice ?? fallback.nifty.price, change: niftyChange },
-      banknifty: { price: (bd as any)?.regularMarketPrice ?? fallback.banknifty.price, change: (bd as any)?.regularMarketChangePercent ?? 0 },
-      topGainers: fallback.topGainers,
-      topLosers:  fallback.topLosers,
-      aiPicks:    fallback.aiPicks,
-      fii:        "See NSE website",
-      dii:        "See NSE website",
-      usdinr:     (ud as any)?.regularMarketPrice?.toFixed(2) ?? "83.50",
-      riskLevel,
-      outlook: niftyChange > 0.5
-        ? "Markets trending bullish. Stay disciplined."
-        : niftyChange < -0.5
-        ? "Markets under pressure. Manage risk carefully."
-        : "Markets consolidating. Wait for clear direction.",
-    };
-  } catch {
-    return fallback;
-  }
 }

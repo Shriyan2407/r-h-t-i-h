@@ -53,15 +53,8 @@ describe("telegram formatters never emit attacker-controlled markup", () => {
     const msg = fmtDailyBriefing({
       date: PAYLOAD,
       nifty: { price: 1, change: 0 },
-      banknifty: { price: 1, change: 0 },
       topGainers: [{ ticker: PAYLOAD, change: 1 }],
-      topLosers: [],
-      aiPicks: [{ ticker: PAYLOAD, verdict: PAYLOAD, note: PAYLOAD }],
-      fii: PAYLOAD,
-      dii: PAYLOAD,
-      usdinr: PAYLOAD,
-      riskLevel: 5,
-      outlook: PAYLOAD,
+      topLosers: [{ ticker: PAYLOAD, change: -1 }],
     });
     expect(msg).not.toContain("<a href");
   });

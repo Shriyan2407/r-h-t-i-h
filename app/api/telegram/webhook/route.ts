@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/auth/prisma";
-import { tgSend, fmtHelp, fmtConnected, fmtStockAnalysis } from "@/lib/services/telegramService";
+import { tgSend, fmtHelp, fmtConnected, fmtStockAnalysis, fmtDailyBriefing } from "@/lib/services/telegramService";
+import { getMarketSnapshot } from "@/lib/services/marketSnapshot";
 import { checkSecret } from "@/lib/security/secrets";
 import { telegramUpdateSchema, parseStartToken, parseAnalyzeCommand } from "@/lib/telegram/updates";
 
@@ -92,47 +93,32 @@ export async function POST(req: NextRequest) {
       return Response.json({ ok: true });
     }
 
-    // /briefing — send daily briefing on demand
+    // /briefing - live market briefing on demand (real data only)
     if (text === "/briefing") {
-      await tgSend(chatId, "⏳ Generating your market briefing...");
-      const { generateAndSendDailyBriefing } = await import("@/lib/services/alertEngine");
-      // Find user and send briefing just to them
       const conn = await prisma.telegramConnection.findUnique({ where: { chatId: String(chatId) } });
-      if (conn) {
-        // Trigger the full briefing but it will only target users with prefs;
-        // For this user, generate and send directly
-        const { fmtDailyBriefing } = await import("@/lib/services/telegramService");
-        const YFClass = (await import("yahoo-finance2")).default;
-        const yf = new (YFClass as any)();
-        let niftyChange = 0;
-        try {
-          const nq: any = await yf.quote("^NSEI");
-          niftyChange = nq?.regularMarketChangePercent ?? 0;
-        } catch { /* use 0 */ }
-        const dateStr = new Date().toLocaleDateString("en-IN", {
-          weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata",
-        });
-        const brief = fmtDailyBriefing({
-          date: dateStr,
-          nifty: { price: 24000, change: niftyChange },
-          banknifty: { price: 51500, change: 0.1 },
-          topGainers: [{ ticker: "RELIANCE", change: 1.8 }, { ticker: "HDFCBANK", change: 1.2 }, { ticker: "TCS", change: 0.9 }],
-          topLosers: [{ ticker: "WIPRO", change: -1.5 }, { ticker: "INFY", change: -0.8 }, { ticker: "LTIM", change: -0.6 }],
-          aiPicks: [
-            { ticker: "HDFCBANK", verdict: "ACCUMULATE", note: "Near key support" },
-            { ticker: "TCS", verdict: "HOLD", note: "Await breakout" },
-            { ticker: "RELIANCE", verdict: "BUY", note: "Strong volume" },
-          ],
-          fii: "Check NSE website",
-          dii: "Check NSE website",
-          usdinr: "83.50",
-          riskLevel: niftyChange > 0.5 ? 4 : niftyChange < -0.5 ? 7 : 5,
-          outlook: niftyChange > 0 ? "Bullish bias. Stay disciplined." : "Cautious. Manage risk.",
-        });
-        await tgSend(chatId, brief);
-      } else {
+      if (!conn) {
         await tgSend(chatId, "❌ Account not linked. Visit Market Ka Baadshah → Alerts to connect.");
+        return Response.json({ ok: true });
       }
+
+      await tgSend(chatId, "⏳ Fetching live market data...");
+      const snapshot = await getMarketSnapshot();
+      if (!snapshot.nifty) {
+        await tgSend(chatId, "⚠️ Live market data is unavailable right now. Please try again shortly.");
+        return Response.json({ ok: true });
+      }
+
+      const dateStr = new Date().toLocaleDateString("en-IN", {
+        weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata",
+      });
+      await tgSend(chatId, fmtDailyBriefing({
+        date:       dateStr,
+        nifty:      snapshot.nifty,
+        banknifty:  snapshot.banknifty,
+        usdinr:     snapshot.usdinr,
+        topGainers: snapshot.topGainers,
+        topLosers:  snapshot.topLosers,
+      }));
       return Response.json({ ok: true });
     }
 

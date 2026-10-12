@@ -176,51 +176,38 @@ ${verdictEmoji} Verdict: <b>${esc(data.verdict ?? "HOLD")}</b>
 
 export function fmtDailyBriefing(data: {
   date: string;
-  nifty: { price: number; change: number };
-  banknifty: { price: number; change: number };
+  nifty?: { price: number; change: number };
+  banknifty?: { price: number; change: number };
+  usdinr?: number;
   topGainers: Array<{ ticker: string; change: number }>;
   topLosers: Array<{ ticker: string; change: number }>;
-  aiPicks: Array<{ ticker: string; verdict: string; note: string }>;
-  fii: string;
-  dii: string;
-  usdinr: string;
-  riskLevel: number;
-  outlook: string;
 }): string {
-  const gainers = data.topGainers.slice(0, 3)
-    .map(s => `▲ ${esc(s.ticker.padEnd(12))} +${s.change.toFixed(1)}%`).join("\n");
-  const losers = data.topLosers.slice(0, 3)
-    .map(s => `▼ ${esc(s.ticker.padEnd(12))} ${s.change.toFixed(1)}%`).join("\n");
-  const picks = data.aiPicks.slice(0, 3)
-    .map(p => `• <b>${esc(p.ticker)}</b> — ${esc(p.verdict)} | ${esc(p.note)}`).join("\n");
+  const sign = (n: number) => (n >= 0 ? "+" : "");
+  const idx = (label: string, q?: { price: number; change: number }) =>
+    q ? `${label} <b>${q.price.toLocaleString("en-IN")}</b>  (${sign(q.change)}${q.change.toFixed(2)}%)` : null;
 
-  const niftySign = data.nifty.change >= 0 ? "+" : "";
-  const bnSign = data.banknifty.change >= 0 ? "+" : "";
+  const indices = [idx("NIFTY 50:  ", data.nifty), idx("BANKNIFTY: ", data.banknifty)]
+    .filter(Boolean)
+    .join("\n");
 
-  return `📊 <b>MARKET KA BAADSHAH</b>
-Daily Briefing — ${esc(data.date)}
-━━━━━━━━━━━━━━━━━━━━━━━━
+  const movers = [
+    ...data.topGainers.slice(0, 3).map((s) => `▲ ${esc(s.ticker.padEnd(12))} +${s.change.toFixed(1)}%`),
+    ...data.topLosers.slice(0, 3).map((s) => `▼ ${esc(s.ticker.padEnd(12))} ${s.change.toFixed(1)}%`),
+  ].join("\n");
 
-🇮🇳 <b>INDICES</b>
-NIFTY 50:   <b>${data.nifty.price.toLocaleString("en-IN")}</b>  (${niftySign}${data.nifty.change.toFixed(2)}%)
-BANKNIFTY:  <b>${data.banknifty.price.toLocaleString("en-IN")}</b>  (${bnSign}${data.banknifty.change.toFixed(2)}%)
+  const time = new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" });
 
-📈 <b>TOP MOVERS</b>
-<code>${gainers}
-${losers}</code>
-
-🧠 <b>AI PICKS TODAY</b>
-${picks}
-
-🌐 <b>MACRO PULSE</b>
-FII:      ${esc(data.fii)}
-DII:      ${esc(data.dii)}
-USD/INR:  ${esc(data.usdinr)}
-
-⚡ <b>RISK LEVEL: ${data.riskLevel}/10</b>
-${esc(data.outlook)}
-
-<i>Market Ka Baadshah AI · ${new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" })} IST</i>`;
+  return [
+    `📊 <b>MARKET KA BAADSHAH</b>`,
+    `Market Briefing — ${esc(data.date)}`,
+    `━━━━━━━━━━━━━━━━━━━━━━━━`,
+    indices ? `\n🇮🇳 <b>INDICES</b>\n${indices}` : "",
+    movers ? `\n📈 <b>LARGE-CAP MOVERS</b> (tracked basket)\n<code>${movers}</code>` : "",
+    data.usdinr !== undefined ? `\n🌐 <b>USD/INR:</b> ${data.usdinr.toFixed(2)}` : "",
+    `\n<i>Live data from Yahoo Finance, as of ${time} IST. Informational only - not investment advice.</i>`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function fmtHelp(): string {
