@@ -105,11 +105,14 @@ jobs:
       - name: Migrations apply cleanly to an empty database
         run: npx prisma migrate deploy
       - name: Migrations and schema.prisma agree (no drift)
+        # Prisma replays the migrations into a separate EMPTY shadow database, so it must
+        # not be the database that `migrate deploy` has already populated.
         run: |
+          PGPASSWORD=ci psql -h localhost -U ci -d ci -c "CREATE DATABASE ci_shadow"
           npx prisma migrate diff \
             --from-migrations prisma/migrations \
             --to-schema-datamodel prisma/schema.prisma \
-            --shadow-database-url "$DATABASE_URL" \
+            --shadow-database-url "postgresql://ci:ci@localhost:5432/ci_shadow" \
             --exit-code
       - name: Database integration tests (real PostgreSQL)
         run: npm run test:integration
