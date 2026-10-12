@@ -1,3 +1,5 @@
+import { escapeHtml as esc } from "@/lib/security/html";
+
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME ?? "MarketKaBaadshahBot";
 const BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
@@ -55,7 +57,7 @@ export function fmtBreakout(ticker: string, price: number, prevHigh: number): st
   return `🚀 <b>BREAKOUT ALERT</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
-📊 <b>${ticker}</b>
+📊 <b>${esc(ticker)}</b>
 
 💰 Price: ₹${price.toFixed(2)}
 📈 Broke Above: ₹${prevHigh.toFixed(2)} (+${pct}%)
@@ -71,7 +73,7 @@ export function fmtBreakdown(ticker: string, price: number, prevLow: number): st
   return `🔴 <b>BREAKDOWN ALERT</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
-📊 <b>${ticker}</b>
+📊 <b>${esc(ticker)}</b>
 
 💰 Price: ₹${price.toFixed(2)}
 📉 Broke Below: ₹${prevLow.toFixed(2)} (-${pct}%)
@@ -86,7 +88,7 @@ export function fmtVolumeSpike(ticker: string, price: number, volumeMultiple: nu
   return `📊 <b>UNUSUAL VOLUME</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
-📊 <b>${ticker}</b>
+📊 <b>${esc(ticker)}</b>
 
 💰 Price: ₹${price.toFixed(2)}
 🔊 Volume: <b>${volumeMultiple.toFixed(1)}x</b> above average
@@ -101,7 +103,7 @@ export function fmtBuySignal(ticker: string, price: number, t1: number, t2: numb
   return `💡 <b>AI BUY SIGNAL</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
-📊 <b>${ticker}</b>
+📊 <b>${esc(ticker)}</b>
 🧠 Confidence: <b>${confidence}%</b>
 
 💰 Entry: ₹${price.toFixed(2)}
@@ -116,7 +118,7 @@ export function fmtSellSignal(ticker: string, price: number, confidence: number)
   return `🔴 <b>AI SELL SIGNAL</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
-📊 <b>${ticker}</b>
+📊 <b>${esc(ticker)}</b>
 🧠 Confidence: <b>${confidence}%</b>
 
 💰 Current: ₹${price.toFixed(2)}
@@ -140,10 +142,10 @@ export function fmtStockAnalysis(ticker: string, data: {
     ? "🟢" : data.verdict?.toLowerCase().includes("sell") || data.verdict?.toLowerCase().includes("avoid")
     ? "🔴" : "🟡";
 
-  let msg = `🧠 <b>${ticker} — AI ANALYSIS</b>
+  let msg = `🧠 <b>${esc(ticker)} — AI ANALYSIS</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
-${verdictEmoji} Verdict: <b>${data.verdict ?? "HOLD"}</b>
+${verdictEmoji} Verdict: <b>${esc(data.verdict ?? "HOLD")}</b>
 💪 Confidence: <b>${data.confidence ?? 0}%</b>
 💰 Price: ₹${data.price.toFixed(2)}`;
 
@@ -156,11 +158,11 @@ ${verdictEmoji} Verdict: <b>${data.verdict ?? "HOLD"}</b>
 🛡️ Stop Loss: ₹${data.sl.toFixed(2)}`;
   }
 
-  if (data.riskLevel) msg += `\n⚠️ Risk: <b>${data.riskLevel}</b>`;
-  if (data.newsSentiment) msg += `\n📰 Sentiment: ${data.newsSentiment}`;
+  if (data.riskLevel) msg += `\n⚠️ Risk: <b>${esc(data.riskLevel)}</b>`;
+  if (data.newsSentiment) msg += `\n📰 Sentiment: ${esc(data.newsSentiment)}`;
 
   if (data.summary) {
-    const shortSummary = data.summary.slice(0, 280).replace(/<[^>]+>/g, "");
+    const shortSummary = esc(data.summary.slice(0, 280).replace(/<[^>]+>/g, ""));
     msg += `\n\n📝 ${shortSummary}${data.summary.length > 280 ? "…" : ""}`;
   }
 
@@ -182,17 +184,17 @@ export function fmtDailyBriefing(data: {
   outlook: string;
 }): string {
   const gainers = data.topGainers.slice(0, 3)
-    .map(s => `▲ ${s.ticker.padEnd(12)} +${s.change.toFixed(1)}%`).join("\n");
+    .map(s => `▲ ${esc(s.ticker.padEnd(12))} +${s.change.toFixed(1)}%`).join("\n");
   const losers = data.topLosers.slice(0, 3)
-    .map(s => `▼ ${s.ticker.padEnd(12)} ${s.change.toFixed(1)}%`).join("\n");
+    .map(s => `▼ ${esc(s.ticker.padEnd(12))} ${s.change.toFixed(1)}%`).join("\n");
   const picks = data.aiPicks.slice(0, 3)
-    .map(p => `• <b>${p.ticker}</b> — ${p.verdict} | ${p.note}`).join("\n");
+    .map(p => `• <b>${esc(p.ticker)}</b> — ${esc(p.verdict)} | ${esc(p.note)}`).join("\n");
 
   const niftySign = data.nifty.change >= 0 ? "+" : "";
   const bnSign = data.banknifty.change >= 0 ? "+" : "";
 
   return `📊 <b>MARKET KA BAADSHAH</b>
-Daily Briefing — ${data.date}
+Daily Briefing — ${esc(data.date)}
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
 🇮🇳 <b>INDICES</b>
@@ -207,12 +209,12 @@ ${losers}</code>
 ${picks}
 
 🌐 <b>MACRO PULSE</b>
-FII:      ${data.fii}
-DII:      ${data.dii}
-USD/INR:  ${data.usdinr}
+FII:      ${esc(data.fii)}
+DII:      ${esc(data.dii)}
+USD/INR:  ${esc(data.usdinr)}
 
 ⚡ <b>RISK LEVEL: ${data.riskLevel}/10</b>
-${data.outlook}
+${esc(data.outlook)}
 
 <i>Market Ka Baadshah AI · ${new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" })} IST</i>`;
 }
@@ -247,13 +249,13 @@ export function fmtNewsAlert(ticker: string, item: {
   sentiment: "positive" | "negative" | "neutral";
 }): string {
   const emoji = item.sentiment === "positive" ? "🟢" : item.sentiment === "negative" ? "🔴" : "🟡";
-  const short = item.summary?.slice(0, 200).replace(/<[^>]+>/g, "") ?? "";
-  return `${emoji} <b>BREAKING: ${ticker}</b>
+  const short = esc(item.summary?.slice(0, 200).replace(/<[^>]+>/g, "") ?? "");
+  return `${emoji} <b>BREAKING: ${esc(ticker)}</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
-📰 ${item.title}
+📰 ${esc(item.title)}
 
-${short ? `📝 ${short}${item.summary.length > 200 ? "…" : ""}\n\n` : ""}🔗 Source: ${item.source}
+${short ? `📝 ${short}${item.summary.length > 200 ? "…" : ""}\n\n` : ""}🔗 Source: ${esc(item.source)}
 
 <i>Market Ka Baadshah AI</i>`;
 }
@@ -280,7 +282,7 @@ export function fmtEarningsAlert(
     }
   }
 
-  return `${emoji} <b>${ticker} — EARNINGS ${isReleased ? "REPORTED" : "ALERT"}</b>
+  return `${emoji} <b>${esc(ticker)} — EARNINGS ${isReleased ? "REPORTED" : "ALERT"}</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
 📅 Date: ${dateStr}
@@ -296,7 +298,7 @@ ${isReleased
 export function fmtConnected(firstName?: string): string {
   return `✅ <b>Connected!</b>
 
-Welcome${firstName ? `, ${firstName}` : ""} to <b>Market Ka Baadshah AI</b>!
+Welcome${firstName ? `, ${esc(firstName)}` : ""} to <b>Market Ka Baadshah AI</b>!
 
 You'll now receive:
 • 🚀 Breakout & breakdown alerts
