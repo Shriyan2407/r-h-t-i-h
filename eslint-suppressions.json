@@ -30,11 +30,6 @@
       "count": 2
     }
   },
-  "app/api/fundamentals/[ticker]/route.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
   "app/api/health/route.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
@@ -55,11 +50,6 @@
       "count": 10
     }
   },
-  "app/api/macro/route.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
   "app/api/search/route.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 4
@@ -73,11 +63,6 @@
   "app/api/stocks/[ticker]/quote/route.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
-    }
-  },
-  "app/api/technicals/[ticker]/route.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
     }
   },
   "app/dashboard/page.tsx": {
@@ -209,9 +194,19 @@
       "count": 14
     }
   },
+  "lib/services/fundamentals.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
   "lib/services/intelligenceEngine.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 8
+    }
+  },
+  "lib/services/macro.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
     }
   },
   "lib/services/newsAggregator.ts": {
@@ -232,6 +227,11 @@
   "lib/services/socialSentiment.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 3
+    }
+  },
+  "lib/services/technicals.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
     }
   },
   "lib/services/telegramService.ts": {
