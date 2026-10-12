@@ -59,3 +59,46 @@ export async function validatePasswordResetToken(rawToken: string) {
 
   return record;
 }
+
+const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+/**
+ * Create a single-use email verification token (stored hashed in NextAuth's
+ * VerificationToken table), replacing any outstanding one for the address.
+ * Returns the raw token to embed in the emailed link.
+ */
+export async function createEmailVerificationToken(email: string): Promise<string> {
+  await prisma.verificationToken.deleteMany({ where: { identifier: email } });
+
+  const token = generateSecureToken();
+  await prisma.verificationToken.create({
+    data: {
+      identifier: email,
+      token: hashToken(token),
+      expires: new Date(Date.now() + VERIFY_TOKEN_TTL_MS),
+    },
+  });
+  return token;
+}
+
+/**
+ * Consume a verification token and mark the matching account's email as verified.
+ * Returns the verified address, or null for unknown, expired or already-used tokens.
+ * The delete-with-count makes consumption atomic: two concurrent requests cannot
+ * both succeed with the same token.
+ */
+export async function consumeEmailVerificationToken(rawToken: string): Promise<string | null> {
+  const tokenHash = hashToken(rawToken);
+  const record = await prisma.verificationToken.findUnique({ where: { token: tokenHash } });
+  if (!record) return null;
+
+  const { count } = await prisma.verificationToken.deleteMany({ where: { token: tokenHash } });
+  if (count !== 1) return null;
+  if (record.expires < new Date()) return null;
+
+  await prisma.user.updateMany({
+    where: { email: record.identifier, emailVerified: null },
+    data: { emailVerified: new Date() },
+  });
+  return record.identifier;
+}
