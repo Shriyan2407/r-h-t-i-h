@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
   Star, Brain, Search, TrendingUp, Clock,
   BarChart2, ArrowRight, RefreshCw, Zap,
-  Activity, ChevronRight, Cpu,
+  Activity, ChevronRight, Cpu, Shield, AlertTriangle,
 } from "lucide-react";
 import { Navbar }       from "@/components/Navbar";
 import { MarketTicker } from "@/components/MarketTicker";
@@ -124,14 +124,15 @@ export default function DashboardPage() {
             >
               {MARKET_PULSE.map(item => (
                 <div key={item.label} className="flex items-center gap-1.5">
-                  <span className="text-[8.5px] font-mono font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
+                  {/* Label — subtle */}
+                  <span style={{ fontFamily: "monospace", fontSize: "9px", fontWeight: 400, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--th-text-faint)" }}>
                     {item.label}
                   </span>
-                  <span className="text-[10.5px] font-mono font-bold" style={{ color: "var(--th-text-secondary)" }}>
+                  {/* Value — dominant */}
+                  <span style={{ fontFamily: "monospace", fontSize: "13px", fontWeight: 700, letterSpacing: "-0.01em", color: "var(--th-text-secondary)" }}>
                     {item.value}
                   </span>
-                  <span className="text-[9px] font-mono font-semibold"
-                    style={{ color: item.up ? "var(--positive)" : "var(--negative)" }}>
+                  <span style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 600, color: item.up ? "var(--positive)" : "var(--negative)" }}>
                     {item.change}
                   </span>
                 </div>
@@ -200,10 +201,31 @@ export default function DashboardPage() {
                   <Icon size={15} style={{ color }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[22px] font-bold font-mono leading-none mb-1" style={{ color: "var(--th-text-primary)" }}>
+                  {/* Number — hero weight */}
+                  <div
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "32px",
+                      fontWeight: 700,
+                      letterSpacing: "-0.04em",
+                      lineHeight: 1,
+                      color: "var(--th-text-primary)",
+                      marginBottom: "4px",
+                    }}
+                  >
                     {loading ? "—" : value}
                   </div>
-                  <div className="text-[9.5px] font-mono font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
+                  {/* Label — subtle */}
+                  <div
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "10px",
+                      fontWeight: 400,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase" as const,
+                      color: "var(--th-text-muted)",
+                    }}
+                  >
                     {label}
                   </div>
                 </div>
@@ -318,10 +340,32 @@ export default function DashboardPage() {
                           {item.ticker.slice(0, 3)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="text-[12px] font-mono font-bold truncate" style={{ color: "var(--th-text-primary)" }}>
+                          {/* Ticker — name weight */}
+                          <div
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "14px",
+                              fontWeight: 600,
+                              color: "var(--th-text-primary)",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {item.ticker}
                           </div>
-                          <div className="text-[9px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
+                          {/* Metadata — micro label */}
+                          <div
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "10px",
+                              fontWeight: 400,
+                              color: "var(--th-text-muted)",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {item.exchange} · {item.sector ?? "Stock"}
                           </div>
                         </div>
@@ -386,22 +430,48 @@ export default function DashboardPage() {
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
+                        {/* Ticker — name weight (Layer 2) */}
+                        <span
+                          style={{
+                            fontFamily: "monospace",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            color: "var(--th-text-primary)",
+                          }}
+                        >
                           {sig.ticker}
                         </span>
-                        <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded"
-                          style={{ color: sig.color, background: `${sig.color}18`, border: `1px solid ${sig.color}30` }}>
+                        <span
+                          style={{
+                            fontFamily: "monospace",
+                            fontSize: "9px",
+                            fontWeight: 700,
+                            padding: "2px 7px",
+                            borderRadius: "4px",
+                            color: sig.color,
+                            background: `${sig.color}18`,
+                            border: `1px solid ${sig.color}30`,
+                          }}
+                        >
                           {sig.verdict}
                         </span>
                       </div>
                       <div>
-                        <div className="h-1 rounded-full overflow-hidden mb-1" style={{ background: "rgba(255,255,255,0.06)" }}>
+                        <div className="h-1 rounded-full overflow-hidden mb-1.5" style={{ background: "rgba(255,255,255,0.06)" }}>
                           <div
                             className="h-full rounded-full transition-all duration-700"
                             style={{ width: `${sig.confidence}%`, background: sig.color }}
                           />
                         </div>
-                        <div className="text-[9px] font-mono font-semibold" style={{ color: "var(--th-text-muted)" }}>
+                        {/* Confidence — micro label */}
+                        <div
+                          style={{
+                            fontFamily: "monospace",
+                            fontSize: "11px",
+                            fontWeight: 400,
+                            color: "var(--th-text-muted)",
+                          }}
+                        >
                           {sig.confidence}% confidence
                         </div>
                       </div>
@@ -521,6 +591,57 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+
+            {/* Portfolio Stress Test */}
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-subtle)" }}
+            >
+              <div
+                className="flex items-center gap-2.5 px-5 py-3.5"
+                style={{ borderBottom: "1px solid var(--th-border-subtle)" }}
+              >
+                <Shield size={11} style={{ color: "var(--th-text-muted)" }} />
+                <span className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
+                  Portfolio Stress Test
+                </span>
+              </div>
+              <div className="p-5 flex flex-col gap-5">
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-widest mb-1.5" style={{ color: "var(--th-text-muted)" }}>If NIFTY falls 20%</div>
+                  <div className="flex items-baseline gap-2">
+                    <div className="font-mono font-bold" style={{ fontSize: "36px", color: "var(--negative)", letterSpacing: "-0.04em", lineHeight: 1 }}>-19.5%</div>
+                    <div className="text-[11px] font-mono" style={{ color: "var(--th-text-faint)" }}>Est. Loss</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}>
+                    <div className="text-[9px] font-mono uppercase tracking-widest mb-1" style={{ color: "var(--th-text-faint)" }}>Risk Level</div>
+                    <div className="text-[12px] font-bold" style={{ color: "var(--gold)" }}>MEDIUM</div>
+                  </div>
+                  <div className="p-3 rounded-lg" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}>
+                    <div className="text-[9px] font-mono uppercase tracking-widest mb-1" style={{ color: "var(--th-text-faint)" }}>Protection Score</div>
+                    <div className="text-[12px] font-bold" style={{ color: "var(--th-text-primary)" }}>63<span className="text-[9px]" style={{ color: "var(--th-text-muted)" }}>/100</span></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] font-mono uppercase tracking-widest mb-2.5" style={{ color: "var(--th-text-muted)" }}>Most Vulnerable</div>
+                  <div className="flex flex-col gap-2">
+                    {["TEJASNET", "NTPCGREEN", "GATECH"].map((t, i) => (
+                      <div key={t} className="flex items-center justify-between p-2 rounded-md" style={{ background: "rgba(255,77,77,0.04)", border: "1px solid rgba(255,77,77,0.1)" }}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{i + 1}.</span>
+                          <span className="text-[12px] font-semibold" style={{ color: "var(--th-text-primary)" }}>{t}</span>
+                        </div>
+                        <AlertTriangle size={11} style={{ color: "var(--negative)" }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Intelligence CTA */}
             <Link

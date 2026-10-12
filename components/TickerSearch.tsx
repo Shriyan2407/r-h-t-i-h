@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Clock, RefreshCw, X, Zap } from "lucide-react";
+import { Search, Clock, RefreshCw, X, Zap, TrendingUp } from "lucide-react";
 import type { SearchResult } from "@/lib/types";
 
 /* ─── Static data ────────────────────────────────────────────────────────── */
@@ -68,31 +68,31 @@ export function saveRecentTicker(r: SearchResult) {
 
 /* ─── Shimmer ────────────────────────────────────────────────────────────── */
 
-function ShimmerRow({ isLight }: { isLight: boolean }) {
-  const bg  = isLight ? "rgba(0,0,0,0.07)"  : "rgba(255,255,255,0.06)";
-  const bg2 = isLight ? "rgba(0,0,0,0.04)"  : "rgba(255,255,255,0.03)";
+function ShimmerRow() {
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <div className="w-9 h-9 rounded-xl flex-shrink-0 animate-pulse" style={{ background: bg }} />
+    <div className="flex items-center gap-4 px-5 py-3">
+      <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0" style={{ background: "var(--border-muted)" }} />
       <div className="flex-1 space-y-2">
-        <div className="h-3 w-20 rounded animate-pulse" style={{ background: bg }} />
-        <div className="h-2 w-36 rounded animate-pulse" style={{ background: bg2 }} />
+        <div className="h-2 w-10 rounded overflow-hidden" style={{ background: "var(--border-muted)" }}>
+          <motion.div className="h-full w-full"
+            style={{ background: "var(--border)" }}
+            animate={{ x: ["-100%", "100%"] }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
+        </div>
       </div>
-      <div className="h-3 w-14 rounded animate-pulse" style={{ background: bg }} />
     </div>
   );
 }
 
 /* ─── Section header ─────────────────────────────────────────────────────── */
 
-function SectionHeader({ icon, label, right, isLight }: {
-  icon: React.ReactNode; label: string; right?: string; isLight: boolean;
+function SectionHeader({ icon, label, right }: {
+  icon: React.ReactNode; label: string; right?: string;
 }) {
   return (
-    <div className="px-4 py-2 flex items-center gap-2"
+    <div className="px-5 py-2.5 flex items-center justify-between"
       style={{
-        background:   isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)",
-        borderBottom: "1px solid var(--th-border-subtle)",
+        background:   "var(--border-muted)",
+        borderBottom: "1px solid var(--border)",
       }}>
       {icon}
       <span className="text-[8.5px] font-mono uppercase tracking-widest"
@@ -106,8 +106,8 @@ function SectionHeader({ icon, label, right, isLight }: {
 
 /* ─── Stock card ─────────────────────────────────────────────────────────── */
 
-function StockCard({ r, active, isLight, onPick }: {
-  r: SearchResult; active: boolean; isLight: boolean; onPick: () => void;
+function StockCard({ r, active, onPick }: {
+  r: SearchResult; active: boolean; onPick: () => void;
 }) {
   const col  = sCol(r.sector);
   const isUp = (r.change_pct ?? 0) >= 0;
@@ -117,16 +117,15 @@ function StockCard({ r, active, isLight, onPick }: {
       onMouseDown={e => { e.preventDefault(); onPick(); }}
       className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150"
       style={{
-        background: active
-          ? isLight ? "rgba(184,150,46,0.08)" : "rgba(255,215,0,0.06)"
-          : "transparent",
-        borderLeft: `2px solid ${active ? "var(--gold)" : "transparent"}`,
+        background: active ? "var(--bg-hover)" : "transparent",
+        boxShadow: active
+          ? "0 0 0 1px var(--border-accent) inset"
+          : "none",
       }}
-      onMouseEnter={e => {
-        if (!active) e.currentTarget.style.background =
-          isLight ? "rgba(184,150,46,0.05)" : "rgba(255,215,0,0.04)";
+      onMouseEnter={(e) => {
+        if (!active) e.currentTarget.style.background = "var(--border-muted)";
       }}
-      onMouseLeave={e => {
+      onMouseLeave={(e) => {
         if (!active) e.currentTarget.style.background = "transparent";
       }}
     >
@@ -164,13 +163,10 @@ function StockCard({ r, active, isLight, onPick }: {
           {r.company_name}
         </div>
         <div className="flex items-center gap-1.5 mt-px">
-          <span className="text-[8px] font-mono px-1.5 py-px rounded"
-            style={{
-              background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)",
-              color:      "var(--th-text-faint)",
-            }}>
-            {r.exchange}
-          </span>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md"
+            style={{ background: "var(--border-muted)" }}>
+            <span className="text-[8px] font-mono" style={{ color: "var(--th-text-faint)" }}>{r.exchange}</span>
+          </div>
           {r.sector && r.sector !== "Unknown" && (
             <span className="text-[8.5px] font-semibold" style={{ color: col }}>
               {r.sector}
@@ -200,10 +196,9 @@ function StockCard({ r, active, isLight, onPick }: {
 /* ─── TickerSearchInput ──────────────────────────────────────────────────── */
 
 export function TickerSearchInput({
-  onSelect, isLight,
+  onSelect,
 }: {
   onSelect: (r: SearchResult) => void;
-  isLight:  boolean;
 }) {
   const [query,     setQuery]     = useState("");
   const [results,   setResults]   = useState<SearchResult[]>([]);
@@ -218,7 +213,6 @@ export function TickerSearchInput({
 
   useEffect(() => { setRecent(loadRecent()); }, []);
 
-  /* Debounced search */
   useEffect(() => {
     if (debRef.current) clearTimeout(debRef.current);
     if (query.length < 2) { setResults([]); setLoading(false); return; }
@@ -234,7 +228,6 @@ export function TickerSearchInput({
     return () => { if (debRef.current) clearTimeout(debRef.current); };
   }, [query]);
 
-  /* Outside-click close */
   useEffect(() => {
     const h = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
@@ -244,8 +237,7 @@ export function TickerSearchInput({
   }, []);
 
   const showEmpty   = !query || query.length < 2;
-  const displayList = showEmpty ? [...recent, ...POPULAR] : results;
-  const totalLen    = displayList.length;
+  const totalLen    = showEmpty ? (recent.length + POPULAR.length) : results.length;
 
   const pick = useCallback((r: SearchResult) => {
     saveRecentTicker(r);
@@ -262,21 +254,17 @@ export function TickerSearchInput({
     }
     if      (e.key === "ArrowDown")  { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, totalLen - 1)); }
     else if (e.key === "ArrowUp")    { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
-    else if (e.key === "Enter" && activeIdx >= 0 && displayList[activeIdx]) {
+    else if (e.key === "Enter" && activeIdx >= 0) {
       e.preventDefault();
-      pick(displayList[activeIdx]);
+      const list = showEmpty ? [...recent, ...POPULAR] : results;
+      pick(list[activeIdx]);
     }
     else if (e.key === "Escape") { setOpen(false); setActiveIdx(-1); }
   };
 
   return (
     <div ref={wrapRef} className="relative">
-
-      {/* Input */}
       <div className="relative">
-        <Search size={12}
-          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 transition-colors duration-200"
-          style={{ color: open ? "var(--gold)" : "var(--th-text-faint)" }} />
         <input
           ref={inputRef}
           value={query}
@@ -286,14 +274,11 @@ export function TickerSearchInput({
           placeholder="Search ticker or company name..."
           className="w-full text-[12px] font-mono outline-none transition-all duration-200"
           style={{
-            background:   isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)",
-            border:       `1px solid ${open ? "var(--gold-border-soft)" : "var(--th-border-card)"}`,
+            background:   "transparent",
+            border:       `1px solid ${open ? "var(--border-accent)" : "var(--border)"}`,
             borderRadius: "10px",
             padding:      "10px 36px",
             color:        "var(--th-text-primary)",
-            boxShadow:    open
-              ? isLight ? "0 0 0 3px rgba(184,150,46,0.10)" : "0 0 0 3px rgba(255,215,0,0.07)"
-              : "none",
           }}
           autoComplete="off"
           spellCheck={false}
@@ -303,17 +288,17 @@ export function TickerSearchInput({
             <RefreshCw size={11} className="animate-spin" style={{ color: "var(--gold)" }} />
           ) : query ? (
             <button
-              onMouseDown={e => { e.preventDefault(); setQuery(""); setResults([]); inputRef.current?.focus(); }}
-              style={{ color: "var(--th-text-faint)" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "var(--th-text-primary)")}
-              onMouseLeave={e => (e.currentTarget.style.color = "var(--th-text-faint)")}>
+              onClick={() => { setQuery(""); setResults([]); inputRef.current?.focus(); }}
+              className="w-5 h-5 flex items-center justify-center rounded transition-colors"
+              style={{ background: "var(--border-muted)", color: "var(--th-text-faint)" }}
+              onMouseEnter={e => e.currentTarget.style.color = "var(--th-text-secondary)"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--th-text-faint)"}>
               <X size={11} />
             </button>
           ) : null}
         </div>
       </div>
 
-      {/* Dropdown */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -321,110 +306,56 @@ export function TickerSearchInput({
             animate={{ opacity: 1, y: 0,  scale: 1    }}
             exit={{   opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute left-0 right-0 mt-1.5 rounded-xl z-[60] overflow-hidden flex flex-col"
+            className="absolute top-16 left-0 right-0 overflow-hidden rounded-xl z-50 flex flex-col"
             style={{
-              background:     isLight ? "rgba(252,250,244,0.99)" : "rgba(10,10,10,0.99)",
-              border:         `1px solid ${isLight ? "rgba(184,150,46,0.22)" : "rgba(255,215,0,0.13)"}`,
-              boxShadow:      isLight
-                ? "0 16px 56px rgba(100,80,20,0.18), 0 2px 12px rgba(0,0,0,0.08)"
-                : "0 16px 64px rgba(0,0,0,0.95), 0 0 48px rgba(255,215,0,0.05)",
-              backdropFilter: "blur(24px)",
-              maxHeight:      "360px",
+              background:     "var(--th-bg-card)",
+              border:         "1px solid var(--border-accent)",
+              boxShadow:      "var(--th-shadow-elevated)",
+              maxHeight:      "70vh",
             }}
           >
-            {/* Scrollable body */}
             <div className="overflow-y-auto flex-1">
-
-              {/* Loading shimmer */}
-              {loading && query.length >= 2 && (
-                <div className="divide-y" style={{ borderColor: "var(--th-border-subtle)" }}>
-                  {[0, 1, 2].map(i => <ShimmerRow key={i} isLight={isLight} />)}
-                </div>
-              )}
-
-              {/* Search results */}
-              {!loading && !showEmpty && results.length > 0 && (
+              {loading && query.length >= 2 ? (
+                [0, 1, 2].map(i => <ShimmerRow key={i} />)
+              ) : !showEmpty && results.length > 0 ? (
                 <>
-                  <SectionHeader
-                    icon={<Search size={9} style={{ color: "var(--th-text-faint)" }} />}
-                    label={`Results for "${query}"`}
-                    right={`${results.length} found`}
-                    isLight={isLight}
-                  />
+                  <SectionHeader icon={<TrendingUp size={12}/>} label="Search Results" />
                   {results.map((r, i) => (
-                    <StockCard key={r.ticker + i} r={r}
-                      active={i === activeIdx} isLight={isLight} onPick={() => pick(r)} />
+                    <StockCard key={r.ticker} r={r} active={i === activeIdx} onPick={() => pick(r)} />
                   ))}
                 </>
-              )}
-
-              {/* No results */}
-              {!loading && !showEmpty && results.length === 0 && query.length >= 2 && (
-                <div className="py-10 text-center">
-                  <div className="text-3xl mb-3">🔍</div>
-                  <div className="text-[11px] font-mono font-medium"
-                    style={{ color: "var(--th-text-secondary)" }}>
-                    No results for &quot;{query}&quot;
-                  </div>
-                  <div className="text-[9.5px] mt-1" style={{ color: "var(--th-text-faint)" }}>
-                    Try a partial ticker · e.g. &quot;REL&quot;, &quot;HDFC&quot;, &quot;TAT&quot;
-                  </div>
-                </div>
-              )}
-
-              {/* Empty state: recent + popular */}
-              {showEmpty && (
+              ) : showEmpty ? (
                 <>
                   {recent.length > 0 && (
                     <>
-                      <SectionHeader
-                        icon={<Clock size={9} style={{ color: "var(--th-text-faint)" }} />}
-                        label="Recent"
-                        isLight={isLight}
-                      />
+                      <SectionHeader icon={<Clock size={9} />} label="Recent" />
                       {recent.map((r, i) => (
-                        <StockCard key={r.ticker} r={r}
-                          active={i === activeIdx} isLight={isLight} onPick={() => pick(r)} />
+                        <StockCard key={r.ticker} r={r} active={i === activeIdx} onPick={() => pick(r)} />
                       ))}
-                      <div className="h-px" style={{ background: "var(--th-border-subtle)" }} />
                     </>
                   )}
-                  <SectionHeader
-                    icon={<Zap size={9} style={{ color: "var(--gold)" }} />}
-                    label="Popular Stocks"
-                    isLight={isLight}
-                  />
+                  <SectionHeader icon={<Zap size={9} />} label="Popular Stocks" />
                   {POPULAR.map((r, i) => (
-                    <StockCard key={r.ticker} r={r}
-                      active={(i + recent.length) === activeIdx} isLight={isLight} onPick={() => pick(r)} />
+                    <StockCard key={r.ticker} r={r} active={(i + recent.length) === activeIdx} onPick={() => pick(r)} />
                   ))}
                 </>
+              ) : (
+                <div className="p-8 text-center text-[11px] text-gray-500">No results found.</div>
               )}
             </div>
 
-            {/* Keyboard hints — sticky footer */}
-            <div
-              className="px-4 py-2 flex items-center gap-3 flex-shrink-0"
+            <div className="p-3 border-t flex items-center justify-between flex-shrink-0"
               style={{
-                borderTop:  "1px solid var(--th-border-subtle)",
-                background: isLight ? "rgba(252,250,244,0.97)" : "rgba(10,10,10,0.97)",
-              }}
-            >
-              {[["↑↓", "Navigate"], ["↵", "Select"], ["Esc", "Close"]].map(([key, lbl]) => (
-                <div key={key} className="flex items-center gap-1">
-                  <kbd
-                    className="text-[7.5px] font-mono px-1.5 py-0.5 rounded"
-                    style={{
-                      background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)",
-                      border:     `1px solid ${isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)"}`,
-                      color:      "var(--th-text-faint)",
-                    }}
-                  >
-                    {key}
-                  </kbd>
-                  <span className="text-[8px]" style={{ color: "var(--th-text-faint)" }}>{lbl}</span>
+                background: "var(--th-bg-card)",
+                borderColor: "var(--border)",
+              }}>
+              <div className="flex gap-4 items-center">
+                <div className="flex items-center gap-1.5">
+                  <kbd className="px-1.5 py-0.5 rounded text-[9px] font-mono"
+                    style={{ color: "var(--th-text-faint)", background: "var(--border-muted)", border: "1px solid var(--border)" }}>↑↓</kbd>
+                  <span className="text-[9px] font-mono" style={{ color: "var(--th-text-dim)" }}>to navigate</span>
                 </div>
-              ))}
+              </div>
             </div>
           </motion.div>
         )}
@@ -436,11 +367,10 @@ export function TickerSearchInput({
 /* ─── SelectedStockChip ──────────────────────────────────────────────────── */
 
 export function SelectedStockChip({
-  stock, onClear, isLight,
+  stock, onClear,
 }: {
   stock:   SearchResult;
   onClear: () => void;
-  isLight: boolean;
 }) {
   const col  = sCol(stock.sector);
   const isUp = (stock.change_pct ?? 0) >= 0;
@@ -452,11 +382,9 @@ export function SelectedStockChip({
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
       className="rounded-xl p-3 flex items-center gap-3"
       style={{
-        background: isLight
-          ? "linear-gradient(135deg, rgba(184,150,46,0.07), rgba(184,150,46,0.03))"
-          : "linear-gradient(135deg, rgba(255,215,0,0.06), rgba(255,215,0,0.02))",
-        border:    `1px solid ${isLight ? "rgba(184,150,46,0.25)" : "rgba(255,215,0,0.18)"}`,
-        boxShadow: isLight ? "none" : "0 0 24px rgba(255,215,0,0.04)",
+        background: "var(--th-bg-card)",
+        border:    "1px solid var(--border-accent)",
+        boxShadow: "0 0 24px var(--shadow-sm)",
       }}
     >
       {/* Avatar */}
@@ -475,7 +403,7 @@ export function SelectedStockChip({
           </span>
           <span
             className="text-[8px] font-mono px-1.5 py-px rounded"
-            style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: "var(--th-text-faint)" }}
+            style={{ background: "var(--border-muted)", color: "var(--th-text-faint)" }}
           >
             {stock.exchange}
           </span>
@@ -523,7 +451,7 @@ export function SelectedStockChip({
         style={{ color: "var(--th-text-faint)" }}
         onMouseEnter={e => {
           e.currentTarget.style.color      = "var(--negative)";
-          e.currentTarget.style.background = "rgba(255,77,77,0.08)";
+          e.currentTarget.style.background = "var(--danger-muted)";
         }}
         onMouseLeave={e => {
           e.currentTarget.style.color      = "var(--th-text-faint)";

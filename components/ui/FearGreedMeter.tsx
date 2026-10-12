@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * R.H.T.I.H — Institutional Fear & Greed Meter
@@ -32,11 +32,11 @@ const SEG_GAP  =   1.8;   // score-unit gap on each side of every segment
 type Seg = { from:number; to:number; label:string; col:string; dimCol:string; glow:string };
 
 const SEGS: Seg[] = [
-  { from:  0, to: 20, label:"Extreme Fear", col:"#B83232", dimCol:"rgba(184,50,50,0.18)",  glow:"rgba(184,50,50,0.48)"  },
-  { from: 20, to: 40, label:"Fear",          col:"#B8641A", dimCol:"rgba(184,100,26,0.18)", glow:"rgba(184,100,26,0.48)" },
-  { from: 40, to: 60, label:"Neutral",       col:"#A88A0A", dimCol:"rgba(168,138,10,0.18)", glow:"rgba(168,138,10,0.48)" },
-  { from: 60, to: 80, label:"Greed",         col:"#218050", dimCol:"rgba(33,128,80,0.18)",  glow:"rgba(33,128,80,0.48)"  },
-  { from: 80, to:100, label:"Extreme Greed", col:"#00A86B", dimCol:"rgba(0,168,107,0.18)",  glow:"rgba(0,168,107,0.48)"  },
+  { from:  0, to: 20, label:"Extreme Fear", col:"var(--danger)", dimCol:"var(--danger-muted)",  glow:"var(--danger)"  },
+  { from: 20, to: 40, label:"Fear",          col:"#FF7A00", dimCol:"rgba(255,122,0,0.18)", glow:"#FF7A00" },
+  { from: 40, to: 60, label:"Neutral",       col:"var(--warning)", dimCol:"var(--warning-muted)", glow:"var(--warning)" },
+  { from: 60, to: 80, label:"Greed",         col:"#34D399", dimCol:"rgba(52,211,153,0.18)",  glow:"#34D399"  },
+  { from: 80, to:100, label:"Extreme Greed", col:"var(--success)", dimCol:"var(--success-muted)",  glow:"var(--success)"  },
 ] as const;
 
 /* ── Core geometry helpers ──────────────────────────────── */
@@ -125,9 +125,9 @@ export function FearGreedMeter({
 
           {/* Needle body gradient (tapered, white → grey) */}
           <linearGradient id="fgm-needle" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="rgba(255,255,255,0.96)"/>
-            <stop offset="65%"  stopColor="rgba(210,210,210,0.82)"/>
-            <stop offset="100%" stopColor="rgba(120,120,120,0.55)"/>
+            <stop offset="0%"   stopColor="var(--th-text-primary)"/>
+            <stop offset="65%"  stopColor="var(--th-text-muted)"/>
+            <stop offset="100%" stopColor="var(--th-text-faint)"/>
           </linearGradient>
 
           {/* Active segment inner glow */}
@@ -138,7 +138,7 @@ export function FearGreedMeter({
         </defs>
 
         {/* ① Faint full-range background ring */}
-        <path d={bgPath} fill="rgba(255,255,255,0.022)"/>
+        <path d={bgPath} fill="var(--border-muted)"/>
 
         {/* ② All segment tracks — uniformly dimmed */}
         {SEGS.map(s => (
@@ -177,7 +177,7 @@ export function FearGreedMeter({
         {ticks.map(t => (
           <line key={t.xi}
             x1={t.xi} y1={t.yi} x2={t.xo} y2={t.yo}
-            stroke={t.major ? "rgba(255,255,255,0.20)" : "rgba(255,255,255,0.10)"}
+            stroke={t.major ? "var(--th-text-faint)" : "var(--border)"}
             strokeWidth={t.major ? 1.5 : 1}
             strokeLinecap="round"
           />
@@ -227,20 +227,20 @@ export function FearGreedMeter({
         {/* ⑦ Hub pivot — layered for 3-D depth */}
         {/* Outer shadow disc */}
         <circle cx={CX} cy={CY} r={HUB_R + 5}
-          fill="rgba(0,0,0,0.65)"
-          style={{ filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.7))" }}
+          fill="var(--th-bg-card)"
+          style={{ filter: "drop-shadow(0 3px 6px var(--shadow-sm))" }}
         />
         {/* Metallic gold hub */}
         <circle cx={CX} cy={CY} r={HUB_R}
           fill="url(#fgm-hub)"
-          style={{ filter: "drop-shadow(0 0 7px rgba(255,215,0,0.58))" }}
+          style={{ filter: "drop-shadow(0 0 7px var(--primary-muted))" }}
         />
         {/* Specular shine highlight */}
         <ellipse cx={CX - 3} cy={CY - 3} rx={3} ry={2.2}
-          fill="rgba(255,255,255,0.48)"
+          fill="var(--th-text-dim)"
         />
         {/* Centre dot */}
-        <circle cx={CX} cy={CY} r={1.8} fill="rgba(0,0,0,0.55)"/>
+        <circle cx={CX} cy={CY} r={1.8} fill="var(--th-text-secondary)"/>
 
         {/* ⑧ Score integer — dominant inside the donut */}
         <text
@@ -277,15 +277,15 @@ export function FearGreedMeter({
       {/* ─── Scale labels (HTML — better typography) ──────── */}
       <div className="flex justify-between w-full" style={{ marginTop:"-3px" }}>
         <span className="text-[7px] font-mono tracking-wider"
-          style={{ color:"rgba(184,50,50,0.38)" }}>
+          style={{ color:"var(--danger)" }}>
           FEAR
         </span>
         <span className="text-[7px] font-mono tracking-wider"
-          style={{ color:"rgba(168,138,10,0.38)" }}>
+          style={{ color:"var(--warning)" }}>
           NEUTRAL
         </span>
         <span className="text-[7px] font-mono tracking-wider"
-          style={{ color:"rgba(0,168,107,0.38)" }}>
+          style={{ color:"var(--success)" }}>
           GREED
         </span>
       </div>
@@ -305,14 +305,14 @@ export function FearGreedMeter({
           </div>
           {/* Track */}
           <div className="h-[3px] rounded-full overflow-hidden"
-            style={{ background:"rgba(255,255,255,0.04)" }}>
+            style={{ background:"var(--border-muted)" }}>
             <motion.div
               className="h-full rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${confidence}%` }}
               transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                background: `linear-gradient(90deg, ${seg.col}88, ${seg.col})`,
+                background: seg.col,
                 boxShadow:  `0 0 5px ${seg.glow}`,
               }}
             />

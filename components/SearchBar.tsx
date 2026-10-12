@@ -198,23 +198,16 @@ export function SearchBar({
           isHero ? "h-14" : "h-10"
         )}
         style={{
-          background: focused
-            ? isLight ? "rgba(255,253,247,0.99)" : "rgba(12,12,12,0.99)"
-            : "var(--th-bg-elevated)",
-          backdropFilter: "blur(24px)",
-          border: focused
-            ? "1px solid var(--th-border-accent)"
-            : "1px solid var(--th-border-normal)",
-          boxShadow: focused
-            ? `0 0 0 3px ${isLight ? "rgba(184,150,46,0.08)" : "rgba(255,215,0,0.05)"}, var(--th-shadow-elevated)`
-            : "none",
+          background: focused ? "var(--th-bg-card)" : "var(--muted)",
+          border: "1px solid " + (focused ? "var(--border-accent)" : "var(--border-muted)"),
+          boxShadow: focused ? "0 0 0 3px var(--primary-muted), var(--th-shadow-elevated)" : "none",
         }}
       >
         {/* Shimmer on focus */}
         {focused && (
           <div className="absolute inset-0 pointer-events-none"
             style={{
-              background: "linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.025) 50%, transparent 100%)",
+              background: "linear-gradient(90deg, transparent 0%, var(--th-gold-bg) 50%, transparent 100%)",
               backgroundSize: "200% auto",
               animation: "shimmer 3s linear infinite",
             }}
@@ -266,8 +259,8 @@ export function SearchBar({
             <kbd className="hidden sm:flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono"
               style={{
                 color: "var(--th-text-faint)",
-                background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.04)",
-                border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)",
+                background: "var(--border-muted)",
+                border: "1px solid var(--border)",
               }}>
               ⌘K
             </kbd>
@@ -288,12 +281,10 @@ export function SearchBar({
             transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
             className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-50"
             style={{
-              background: isLight ? "rgba(255,253,247,0.99)" : "rgba(10,10,10,0.99)",
-              border: `1px solid var(--th-border-normal)`,
+              background: "var(--th-bg-card)",
+              border: "1px solid var(--border-accent)",
               backdropFilter: "blur(32px)",
-              boxShadow: isLight
-                ? "0 20px 60px rgba(100,80,20,0.15), 0 4px 12px rgba(0,0,0,0.06)"
-                : "0 24px 70px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,215,0,0.04)",
+              boxShadow: "var(--th-shadow-elevated)",
               maxHeight: "72vh",
               overflowY: "auto",
             }}

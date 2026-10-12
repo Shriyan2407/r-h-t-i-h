@@ -44,7 +44,7 @@ function Section({
     >
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3.5 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 transition-colors"
         style={{ background: "transparent" }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-hover)"; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
@@ -52,8 +52,8 @@ function Section({
         <div className="flex items-center gap-2.5">
           <Icon size={13} style={{ color: accentColor ?? "var(--th-text-muted)" }} />
           <span
-            className="text-[11px] font-mono font-bold uppercase tracking-[0.12em]"
-            style={{ color: "var(--th-text-secondary)" }}
+            className="font-mono font-bold uppercase tracking-[0.12em]"
+            style={{ fontSize: "12px", color: "var(--th-text-secondary)" }}
           >
             {title}
           </span>
@@ -95,24 +95,26 @@ function ScenarioCard({ scenario }: { scenario: Scenario }) {
   return (
     <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-mono font-bold tracking-[0.12em]" style={{ color: c.text }}>{c.label}</span>
+        <span className="font-mono font-bold tracking-[0.12em]" style={{ fontSize: "11px", color: c.text }}>{c.label}</span>
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-mono font-medium" style={{ color: "var(--th-text-muted)" }}>Probability:</span>
-          <span className="text-[11px] font-mono font-bold" style={{ color: c.text }}>{scenario.probability}%</span>
+          <span className="font-mono" style={{ fontSize: "11px", fontWeight: 400, color: "var(--th-text-muted)" }}>Probability:</span>
+          <span className="font-mono font-bold" style={{ fontSize: "13px", color: c.text }}>{scenario.probability}%</span>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-muted)" }}>Target</div>
-          <div className="text-[15px] font-mono font-bold" style={{ color: c.text }}>₹{scenario.target_price.toFixed(0)}</div>
+          {/* Label subtle */}
+          <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-muted)" }}>Target</div>
+          {/* Number dominant */}
+          <div className="font-mono font-bold" style={{ fontSize: "20px", letterSpacing: "-0.03em", color: c.text }}>₹{scenario.target_price.toFixed(0)}</div>
         </div>
         <div>
-          <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-muted)" }}>Timeline</div>
-          <div className="text-[12px] font-mono font-semibold" style={{ color: "var(--th-text-secondary)" }}>{scenario.timeline}</div>
+          <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-muted)" }}>Timeline</div>
+          <div className="font-mono font-semibold" style={{ fontSize: "14px", color: "var(--th-text-secondary)" }}>{scenario.timeline}</div>
         </div>
         <div>
-          <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-muted)" }}>Stop Below</div>
-          <div className="text-[12px] font-mono font-semibold" style={{ color: "#FF4D4D" }}>₹{scenario.invalidation_level.toFixed(0)}</div>
+          <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-muted)" }}>Stop Below</div>
+          <div className="font-mono font-bold" style={{ fontSize: "14px", color: "#FF4D4D" }}>₹{scenario.invalidation_level.toFixed(0)}</div>
         </div>
       </div>
       <div className="flex flex-col gap-1">
@@ -171,13 +173,13 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
         }}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
             <Brain size={14} style={{ color: "#38BDF8" }} />
-            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.14em]" style={{ color: "var(--th-text-muted)" }}>
+            <span className="font-mono font-bold uppercase tracking-[0.14em]" style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
               AI Final Verdict
             </span>
           </div>
-          <span className="text-[10px] font-mono font-medium" style={{ color: "var(--th-text-dim)" }}>
+          <span className="font-mono" style={{ fontSize: "11px", fontWeight: 400, color: "var(--th-text-dim)" }}>
             {new Date(analysis.generated_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
           </span>
         </div>
@@ -191,8 +193,8 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
         <ConfidenceMeter confidence={analysis.verdict.confidence} verdict={analysis.verdict.rating} />
 
         <p
-          className="text-[12.5px] font-medium leading-relaxed"
-          style={{ color: "var(--th-text-secondary)", borderTop: "1px solid var(--th-border-subtle)", paddingTop: "12px" }}
+          className="font-medium leading-relaxed"
+          style={{ fontSize: "14px", fontWeight: 400, color: "var(--th-text-secondary)", borderTop: "1px solid var(--th-border-subtle)", paddingTop: "14px" }}
         >
           {analysis.verdict.investment_thesis}
         </p>
@@ -200,23 +202,23 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
         {(analysis.verdict.entry_range || analysis.verdict.stop_loss) && (
           <div className="grid grid-cols-3 gap-2 text-center">
             {analysis.verdict.entry_range && (
-              <div className="p-2.5 rounded-lg" style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.22)" }}>
-                <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-dim)" }}>Entry Range</div>
-                <div className="text-[12px] font-mono font-bold" style={{ color: "#38BDF8" }}>
+              <div className="p-3 rounded-lg" style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.22)" }}>
+                <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-dim)" }}>Entry Range</div>
+                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "#38BDF8" }}>
                   ₹{analysis.verdict.entry_range[0].toFixed(0)}–{analysis.verdict.entry_range[1].toFixed(0)}
                 </div>
               </div>
             )}
             {analysis.verdict.stop_loss && (
-              <div className="p-2.5 rounded-lg" style={{ background: "rgba(255,77,77,0.06)", border: "1px solid rgba(255,77,77,0.22)" }}>
-                <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-dim)" }}>Stop Loss</div>
-                <div className="text-[12px] font-mono font-bold" style={{ color: "#FF4D4D" }}>₹{analysis.verdict.stop_loss.toFixed(0)}</div>
+              <div className="p-3 rounded-lg" style={{ background: "rgba(255,77,77,0.06)", border: "1px solid rgba(255,77,77,0.22)" }}>
+                <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-dim)" }}>Stop Loss</div>
+                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "#FF4D4D" }}>₹{analysis.verdict.stop_loss.toFixed(0)}</div>
               </div>
             )}
             {analysis.verdict.target_1 && (
-              <div className="p-2.5 rounded-lg" style={{ background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.22)" }}>
-                <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-dim)" }}>Target 1 / 2</div>
-                <div className="text-[12px] font-mono font-bold" style={{ color: "#00FF9C" }}>
+              <div className="p-3 rounded-lg" style={{ background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.22)" }}>
+                <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-dim)" }}>Target 1 / 2</div>
+                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "#00FF9C" }}>
                   ₹{analysis.verdict.target_1.toFixed(0)}
                   {analysis.verdict.target_2 && ` / ₹${analysis.verdict.target_2.toFixed(0)}`}
                 </div>
@@ -359,8 +361,8 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
 
       {/* ── Disclaimer ── */}
       <div
-        className="text-[10.5px] font-mono font-medium p-3 rounded-lg leading-relaxed"
-        style={{ color: "var(--th-text-dim)", border: "1px solid var(--th-border-subtle)", background: "var(--th-bg-elevated)" }}
+        className="font-mono font-medium p-4 rounded-xl leading-relaxed"
+        style={{ fontSize: "11px", fontWeight: 400, color: "var(--th-text-dim)", border: "1px solid var(--th-border-subtle)", background: "var(--th-bg-elevated)" }}
       >
         ⚠ This analysis is AI-generated for informational purposes only. Not investment advice.
         Past performance does not guarantee future results. Conduct independent due diligence before investing.

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { use, useEffect, useState, useCallback } from "react";
 import {
   Brain,
@@ -41,19 +41,19 @@ import type {
 import { cn } from "@/lib/utils";
 
 const TABS: { id: AnalysisTab; label: string; icon: React.ElementType }[] = [
+  { id: "ai-report",     label: "AI Report",     icon: Brain      },
   { id: "overview",      label: "Overview",      icon: BarChart2  },
   { id: "technical",     label: "Technical",     icon: Activity   },
   { id: "fundamentals",  label: "Fundamentals",  icon: BookOpen   },
   { id: "macro",         label: "Macro",         icon: Globe      },
   { id: "news",          label: "News",          icon: Newspaper  },
-  { id: "ai-report",     label: "AI Report",     icon: Brain      },
 ];
 
 export default function StockPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker }     = use(params);
   const upperTicker    = ticker.toUpperCase();
 
-  const [activeTab,       setActiveTab]       = useState<AnalysisTab>("overview");
+  const [activeTab,       setActiveTab]       = useState<AnalysisTab>("ai-report");
   const [quote,           setQuote]           = useState<StockQuote | null>(null);
   const [technicals,      setTechnicals]      = useState<TechnicalIndicators | null>(null);
   const [fundamentals,    setFundamentals]    = useState<FundamentalData | null>(null);
@@ -188,7 +188,7 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 font-mono font-bold text-[10px]"
+                    className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 mt-1 font-mono font-bold text-[11px]"
                     style={{
                       background: "var(--th-border-card)",
                       border: "1px solid rgba(255,215,0,0.22)",
@@ -198,44 +198,77 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                     {upperTicker.slice(0, 3)}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                    {/* Company name — prominent (Layer 2) */}
+                    <div className="flex items-center gap-2 flex-wrap mb-2">
                       <h1
-                        className="font-bold"
                         style={{
                           fontFamily: "var(--font-space-grotesk, sans-serif)",
-                          fontSize: "18px",
+                          fontSize: "20px",
+                          fontWeight: 600,
                           color: "var(--th-text-primary)",
+                          letterSpacing: "-0.02em",
                         }}
                       >
                         {quote.company_name}
                       </h1>
-                      <Badge variant="gold">{upperTicker}</Badge>
+                      {/* Ticker — smaller, secondary */}
+                      <span
+                        className="font-mono"
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 500,
+                          letterSpacing: "0.06em",
+                          color: "var(--gold)",
+                          background: "rgba(255,215,0,0.10)",
+                          border: "1px solid rgba(255,215,0,0.22)",
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                        }}
+                      >
+                        {upperTicker}
+                      </span>
                       <Badge variant="dim">{quote.exchange}</Badge>
                       {quote.sector !== "Unknown" && (
                         <Badge variant="dim">{quote.sector}</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-[22px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
+
+                    {/* Price — hero number (Layer 1) */}
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "40px",
+                          fontWeight: 700,
+                          letterSpacing: "-0.04em",
+                          lineHeight: 1,
+                          color: "var(--th-text-primary)",
+                        }}
+                      >
                         ₹{quote.current_price.toFixed(2)}
                       </span>
                       <span
-                        className="text-[13px] font-mono font-semibold"
-                        style={{ color: isPositive ? "var(--positive)" : "var(--negative)" }}
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          letterSpacing: "-0.01em",
+                          color: isPositive ? "var(--positive)" : "var(--negative)",
+                        }}
                       >
                         {isPositive ? "▲" : "▼"}{" "}
                         {Math.abs(quote.change).toFixed(2)}{" "}
                         ({Math.abs(quote.change_pct).toFixed(2)}%)
                       </span>
                       <span
-                        className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider"
                         style={{
                           color: "var(--positive)",
                           background: "var(--th-green-bg)",
                           border: "1px solid rgba(0,255,156,0.18)",
                         }}
                       >
-                        <span className="w-1 h-1 rounded-full bg-[#00FF9C] animate-live-dot" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] animate-live-dot" />
                         NSE Live
                       </span>
                     </div>
@@ -269,7 +302,7 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
               </div>
 
               {/* Quick metrics strip */}
-              <div className="flex flex-wrap gap-1.5 mt-3">
+              <div className="flex flex-wrap gap-2 mt-4">
                 {[
                   { label: "Mkt Cap",   value: formatMarketCap(quote.market_cap)                               },
                   { label: "52W High",  value: `₹${quote.week_52_high.toFixed(0)}`                            },
@@ -281,14 +314,37 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                 ].map(m => (
                   <div
                     key={m.label}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+                    className="flex flex-col gap-1 px-3 py-2 rounded-lg"
                     style={{
                       background: "rgba(255,255,255,0.02)",
                       border: "1px solid var(--th-border-subtle)",
                     }}
                   >
-                    <span className="text-[9.5px] font-mono" style={{ color: "var(--th-text-faint)" }}>{m.label}:</span>
-                    <span className="text-[9.5px] font-mono font-medium" style={{ color: "var(--th-text-secondary)" }}>{m.value}</span>
+                    {/* Label — subtle */}
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: "10px",
+                        fontWeight: 400,
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase" as const,
+                        color: "var(--th-text-muted)",
+                      }}
+                    >
+                      {m.label}
+                    </span>
+                    {/* Value — dominant */}
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        letterSpacing: "-0.01em",
+                        color: "var(--th-text-primary)",
+                      }}
+                    >
+                      {m.value}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -340,11 +396,11 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                 {tab.label}
                 {tab.id === "ai-report" && (
                   <span
-                    className="ml-auto text-[8px] font-mono uppercase px-1.5 py-0.5 rounded"
+                    className="ml-auto text-[9px] font-mono uppercase px-1.5 py-0.5 rounded"
                     style={{
-                      color: "var(--gold)",
-                      background: "var(--th-border-card)",
-                      border: "1px solid var(--th-border-accent)",
+                      color: "#FFD700",
+                      background: "rgba(255,215,0,0.12)",
+                      border: "1px solid rgba(255,215,0,0.30)",
                     }}
                   >
                     AI
@@ -532,10 +588,28 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                 </span>
               </div>
               <div>
-                <div className="text-xl font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
+                <div
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "28px",
+                    fontWeight: 700,
+                    letterSpacing: "-0.03em",
+                    lineHeight: 1,
+                    color: "var(--th-text-primary)",
+                  }}
+                >
                   ₹{quote.current_price.toFixed(2)}
                 </div>
-                <div className="text-sm font-mono font-semibold" style={{ color: isPositive ? "var(--positive)" : "var(--negative)" }}>
+                <div
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    letterSpacing: "-0.01em",
+                    color: isPositive ? "var(--positive)" : "var(--negative)",
+                    marginTop: "4px",
+                  }}
+                >
                   {isPositive ? "▲" : "▼"} {Math.abs(quote.change).toFixed(2)} ({Math.abs(quote.change_pct).toFixed(2)}%)
                 </div>
               </div>

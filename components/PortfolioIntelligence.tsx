@@ -40,7 +40,7 @@ export function AIScoreRing({
         <circle cx={CX} cy={CY} r={R + 10} fill="url(#scoreGlow)" />
         {/* Track */}
         <circle cx={CX} cy={CY} r={R} fill="none"
-          stroke="rgba(255,255,255,0.06)" strokeWidth="14" />
+          stroke="var(--border-muted)" strokeWidth="14" />
         {/* Fill arc */}
         <motion.circle cx={CX} cy={CY} r={R} fill="none"
           stroke={color} strokeWidth="12" strokeLinecap="round"
@@ -52,7 +52,7 @@ export function AIScoreRing({
         />
         {/* Inner ring */}
         <circle cx={CX} cy={CY} r={R - 16} fill="none"
-          stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+          stroke="var(--border-muted)" strokeWidth="1" />
         {/* Score */}
         <text x={CX} y={CY - 8} textAnchor="middle" fill={color}
           fontSize="28" fontWeight="bold" fontFamily="monospace">
@@ -65,7 +65,7 @@ export function AIScoreRing({
         </text>
         {/* Label */}
         <text x={CX} y={CY + 26} textAnchor="middle"
-          fill="rgba(255,255,255,0.3)" fontSize="7.5" fontFamily="monospace" letterSpacing="2">
+          fill="var(--th-text-faint)" fontSize="7.5" fontFamily="monospace" letterSpacing="2">
           {label}
         </text>
       </svg>
@@ -120,13 +120,13 @@ export function RadarChart({ dims, color }: { dims: PortfolioDimensions; color: 
       {/* Background grid rings */}
       {[0.25, 0.5, 0.75, 1].map((s, i) => (
         <path key={i} d={polyPath(s)} fill="none"
-          stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+          stroke="var(--border-muted)" strokeWidth="1" />
       ))}
       {/* Axis lines */}
       {RADAR_AXES.map(({ angle }, i) => {
         const p = pt(angle, 1);
         return <line key={i} x1={CX} y1={CY} x2={p.x} y2={p.y}
-          stroke="rgba(255,255,255,0.07)" strokeWidth="1" />;
+          stroke="var(--border-muted)" strokeWidth="1" />;
       })}
       {/* Data fill */}
       <motion.path d="M 105,105 Z" fill="url(#radarFill)"
@@ -151,7 +151,7 @@ export function RadarChart({ dims, color }: { dims: PortfolioDimensions; color: 
         const p = pt(angle, 1.22);
         return (
           <text key={i} x={p.x} y={p.y + 3.5} textAnchor="middle"
-            fill="rgba(255,255,255,0.45)" fontSize="8" fontFamily="monospace">
+            fill="var(--th-text-dim)" fontSize="8" fontFamily="monospace">
             {label}
           </text>
         );
@@ -190,7 +190,7 @@ export function HoldingHeatmap({ holdings }: { holdings: HoldingData[] }) {
         const border = isPos
           ? `rgba(0,255,156,${0.25 + mag * 0.4})`
           : `rgba(255,77,77,${0.25 + mag * 0.4})`;
-        const textCol = isPos ? "#00FF9C" : "#FF6B6B";
+        const textCol = isPos ? "var(--success)" : "#FF6B6B";
 
         return (
           <motion.div key={h.ticker}
@@ -209,14 +209,14 @@ export function HoldingHeatmap({ holdings }: { holdings: HoldingData[] }) {
               justifyContent: "space-between",
               cursor:         "default",
             }}>
-            <div style={{ fontSize: "9.5px", fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", letterSpacing: "0.04em" }}>
+            <div style={{ fontSize: "9.5px", fontFamily: "monospace", fontWeight: 700, color: "var(--th-text-primary)", letterSpacing: "0.04em" }}>
               {h.ticker}
             </div>
             <div>
               <div style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: 700, color: textCol }}>
                 {h.pnlPct >= 0 ? "+" : ""}{h.pnlPct.toFixed(1)}%
               </div>
-              <div style={{ fontSize: "7.5px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)" }}>
+              <div style={{ fontSize: "7.5px", fontFamily: "monospace", color: "var(--th-text-dim)" }}>
                 {h.allocationPct.toFixed(0)}% alloc
               </div>
             </div>
@@ -245,7 +245,7 @@ export function FearGauge({ score }: { score: number }) {
     <svg width={140} height={90}>
       {/* Track */}
       <path d={pathD} fill="none"
-        stroke="rgba(255,255,255,0.07)" strokeWidth="12" strokeLinecap="round" />
+        stroke="var(--border-muted)" strokeWidth="12" strokeLinecap="round" />
       {/* Color zones (faint) */}
       <path d={`M ${CX - R},${CY} A ${R},${R} 0 0 0 ${CX + R},${CY}`}
         fill="none" stroke="rgba(0,255,156,0.06)" strokeWidth="10" />
@@ -273,9 +273,9 @@ export function FearGauge({ score }: { score: number }) {
       </text>
       {/* Axis labels */}
       <text x={CX - R + 2} y={CY + 18} textAnchor="middle"
-        fill="rgba(255,255,255,0.22)" fontSize="7" fontFamily="monospace">CALM</text>
+        fill="var(--th-text-ultra-faint)" fontSize="7" fontFamily="monospace">CALM</text>
       <text x={CX + R - 2} y={CY + 18} textAnchor="middle"
-        fill="rgba(255,255,255,0.22)" fontSize="7" fontFamily="monospace">PANIC</text>
+        fill="var(--th-text-ultra-faint)" fontSize="7" fontFamily="monospace">PANIC</text>
     </svg>
   );
 }
@@ -299,7 +299,7 @@ export function PortfolioDNACard({ dna }: { dna: DNAResult }) {
         <span className="text-[18px]">{dna.emoji}</span>
         <div>
           <div className="text-[8px] font-mono uppercase tracking-[0.18em]"
-            style={{ color: "rgba(255,255,255,0.35)" }}>Portfolio DNA</div>
+            style={{ color: "var(--th-text-dim)" }}>Portfolio DNA</div>
           <div className="text-[13px] font-bold font-mono" style={{ color: dna.color }}>
             {dna.label}
           </div>
@@ -310,14 +310,14 @@ export function PortfolioDNACard({ dna }: { dna: DNAResult }) {
         </div>
       </div>
       <p className="text-[9.5px] leading-relaxed mb-3"
-        style={{ color: "rgba(255,255,255,0.55)" }}>
+        style={{ color: "var(--th-text-muted)" }}>
         {dna.description}
       </p>
       <div className="space-y-1">
         {dna.behaviors.map((b, i) => (
           <div key={i} className="flex items-start gap-1.5">
             <span className="mt-0.5 text-[8px]" style={{ color: dna.color }}>▸</span>
-            <span className="text-[9px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{b}</span>
+            <span className="text-[9px] leading-relaxed" style={{ color: "var(--th-text-muted)" }}>{b}</span>
           </div>
         ))}
       </div>
@@ -344,12 +344,24 @@ export function AICommandCenter({
     metrics.sharpe > 0.5 ? "NEUTRAL" :
     metrics.totalPnlPct > 0 ? "CAUTIOUS" : "BEARISH";
   const convictionColor =
-    convictionLabel === "BULLISH" ? "#00FF9C" :
-    convictionLabel === "NEUTRAL" ? "#FFD700" :
-    convictionLabel === "CAUTIOUS" ? "#FF8C42" : "#FF4D4D";
+    convictionLabel === "BULLISH" ? "var(--success)" :
+    convictionLabel === "NEUTRAL" ? "var(--primary)" :
+    convictionLabel === "CAUTIOUS" ? "#FF8C42" : "var(--danger)";
 
-  const survivalTest = stressTests.find(s => s.scenario.includes("20%"));
-  const survivalPct  = survivalTest ? 100 + survivalTest.portfolioImpactPct : 85;
+  const vulnerable = [...holdings].sort((a,b) => b.allocationPct - a.allocationPct).slice(0, 3);
+  const topHolding = vulnerable[0]?.ticker || "Portfolio";
+  const riskLevel = fearScore >= 70 ? "HIGH" : fearScore >= 40 ? "MEDIUM" : "LOW";
+  const riskColor = fearScore >= 70 ? "var(--danger)" : fearScore >= 40 ? "var(--gold)" : "var(--success)";
+  const protectionScore = Math.max(0, 100 - fearScore);
+  const recommendation = fearScore >= 70 
+    ? `Reduce ${topHolding} concentration by 15% to lower portfolio drawdown.`
+    : fearScore >= 40 
+    ? `Watch ${topHolding} concentration; it drives your downside risk.`
+    : "Strong diversification. Maintain current sector balance.";
+
+  const loss10 = metrics.beta * -10 * 1.08;
+  const loss20 = metrics.beta * -20 * 1.15;
+  const loss30 = metrics.beta * -30 * 1.25;
 
   return (
     <motion.div
@@ -358,47 +370,73 @@ export function AICommandCenter({
       className="rounded-2xl overflow-hidden mb-4"
       style={{
         background: "var(--th-bg-card)",
-        border:     "1px solid rgba(255,215,0,0.18)",
-        boxShadow:  "0 0 40px rgba(255,215,0,0.05), 0 8px 32px rgba(0,0,0,0.4)",
+        border:     "1px solid var(--border-accent-faint)",
+        boxShadow:  "0 0 40px var(--border-accent-faint), 0 8px 32px var(--shadow-deep)",
       }}>
 
       {/* Header bar */}
-      <div className="flex items-center gap-2.5 px-5 py-2.5"
-        style={{ borderBottom: "1px solid rgba(255,215,0,0.10)", background: "rgba(255,215,0,0.03)" }}>
-        <Brain size={12} style={{ color: "#FFD700" }} />
-        <span className="text-[9px] font-mono uppercase tracking-[0.22em]"
-          style={{ color: "rgba(255,215,0,0.7)" }}>
+      <div className="flex items-center gap-2.5 px-5 py-3"
+        style={{ borderBottom: "1px solid var(--border-accent-faint)", background: "var(--primary-muted)" }}>
+        <Brain size={13} style={{ color: "var(--primary)" }} />
+        <span
+          style={{
+            fontFamily: "monospace",
+            fontSize: "11px",
+            fontWeight: 500,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: "var(--border-accent)",
+          }}
+        >
           AI Intelligence Command Center
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-[8px] font-mono" style={{ color: "rgba(255,255,255,0.25)" }}>LIVE</span>
+          <span style={{ fontFamily: "monospace", fontSize: "9px", fontWeight: 400, color: "var(--th-text-faint)" }}>LIVE</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
 
         {/* AI Verdict */}
-        <div className="p-5" style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="p-5" style={{ borderRight: "1px solid var(--border-muted)" }}>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-5 h-5 rounded-lg flex items-center justify-center"
-              style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.25)" }}>
-              <Brain size={10} style={{ color: "#FFD700" }} />
+              style={{ background: "var(--primary-muted)", border: "1px solid var(--border-accent-faint)" }}>
+              <Brain size={10} style={{ color: "var(--primary)" }} />
             </div>
-            <span className="text-[8.5px] font-mono uppercase tracking-widest"
-              style={{ color: "rgba(255,255,255,0.35)" }}>AI Portfolio Verdict</span>
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontSize: "11px",
+                fontWeight: 400,
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                color: "var(--th-text-dim)",
+              }}
+            >
+              AI Portfolio Verdict
+            </span>
             <div className="ml-auto px-2 py-0.5 rounded text-[8px] font-mono font-bold"
               style={{ background: `${convictionColor}18`, border: `1px solid ${convictionColor}30`, color: convictionColor }}>
               {convictionLabel}
             </div>
           </div>
-          <p className="text-[11px] leading-relaxed"
-            style={{ color: "rgba(255,255,255,0.72)", fontFamily: "monospace" }}>
+          {/* AI narrative — body text (14px/400) */}
+          <p
+            style={{
+              fontFamily: "sans-serif",
+              fontSize: "14px",
+              fontWeight: 400,
+              lineHeight: 1.7,
+              color: "var(--th-text-secondary)",
+            }}
+          >
             {narrative}
           </p>
           {holdings.length > 0 && (
             <div className="mt-3 flex items-center gap-3 text-[9px] font-mono"
-              style={{ color: "rgba(255,255,255,0.3)" }}>
+              style={{ color: "var(--th-text-faint)" }}>
               <span>β {metrics.beta.toFixed(2)}</span>
               <span>·</span>
               <span>Sharpe {metrics.sharpe.toFixed(2)}</span>
@@ -409,13 +447,31 @@ export function AICommandCenter({
         </div>
 
         {/* Portfolio DNA */}
-        <div className="p-5" style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="p-5" style={{ borderRight: "1px solid var(--border-muted)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-[14px]">{dna.emoji}</span>
+            <span className="text-[16px]">{dna.emoji}</span>
             <div>
-              <div className="text-[8.5px] font-mono uppercase tracking-widest"
-                style={{ color: "rgba(255,255,255,0.35)" }}>Portfolio DNA</div>
-              <div className="text-[13px] font-bold font-mono" style={{ color: dna.color }}>
+              <div
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "11px",
+                  fontWeight: 400,
+                  letterSpacing: "0.10em",
+                  textTransform: "uppercase",
+                  color: "var(--th-text-dim)",
+                }}
+              >
+                Portfolio DNA
+              </div>
+              <div
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "16px",
+                  fontWeight: 700,
+                  letterSpacing: "-0.01em",
+                  color: dna.color,
+                }}
+              >
                 {dna.label}
               </div>
             </div>
@@ -425,52 +481,69 @@ export function AICommandCenter({
             </div>
           </div>
           <p className="text-[10px] leading-relaxed mb-2.5"
-            style={{ color: "rgba(255,255,255,0.55)", fontFamily: "monospace" }}>
+            style={{ color: "var(--th-text-muted)", fontFamily: "monospace" }}>
             {dna.description}
           </p>
           <div className="space-y-1">
             {dna.behaviors.map((b, i) => (
               <div key={i} className="flex items-start gap-1.5">
                 <span className="text-[8px] mt-0.5" style={{ color: dna.color }}>▸</span>
-                <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.42)" }}>{b}</span>
+                <span className="text-[9px]" style={{ color: "var(--th-text-dim)" }}>{b}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Survival Meter */}
-        <div className="p-5">
-          <div className="text-[8.5px] font-mono uppercase tracking-widest mb-3"
-            style={{ color: "rgba(255,255,255,0.35)" }}>Portfolio Survival</div>
-
-          {/* Fear gauge */}
-          <div className="flex justify-center mb-1">
-            <FearGauge score={fearScore} />
-          </div>
-          <div className="text-[8.5px] font-mono text-center mb-3"
-            style={{ color: "rgba(255,255,255,0.28)" }}>Fear Exposure Score</div>
-
-          {/* Survival in crash */}
-          {survivalTest && (
-            <div className="p-2.5 rounded-lg"
-              style={{
-                background: survivalPct < 75 ? "rgba(255,77,77,0.08)" : "rgba(0,255,156,0.06)",
-                border: `1px solid ${survivalPct < 75 ? "rgba(255,77,77,0.18)" : "rgba(0,255,156,0.15)"}`,
-              }}>
-              <div className="text-[8px] font-mono uppercase mb-1"
-                style={{ color: "rgba(255,255,255,0.3)" }}>If NIFTY −20% crash</div>
-              <div className="text-[14px] font-bold font-mono"
-                style={{ color: survivalPct < 75 ? "#FF4D4D" : "#00FF9C" }}>
-                {survivalTest.portfolioImpactPct.toFixed(1)}% estimated damage
-              </div>
-              <div className="text-[8.5px] font-mono mt-0.5"
-                style={{ color: "rgba(255,255,255,0.35)" }}>
-                Severity: <span style={{ color: survivalTest.severity === "CRITICAL" ? "#FF4D4D" : "#FFD700" }}>
-                  {survivalTest.severity}
-                </span>
+        {/* Risk Meter */}
+        <div className="p-5 flex flex-col justify-between" style={{ background: "var(--th-bg-elevated)", borderLeft: "1px solid var(--border-muted)" }}>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--th-text-dim)" }}>Risk Meter</div>
+              <div className="px-2 py-0.5 rounded text-[9px] font-mono font-bold" style={{ background: `${riskColor}18`, border: `1px solid ${riskColor}30`, color: riskColor }}>
+                {riskLevel} RISK
               </div>
             </div>
-          )}
+
+            <div className="space-y-2.5 mb-5">
+              <div className="flex justify-between items-center text-[11px] font-mono">
+                <span style={{ color: "var(--th-text-muted)" }}>If NIFTY falls 10%</span>
+                <span style={{ color: "var(--danger)", fontWeight: 600 }}>{loss10.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px] font-mono">
+                <span style={{ color: "var(--th-text-muted)" }}>If NIFTY falls 20%</span>
+                <span style={{ color: "var(--danger)", fontWeight: 600 }}>{loss20.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px] font-mono">
+                <span style={{ color: "var(--th-text-muted)" }}>If NIFTY falls 30%</span>
+                <span style={{ color: "var(--danger)", fontWeight: 600 }}>{loss30.toFixed(1)}%</span>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <div className="text-[9px] font-mono uppercase tracking-widest mb-2" style={{ color: "var(--th-text-faint)" }}>Vulnerable Holdings</div>
+              <div className="flex flex-col gap-1.5 text-[11px] font-mono">
+                {vulnerable.map((h, i) => (
+                  <div key={h.ticker} className="flex justify-between items-center">
+                    <div className="flex gap-2 items-center">
+                      <span style={{ color: "var(--th-text-faint)" }}>{i + 1}.</span>
+                      <span style={{ color: "var(--th-text-secondary)" }}>{h.ticker}</span>
+                    </div>
+                    <span style={{ color: "var(--th-text-dim)" }}>{h.allocationPct.toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-3" style={{ borderTop: "1px solid var(--border-muted)" }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>Protection Score</span>
+              <span className="text-[12px] font-bold font-mono" style={{ color: "var(--th-text-primary)" }}>{protectionScore}<span className="text-[9px]" style={{ color: "var(--th-text-faint)" }}>/100</span></span>
+            </div>
+            <div className="text-[10px] font-mono leading-relaxed" style={{ color: "var(--th-text-secondary)" }}>
+              {recommendation}
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -494,7 +567,7 @@ export function StressTestPanel({
   };
 
   const severityColor: Record<string, string> = {
-    SAFE: "#00FF9C", CAUTION: "#FFD700", WARNING: "#FF8C42", CRITICAL: "#FF4D4D",
+    SAFE: "var(--success)", CAUTION: "var(--primary)", WARNING: "#FF8C42", CRITICAL: "var(--danger)",
   };
 
   return (
@@ -506,21 +579,21 @@ export function StressTestPanel({
           <motion.div key={t.scenario}
             initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.06 }}>
-            <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[9px] font-mono" style={{ color: "rgba(255,255,255,0.55)" }}>
+            <div className="flex items-center justify-between mb-1">
+              <span style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 400, color: "var(--th-text-muted)" }}>
                 {t.icon} {t.scenario}
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-[9px] font-mono font-bold" style={{ color: col }}>
+                <span style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: 700, letterSpacing: "-0.01em", color: col }}>
                   {t.portfolioImpactPct.toFixed(1)}%
                 </span>
-                <span className="text-[7.5px] font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>
+                <span style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: 400, color: "var(--th-text-faint)" }}>
                   {fmtAbs(t.portfolioImpactAbs)}
                 </span>
               </div>
             </div>
             <div className="h-1 rounded-full overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.05)" }}>
+              style={{ background: "var(--border-muted)" }}>
               <motion.div className="h-full rounded-full"
                 initial={{ width: 0 }} animate={{ width: `${barW}%` }}
                 transition={{ duration: 0.8, delay: i * 0.08 }}
@@ -545,7 +618,7 @@ export function OpportunitiesPanel({
 }) {
   if (holdings.length === 0) {
     return <div className="text-[10px] font-mono text-center py-3"
-      style={{ color: "rgba(255,255,255,0.2)" }}>No holdings yet</div>;
+      style={{ color: "var(--th-text-ultra-faint)" }}>No holdings yet</div>;
   }
 
   const ORDER: Record<string, number> = { REDUCE: 0, WATCH: 1, STRONG: 2, HOLD: 3 };
@@ -565,21 +638,27 @@ export function OpportunitiesPanel({
           <motion.div key={h.ticker}
             initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.04 }}
-            className="flex items-center gap-2 py-1.5 border-b last:border-0"
-            style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+            className="flex items-center gap-2 py-2.5 border-b last:border-0"
+            style={{ borderColor: "var(--border-muted)" }}>
             {/* Action badge */}
-            <div className="px-1.5 py-0.5 rounded text-[7.5px] font-mono font-bold w-12 text-center flex-shrink-0"
-              style={{ background: act.bg, border: `1px solid ${act.color}30`, color: act.color }}>
+            <div
+              className="px-2 py-1 rounded font-mono font-bold w-14 text-center flex-shrink-0"
+              style={{ fontSize: "9px", background: act.bg, border: `1px solid ${act.color}30`, color: act.color }}
+            >
               {act.action}
             </div>
-            {/* Ticker */}
-            <span className="text-[10px] font-mono font-bold flex-1"
-              style={{ color: "rgba(255,255,255,0.82)" }}>
+            {/* Ticker — name weight */}
+            <span
+              className="flex-1 font-mono"
+              style={{ fontSize: "13px", fontWeight: 600, color: "var(--th-text-primary)" }}
+            >
               {h.ticker}
             </span>
-            {/* P&L */}
-            <span className="text-[9px] font-mono font-semibold"
-              style={{ color: isPos ? "#00FF9C" : "#FF4D4D" }}>
+            {/* P&L — number dominant */}
+            <span
+              className="font-mono"
+              style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "-0.01em", color: isPos ? "var(--success)" : "var(--danger)" }}
+            >
               {isPos ? "+" : ""}{h.pnlPct.toFixed(1)}%
             </span>
           </motion.div>
@@ -649,26 +728,26 @@ export function AIChatPanel({
       className="rounded-2xl overflow-hidden"
       style={{
         background:  "var(--th-bg-card)",
-        border:      "1px solid rgba(255,215,0,0.16)",
-        boxShadow:   "0 0 40px rgba(255,215,0,0.04)",
+        border:      "1px solid var(--border-accent-faint)",
+        boxShadow:   "0 0 40px var(--shadow-sm)",
       }}>
 
       {/* Header */}
       <div className="flex items-center gap-2.5 px-5 py-3"
-        style={{ borderBottom: "1px solid rgba(255,215,0,0.08)", background: "rgba(255,215,0,0.02)" }}>
+        style={{ borderBottom: "1px solid var(--border-faint)", background: "var(--bg-accent-faint)" }}>
         <div className="w-6 h-6 rounded-lg flex items-center justify-center"
-          style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.25)" }}>
-          <MessageSquare size={11} style={{ color: "#FFD700" }} />
+          style={{ background: "var(--primary-muted)", border: "1px solid var(--border-accent-faint)" }}>
+          <MessageSquare size={11} style={{ color: "var(--primary)" }} />
         </div>
         <span className="text-[9px] font-mono uppercase tracking-[0.2em]"
-          style={{ color: "rgba(255,215,0,0.65)" }}>AI Portfolio Advisor</span>
+          style={{ color: "var(--border-accent)" }}>AI Portfolio Advisor</span>
         <div className="ml-auto flex items-center gap-1.5">
           <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-[8px] font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>ONLINE</span>
+          <span className="text-[8px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>ONLINE</span>
           <button onClick={onClose} className="ml-2 p-1 rounded-lg transition-colors"
-            style={{ color: "rgba(255,255,255,0.3)" }}
-            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}>
+            style={{ color: "var(--th-text-faint)" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "var(--th-text-secondary)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "var(--th-text-faint)")}>
             <X size={12} />
           </button>
         </div>
@@ -682,22 +761,22 @@ export function AIChatPanel({
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             {m.role === "ai" && (
               <div className="w-5 h-5 rounded-lg mr-2 mt-0.5 flex-shrink-0 flex items-center justify-center"
-                style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.25)" }}>
-                <Brain size={9} style={{ color: "#FFD700" }} />
+                style={{ background: "var(--primary-muted)", border: "1px solid var(--border-accent-faint)" }}>
+                <Brain size={9} style={{ color: "var(--primary)" }} />
               </div>
             )}
             <div className="max-w-[82%] px-3 py-2 rounded-xl"
               style={{
                 background: m.role === "user"
-                  ? "linear-gradient(135deg, rgba(255,215,0,0.15), rgba(201,162,39,0.10))"
-                  : "rgba(255,255,255,0.04)",
+                  ? "var(--bg-accent-gradient)"
+                  : "var(--border-muted)",
                 border: m.role === "user"
-                  ? "1px solid rgba(255,215,0,0.25)"
-                  : "1px solid rgba(255,255,255,0.07)",
+                  ? "1px solid var(--border-accent-faint)"
+                  : "1px solid var(--border-faint)",
               }}>
               <p className="text-[10.5px] leading-relaxed"
                 style={{
-                  color: m.role === "user" ? "rgba(255,215,0,0.9)" : "rgba(255,255,255,0.75)",
+                  color: m.role === "user" ? "var(--text-accent)" : "var(--th-text-secondary)",
                   fontFamily: "monospace",
                   whiteSpace: "pre-wrap",
                 }}>
@@ -710,17 +789,17 @@ export function AIChatPanel({
         {typing && (
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-lg flex-shrink-0 flex items-center justify-center"
-              style={{ background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.25)" }}>
-              <Brain size={9} style={{ color: "#FFD700" }} />
+              style={{ background: "var(--primary-muted)", border: "1px solid var(--border-accent-faint)" }}>
+              <Brain size={9} style={{ color: "var(--primary)" }} />
             </div>
-            <div className="px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="px-3 py-2 rounded-xl" style={{ background: "var(--border-muted)", border: "1px solid var(--border-faint)" }}>
               <div className="flex items-center gap-1">
                 {[0, 1, 2].map(i => (
                   <motion.div key={i}
                     animate={{ y: [0, -3, 0] }}
                     transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.15 }}
                     className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: "rgba(255,215,0,0.5)" }} />
+                    style={{ background: "var(--border-accent)" }} />
                 ))}
               </div>
             </div>
@@ -736,12 +815,12 @@ export function AIChatPanel({
             <button key={s} onClick={() => { setInput(s); }}
               className="px-2.5 py-1 rounded-lg text-[8.5px] font-mono transition-all"
               style={{
-                background: "rgba(255,215,0,0.06)",
-                border: "1px solid rgba(255,215,0,0.18)",
-                color: "rgba(255,215,0,0.65)",
+                background: "var(--bg-accent-faint)",
+                border: "1px solid var(--border-accent-faint)",
+                color: "var(--border-accent)",
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,215,0,0.12)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,215,0,0.06)")}>
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--primary-muted)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "var(--bg-accent-faint)")}>
               {s}
             </button>
           ))}
@@ -751,21 +830,21 @@ export function AIChatPanel({
       {/* Input */}
       <div className="px-4 pb-4">
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          style={{ background: "var(--border-muted)", border: "1px solid var(--border)" }}>
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKey}
             placeholder="Ask about your portfolio..."
             className="flex-1 bg-transparent outline-none text-[11px] font-mono"
-            style={{ color: "rgba(255,255,255,0.8)", caretColor: "#FFD700" }}
+            style={{ color: "var(--th-text-soft)", caretColor: "var(--primary)" }}
           />
           <button onClick={send}
             className="w-6 h-6 rounded-lg flex items-center justify-center transition-all flex-shrink-0"
             style={{
-              background: input.trim() ? "rgba(255,215,0,0.18)" : "transparent",
-              border: `1px solid ${input.trim() ? "rgba(255,215,0,0.35)" : "transparent"}`,
-              color: input.trim() ? "#FFD700" : "rgba(255,255,255,0.2)",
+              background: input.trim() ? "var(--bg-accent-faint)" : "transparent",
+              border: `1px solid ${input.trim() ? "var(--border-accent-faint)" : "transparent"}`,
+              color: input.trim() ? "var(--primary)" : "var(--th-text-ultra-faint)",
             }}>
             <Send size={10} />
           </button>
@@ -792,15 +871,15 @@ export function DimensionBars({ dims, color }: { dims: PortfolioDimensions; colo
   return (
     <div className="space-y-2">
       {entries.map(([label, val]) => {
-        const barColor = val >= 70 ? "#00FF9C" : val >= 45 ? "#FFD700" : val >= 25 ? "#FF8C42" : "#FF4D4D";
+        const barColor = val >= 70 ? "var(--success)" : val >= 45 ? "var(--primary)" : val >= 25 ? "#FF8C42" : "var(--danger)";
         return (
           <div key={label}>
             <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[9px] font-mono" style={{ color: "rgba(255,255,255,0.45)" }}>{label}</span>
+              <span className="text-[9px] font-mono" style={{ color: "var(--th-text-dim)" }}>{label}</span>
               <span className="text-[9px] font-mono font-bold" style={{ color: barColor }}>{val}</span>
             </div>
             <div className="h-1 rounded-full overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.05)" }}>
+              style={{ background: "var(--border-muted)" }}>
               <motion.div className="h-full rounded-full"
                 initial={{ width: 0 }} animate={{ width: `${val}%` }}
                 transition={{ duration: 0.9 }}
@@ -818,7 +897,7 @@ export function DimensionBars({ dims, color }: { dims: PortfolioDimensions; colo
 ═══════════════════════════════════════════════════════════════════════════ */
 
 const RISK_COLOR: Record<string, string> = {
-  LOW: "#00FF9C", MODERATE: "#FFD700", HIGH: "#FF8C42", EXTREME: "#FF4D4D",
+  LOW: "var(--success)", MODERATE: "var(--primary)", HIGH: "#FF8C42", EXTREME: "var(--danger)",
 };
 const SECTOR_EMOJI: Record<string, string> = {
   IT: "💻", Banking: "🏦", "Financial Services": "💰",
@@ -867,7 +946,7 @@ function PremiumSectorDonut({
 
       {/* Track */}
       <circle cx={CX} cy={CY} r={R} fill="none"
-        stroke="rgba(255,255,255,0.04)" strokeWidth="18" />
+        stroke="var(--border-muted)" strokeWidth="18" />
 
       {/* Segments */}
       {segs.map((seg, i) => {
@@ -905,7 +984,7 @@ function PremiumSectorDonut({
             {hovSeg.label}
           </text>
           <text x={CX} y={CY + 19} textAnchor="middle"
-            fill="rgba(255,255,255,0.3)" fontSize="7.5" fontFamily="monospace">
+            fill="var(--th-text-faint)" fontSize="7.5" fontFamily="monospace">
             {hovSeg.holdingCount}h
           </text>
         </>
@@ -916,7 +995,7 @@ function PremiumSectorDonut({
             {sectors.length}
           </text>
           <text x={CX} y={CY + 11} textAnchor="middle"
-            fill="rgba(255,255,255,0.3)" fontSize="7.5" fontFamily="monospace" letterSpacing="1.5">
+            fill="var(--th-text-faint)" fontSize="7.5" fontFamily="monospace" letterSpacing="1.5">
             SECTORS
           </text>
         </>
@@ -958,7 +1037,7 @@ function SectorHeatmap({ sectors }: { sectors: EnrichedSectorData[] }) {
               <div style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: 700, color: s.color }}>
                 {s.value.toFixed(0)}%
               </div>
-              <div style={{ fontSize: "7px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>
+              <div style={{ fontSize: "7px", fontFamily: "monospace", color: "var(--th-text-faint)" }}>
                 {s.holdingCount} holding{s.holdingCount !== 1 ? "s" : ""}
               </div>
             </div>
@@ -984,7 +1063,7 @@ export function SectorIntelligencePanel({
   if (sectorData.length === 0) {
     return (
       <div className="text-center py-8 text-[10px] font-mono"
-        style={{ color: "rgba(255,255,255,0.2)" }}>
+        style={{ color: "var(--th-text-ultra-faint)" }}>
         Add holdings to unlock sector intelligence
       </div>
     );
@@ -996,14 +1075,14 @@ export function SectorIntelligencePanel({
       {/* AI Narrative */}
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
         className="p-3 rounded-xl"
-        style={{ background: "rgba(255,215,0,0.05)", border: "1px solid rgba(255,215,0,0.15)" }}>
+        style={{ background: "var(--primary-muted)", border: "1px solid var(--border-accent-faint)" }}>
         <div className="flex items-center gap-2 mb-1.5">
-          <Brain size={9} style={{ color: "#FFD700" }} />
+          <Brain size={9} style={{ color: "var(--primary)" }} />
           <span className="text-[8px] font-mono uppercase tracking-widest"
-            style={{ color: "rgba(255,215,0,0.6)" }}>AI Sector Intelligence</span>
+            style={{ color: "var(--border-accent)" }}>AI Sector Intelligence</span>
         </div>
         <p className="text-[10.5px] font-mono leading-relaxed"
-          style={{ color: "rgba(255,255,255,0.72)" }}>
+          style={{ color: "var(--th-text-secondary)" }}>
           {narrative}
         </p>
       </motion.div>
@@ -1028,7 +1107,7 @@ export function SectorIntelligencePanel({
                   <div>
                     <div className="text-[12px] font-bold font-mono"
                       style={{ color: hoveredSector.color }}>{hoveredSector.label}</div>
-                    <div className="text-[8px] font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    <div className="text-[8px] font-mono" style={{ color: "var(--th-text-faint)" }}>
                       {hoveredSector.holdingCount} holding{hoveredSector.holdingCount !== 1 ? "s" : ""}
                     </div>
                   </div>
@@ -1042,20 +1121,20 @@ export function SectorIntelligencePanel({
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   {[
                     { k: "Allocation",  v: `${hoveredSector.value.toFixed(1)}%`, c: hoveredSector.color },
-                    { k: "P&L",         v: `${hoveredSector.pnlPct >= 0 ? "+" : ""}${hoveredSector.pnlPct.toFixed(1)}%`, c: hoveredSector.pnlPct >= 0 ? "#00FF9C" : "#FF4D4D" },
-                    { k: "Invested",    v: fmtVal(hoveredSector.investedValue), c: "rgba(255,255,255,0.6)" },
-                    { k: "Current",     v: fmtVal(hoveredSector.currentValue),  c: "rgba(255,255,255,0.8)" },
+                    { k: "P&L",         v: `${hoveredSector.pnlPct >= 0 ? "+" : ""}${hoveredSector.pnlPct.toFixed(1)}%`, c: hoveredSector.pnlPct >= 0 ? "var(--success)" : "var(--danger)" },
+                    { k: "Invested",    v: fmtVal(hoveredSector.investedValue), c: "var(--border)" },
+                    { k: "Current",     v: fmtVal(hoveredSector.currentValue),  c: "var(--th-text-soft)" },
                   ].map(m => (
                     <div key={m.k} className="p-1.5 rounded-lg"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      style={{ background: "var(--border-muted)", border: "1px solid var(--border-faint)" }}>
                       <div className="text-[7.5px] font-mono uppercase mb-0.5"
-                        style={{ color: "rgba(255,255,255,0.28)" }}>{m.k}</div>
+                        style={{ color: "var(--th-text-faint)" }}>{m.k}</div>
                       <div className="text-[11px] font-mono font-bold" style={{ color: m.c }}>{m.v}</div>
                     </div>
                   ))}
                 </div>
                 <p className="text-[8.5px] font-mono leading-relaxed"
-                  style={{ color: "rgba(255,255,255,0.45)" }}>
+                  style={{ color: "var(--th-text-dim)" }}>
                   {getSectorInsight(hoveredSector.label, hoveredSector.value, hoveredSector.topHolding)}
                 </p>
               </motion.div>
@@ -1069,14 +1148,14 @@ export function SectorIntelligencePanel({
                     <div key={s.label} className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
                       <span className="text-[9px] font-mono flex-1 truncate"
-                        style={{ color: "rgba(255,255,255,0.55)" }}>{s.label}</span>
+                        style={{ color: "var(--th-text-muted)" }}>{s.label}</span>
                       <span className="text-[9px] font-mono font-bold"
                         style={{ color: s.color }}>{s.value.toFixed(1)}%</span>
                     </div>
                   ))}
                   {sectorData.length > 4 && (
                     <div className="text-[8px] font-mono"
-                      style={{ color: "rgba(255,255,255,0.2)" }}>
+                      style={{ color: "var(--th-text-ultra-faint)" }}>
                       +{sectorData.length - 4} more sectors
                     </div>
                   )}
@@ -1093,14 +1172,14 @@ export function SectorIntelligencePanel({
           <button key={v} onClick={() => setViewMode(v)}
             className="px-2.5 py-1 rounded-lg text-[8.5px] font-mono uppercase transition-all"
             style={{
-              background: viewMode === v ? "rgba(255,215,0,0.12)" : "transparent",
-              border: `1px solid ${viewMode === v ? "rgba(255,215,0,0.30)" : "rgba(255,255,255,0.07)"}`,
-              color: viewMode === v ? "#FFD700" : "rgba(255,255,255,0.35)",
+              background: viewMode === v ? "var(--primary-muted)" : "transparent",
+              border: `1px solid ${viewMode === v ? "rgba(255,215,0,0.30)" : "var(--border-muted)"}`,
+              color: viewMode === v ? "var(--primary)" : "var(--th-text-dim)",
             }}>
             {v === "cards" ? "▦ Cards" : "⬛ Heatmap"}
           </button>
         ))}
-        <span className="ml-auto text-[8px] font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>
+        <span className="ml-auto text-[8px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>
           {sectorData.length} sector{sectorData.length !== 1 ? "s" : ""} detected
         </span>
       </div>
@@ -1146,7 +1225,7 @@ export function SectorIntelligencePanel({
 
                 {/* Animated bar */}
                 <div className="h-1 rounded-full overflow-hidden mb-1.5"
-                  style={{ background: "rgba(255,255,255,0.06)" }}>
+                  style={{ background: "var(--border-muted)" }}>
                   <motion.div className="h-full rounded-full"
                     initial={{ width: 0 }} animate={{ width: `${Math.min(s.value, 100)}%` }}
                     transition={{ duration: 0.9, delay: i * 0.05 }}
@@ -1159,16 +1238,16 @@ export function SectorIntelligencePanel({
                     <div className="text-[13px] font-mono font-bold" style={{ color: s.color }}>
                       {s.value.toFixed(1)}%
                     </div>
-                    <div className="text-[7.5px] font-mono" style={{ color: "rgba(255,255,255,0.28)" }}>
+                    <div className="text-[7.5px] font-mono" style={{ color: "var(--th-text-faint)" }}>
                       {s.holdingCount}h · {fmtVal(s.currentValue)}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] font-mono font-semibold"
-                      style={{ color: s.pnlPct >= 0 ? "#00FF9C" : "#FF4D4D" }}>
+                      style={{ color: s.pnlPct >= 0 ? "var(--success)" : "var(--danger)" }}>
                       {s.pnlPct >= 0 ? "+" : ""}{s.pnlPct.toFixed(1)}%
                     </div>
-                    <div className="text-[7px] font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>
+                    <div className="text-[7px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>
                       sector P&L
                     </div>
                   </div>
@@ -1182,14 +1261,14 @@ export function SectorIntelligencePanel({
       {/* Sector impact analysis */}
       <div>
         <div className="text-[8.5px] font-mono uppercase tracking-widest mb-2"
-          style={{ color: "rgba(255,255,255,0.28)" }}>
+          style={{ color: "var(--th-text-faint)" }}>
           Sector Impact Analysis — If sector falls 10%
         </div>
         <div className="space-y-1.5">
           {sectorData.map((s, i) => {
             const impact    = -(s.value / 100) * 10;
             const impactAbs = (totalValue * Math.abs(impact)) / 100;
-            const col       = Math.abs(impact) >= 4 ? "#FF4D4D" : Math.abs(impact) >= 2 ? "#FF8C42" : "#FFD700";
+            const col       = Math.abs(impact) >= 4 ? "var(--danger)" : Math.abs(impact) >= 2 ? "#FF8C42" : "var(--primary)";
             return (
               <motion.div key={s.label}
                 initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
@@ -1197,7 +1276,7 @@ export function SectorIntelligencePanel({
                 <div className="flex items-center justify-between mb-0.5">
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
-                    <span className="text-[9px] font-mono truncate" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <span className="text-[9px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
                       {s.label}
                     </span>
                   </div>
@@ -1213,7 +1292,7 @@ export function SectorIntelligencePanel({
                   </div>
                 </div>
                 <div className="h-0.5 rounded-full overflow-hidden"
-                  style={{ background: "rgba(255,255,255,0.04)" }}>
+                  style={{ background: "var(--border-muted)" }}>
                   <motion.div className="h-full rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min(100, Math.abs(impact) * 10)}%` }}

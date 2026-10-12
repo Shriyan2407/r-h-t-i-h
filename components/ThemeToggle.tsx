@@ -13,12 +13,8 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg overflow-hidden"
       style={{
-        background: isLight
-          ? "rgba(184,150,46,0.08)"
-          : "rgba(255,215,0,0.06)",
-        border: isLight
-          ? "1px solid rgba(150,120,45,0.22)"
-          : "1px solid rgba(255,215,0,0.14)",
+        background: "var(--primary-muted)",
+        border: "1px solid var(--border-accent-faint)",
         cursor: "pointer",
       }}
       whileHover={{ scale: 1.04 }}
@@ -31,9 +27,7 @@ export function ThemeToggle() {
         initial={{ opacity: 0 }}
         whileHover={{ opacity: 1 }}
         style={{
-          background: isLight
-            ? "radial-gradient(circle at center, rgba(184,150,46,0.12) 0%, transparent 70%)"
-            : "radial-gradient(circle at center, rgba(255,215,0,0.08) 0%, transparent 70%)",
+          background: "radial-gradient(circle at center, var(--primary-muted) 0%, transparent 70%)",
         }}
       />
 
@@ -41,12 +35,8 @@ export function ThemeToggle() {
       <div
         className="relative w-9 h-5 rounded-full flex items-center px-0.5"
         style={{
-          background: isLight
-            ? "linear-gradient(135deg, rgba(184,150,46,0.15), rgba(150,120,45,0.25))"
-            : "linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08))",
-          border: isLight
-            ? "1px solid rgba(150,120,45,0.30)"
-            : "1px solid rgba(255,255,255,0.08)",
+          background: "var(--bg-accent-faint)",
+          border: "1px solid var(--border-accent-faint)",
         }}
       >
         <motion.div
@@ -54,12 +44,8 @@ export function ThemeToggle() {
           animate={{ x: isLight ? 16 : 0 }}
           transition={{ type: "spring", stiffness: 500, damping: 35 }}
           style={{
-            background: isLight
-              ? "linear-gradient(135deg, #C9A227, #B8962E)"
-              : "linear-gradient(135deg, #2A2A2A, #1A1A1A)",
-            boxShadow: isLight
-              ? "0 1px 6px rgba(184,150,46,0.45), 0 0 0 1px rgba(150,120,45,0.25)"
-              : "0 1px 6px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)",
+            background: "var(--border-accent)",
+            boxShadow: "0 1px 6px var(--shadow-sm)",
           }}
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -71,7 +57,7 @@ export function ThemeToggle() {
                 exit={{   opacity: 0, rotate:  90,  scale: 0.5 }}
                 transition={{ duration: 0.18 }}
               >
-                <Sun size={8} style={{ color: "#FFF8E7" }} />
+                <Sun size={8} style={{ color: "var(--th-bg-base)" }} />
               </motion.div>
             ) : (
               <motion.div
@@ -81,7 +67,7 @@ export function ThemeToggle() {
                 exit={{   opacity: 0, rotate: -90,  scale: 0.5 }}
                 transition={{ duration: 0.18 }}
               >
-                <Moon size={8} style={{ color: "#FFD700" }} />
+                <Moon size={8} style={{ color: "var(--th-bg-base)" }} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -92,7 +78,7 @@ export function ThemeToggle() {
       <span
         className="text-[9px] font-mono uppercase tracking-[0.12em] select-none"
         style={{
-          color: isLight ? "var(--gold)" : "rgba(255,215,0,0.55)",
+          color: "var(--border-accent)",
           minWidth: "22px",
         }}
       >

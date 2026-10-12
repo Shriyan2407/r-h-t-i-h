@@ -25,10 +25,10 @@ function RsiGauge({ value }: { value: number }) {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex justify-between items-center text-[11px] font-mono">
-        <span className="text-[#484f58]">Oversold 30</span>
-        <span style={{ color }} className="font-bold">{value.toFixed(1)}</span>
-        <span className="text-[#484f58]">Overbought 70</span>
+      <div className="flex justify-between items-center" style={{ fontFamily: "monospace", fontSize: "11px" }}>
+        <span style={{ color: "rgba(255,255,255,0.35)", fontWeight: 400 }}>Oversold 30</span>
+        <span style={{ color, fontWeight: 700, fontSize: "16px", letterSpacing: "-0.02em" }}>{value.toFixed(1)}</span>
+        <span style={{ color: "rgba(255,255,255,0.35)", fontWeight: 400 }}>Overbought 70</span>
       </div>
       <div className="relative h-2 bg-[#21262d] rounded-full overflow-hidden">
         <div
@@ -71,15 +71,15 @@ function PriceVsMA({
           <div
             key={label}
             className={cn(
-              "flex flex-col gap-1 p-2.5 rounded-lg border text-center",
+              "flex flex-col gap-1.5 p-3 rounded-xl border text-center",
               above
                 ? "bg-[rgba(0,255,136,0.05)] border-[rgba(0,255,136,0.2)]"
                 : "bg-[rgba(255,68,102,0.05)] border-[rgba(255,68,102,0.2)]"
             )}
           >
-            <span className="text-[10px] font-mono text-[#8b949e]">{label}</span>
-            <span className="text-[11px] font-mono text-[#e6edf3]">₹{value.toFixed(0)}</span>
-            <span className={cn("text-[10px] font-mono font-bold", above ? "text-[#00ff88]" : "text-[#ff4466]")}>
+            <span style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: 400, color: "#8b949e", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{label}</span>
+            <span style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: 700, color: "#e6edf3", letterSpacing: "-0.01em" }}>₹{value.toFixed(0)}</span>
+            <span className={cn("font-mono font-bold", above ? "text-[#00ff88]" : "text-[#ff4466]")} style={{ fontSize: "12px" }}>
               {above ? "▲" : "▼"} {Math.abs(d).toFixed(1)}%
             </span>
           </div>
@@ -148,7 +148,7 @@ export function TechnicalPanel({ indicators, currentPrice }: TechnicalPanelProps
       {/* Trend Banner */}
       <div
         className={cn(
-          "flex items-center justify-between px-4 py-3 rounded-xl border",
+          "flex items-center justify-between px-5 py-3.5 rounded-xl border",
           indicators.trend === "UPTREND"
             ? "bg-[rgba(0,255,136,0.06)] border-[rgba(0,255,136,0.2)]"
             : indicators.trend === "DOWNTREND"
@@ -156,17 +156,22 @@ export function TechnicalPanel({ indicators, currentPrice }: TechnicalPanelProps
             : "bg-[rgba(255,204,0,0.06)] border-[rgba(255,204,0,0.2)]"
         )}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {indicators.trend === "UPTREND" ? (
-            <TrendingUp size={16} className="text-[#00ff88]" />
+            <TrendingUp size={18} className="text-[#00ff88]" />
           ) : indicators.trend === "DOWNTREND" ? (
-            <TrendingDown size={16} className="text-[#ff4466]" />
+            <TrendingDown size={18} className="text-[#ff4466]" />
           ) : (
-            <Activity size={16} className="text-[#ffcc00]" />
+            <Activity size={18} className="text-[#ffcc00]" />
           )}
           <span
+            style={{
+              fontFamily: "monospace",
+              fontSize: "16px",
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+            }}
             className={cn(
-              "text-sm font-mono font-bold",
               indicators.trend === "UPTREND"
                 ? "text-[#00ff88]"
                 : indicators.trend === "DOWNTREND"
@@ -192,7 +197,7 @@ export function TechnicalPanel({ indicators, currentPrice }: TechnicalPanelProps
 
       {/* RSI */}
       <div className="flex flex-col gap-2">
-        <span className="text-[10px] font-mono uppercase tracking-widest text-[#8b949e] flex items-center gap-1">
+        <span style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 400, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.4)" }} className="flex items-center gap-1.5">
           <Activity size={10} /> RSI (14)
         </span>
         <RsiGauge value={indicators.rsi_14} />
@@ -200,23 +205,23 @@ export function TechnicalPanel({ indicators, currentPrice }: TechnicalPanelProps
 
       {/* MACD */}
       <div className="flex flex-col gap-2">
-        <span className="text-[10px] font-mono uppercase tracking-widest text-[#8b949e]">MACD</span>
+        <span style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 400, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.4)" }}>MACD</span>
         <div className="grid grid-cols-3 gap-2">
-          <div className="flex flex-col gap-0.5 p-2 bg-[#161b22] border border-[#30363d] rounded-lg">
-            <span className="text-[9px] font-mono text-[#484f58]">MACD Line</span>
-            <span className={cn("text-xs font-mono font-bold", indicators.macd >= 0 ? "text-[#00ff88]" : "text-[#ff4466]")}>
+          <div className="flex flex-col gap-1 p-3 bg-[#161b22] border border-[#30363d] rounded-xl">
+            <span style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: 400, color: "rgba(255,255,255,0.3)" }}>MACD Line</span>
+            <span className={cn("font-mono font-bold", indicators.macd >= 0 ? "text-[#00ff88]" : "text-[#ff4466]")} style={{ fontSize: "14px", letterSpacing: "-0.01em" }}>
               {indicators.macd.toFixed(3)}
             </span>
           </div>
-          <div className="flex flex-col gap-0.5 p-2 bg-[#161b22] border border-[#30363d] rounded-lg">
-            <span className="text-[9px] font-mono text-[#484f58]">Signal</span>
-            <span className="text-xs font-mono font-bold text-[#8b949e]">
+          <div className="flex flex-col gap-1 p-3 bg-[#161b22] border border-[#30363d] rounded-xl">
+            <span style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: 400, color: "rgba(255,255,255,0.3)" }}>Signal</span>
+            <span className="font-mono font-bold" style={{ fontSize: "14px", color: "#8b949e", letterSpacing: "-0.01em" }}>
               {indicators.macd_signal.toFixed(3)}
             </span>
           </div>
-          <div className="flex flex-col gap-0.5 p-2 bg-[#161b22] border border-[#30363d] rounded-lg">
-            <span className="text-[9px] font-mono text-[#484f58]">Histogram</span>
-            <span className={cn("text-xs font-mono font-bold", macdBull ? "text-[#00ff88]" : "text-[#ff4466]")}>
+          <div className="flex flex-col gap-1 p-3 bg-[#161b22] border border-[#30363d] rounded-xl">
+            <span style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: 400, color: "rgba(255,255,255,0.3)" }}>Histogram</span>
+            <span className={cn("font-mono font-bold", macdBull ? "text-[#00ff88]" : "text-[#ff4466]")} style={{ fontSize: "14px", letterSpacing: "-0.01em" }}>
               {indicators.macd_histogram.toFixed(3)}
             </span>
           </div>
@@ -228,7 +233,7 @@ export function TechnicalPanel({ indicators, currentPrice }: TechnicalPanelProps
 
       {/* Moving Averages */}
       <div className="flex flex-col gap-2">
-        <span className="text-[10px] font-mono uppercase tracking-widest text-[#8b949e]">Moving Averages vs Current</span>
+        <span style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 400, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.4)" }}>Moving Averages vs Current</span>
         <PriceVsMA
           current={currentPrice}
           ema20={indicators.ema_20}
@@ -258,7 +263,7 @@ export function TechnicalPanel({ indicators, currentPrice }: TechnicalPanelProps
 
       {/* Support/Resistance */}
       <div className="flex flex-col gap-2">
-        <span className="text-[10px] font-mono uppercase tracking-widest text-[#8b949e]">Support & Resistance</span>
+        <span style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 400, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.4)" }}>Support & Resistance</span>
         <SupportResistance
           supports={indicators.support_levels}
           resistances={indicators.resistance_levels}

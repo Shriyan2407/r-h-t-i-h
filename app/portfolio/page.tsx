@@ -381,12 +381,11 @@ function PerformanceChart({ portfolio, benchmark, pnlPct }: {
 ═══════════════════════════════════════════════════════════════════════════ */
 
 function HoldingModal({
-  onClose, onSubmit, initial, isLight,
+  onClose, onSubmit, initial,
 }: {
   onClose:  () => void;
   onSubmit: (h: Omit<PortfolioHolding, "id" | "addedAt">) => void;
   initial?: PortfolioHolding;
-  isLight:  boolean;
 }) {
   const [selected, setSelected] = useState<ApiSearchResult | null>(null);
   const [form, setForm] = useState({
@@ -435,7 +434,7 @@ function HoldingModal({
   const isReady = !!initial || selected !== null;
 
   const inputStyle: React.CSSProperties = {
-    background:   isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)",
+    background:   "var(--th-bg-secondary)",
     border:       `1px solid var(--th-border-card)`,
     borderRadius: "8px",
     padding:      "8px 12px",
@@ -456,7 +455,7 @@ function HoldingModal({
         transition={{ type: "spring", stiffness: 400, damping: 28 }}
         className="w-full max-w-md rounded-2xl p-6 overflow-y-auto"
         style={{
-          background:  isLight ? "#FAFAF7" : "#0D0D0D",
+          background:  "var(--th-bg-card)",
           border:      "1px solid var(--th-border-accent)",
           boxShadow:   "0 24px 80px rgba(0,0,0,0.8)",
           maxHeight:   "92vh",
@@ -492,7 +491,7 @@ function HoldingModal({
           {initial ? (
             /* Edit mode: static read-only chip */
             <div className="rounded-xl p-3 flex items-center gap-3"
-              style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", border: "1px solid var(--th-border-card)" }}>
+              style={{ background: "var(--th-bg-secondary)", border: "1px solid var(--th-border-card)" }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[9px] font-bold"
                 style={{ background: "var(--th-gold-bg-mid)", border: "1px solid var(--th-border-accent)", color: "var(--gold)" }}>
                 {initial.ticker.slice(0, 3)}
@@ -504,10 +503,10 @@ function HoldingModal({
               </div>
             </div>
           ) : selected ? (
-            <SelectedStockChip stock={selected} onClear={handleClear} isLight={isLight} />
+            <SelectedStockChip stock={selected} onClear={handleClear} />
           ) : (
             <>
-              <TickerSearchInput onSelect={handleSelect} isLight={isLight} />
+              <TickerSearchInput onSelect={handleSelect} />
               <p className="text-[9px] mt-2" style={{ color: "var(--th-text-faint)" }}>
                 Type a ticker (REL, TCS) or company name · Arrow keys to navigate · Enter to select
               </p>
@@ -602,12 +601,11 @@ function HoldingModal({
 ═══════════════════════════════════════════════════════════════════════════ */
 
 function HoldingRow({
-  holding, onEdit, onRemove, isLight, action,
+  holding, onEdit, onRemove, action,
 }: {
   holding:  HoldingWithLive;
   onEdit:   () => void;
   onRemove: () => void;
-  isLight:  boolean;
   action?:  StockActionResult;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -735,7 +733,7 @@ function HoldingRow({
       {/* Expanded detail row */}
       <AnimatePresence>
         {expanded && (
-          <tr style={{ background: isLight ? "rgba(184,150,46,0.03)" : "rgba(255,215,0,0.03)" }}>
+          <tr style={{ background: "var(--th-gold-bg)" }}>
             <td colSpan={8} className="px-4 py-3">
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                 className="grid grid-cols-4 gap-3">
@@ -780,7 +778,6 @@ function HoldingRow({
 export default function PortfolioPage() {
   const { holdings, add, update, remove, sync } = usePortfolioStore();
   const { theme } = useTheme();
-  const isLight   = theme === "light";
 
   const [liveData,     setLiveData]     = useState<Record<string, LiveData>>({});
   const [refreshing,   setRefreshing]   = useState(false);
@@ -1444,7 +1441,6 @@ export default function PortfolioPage() {
                             <HoldingRow
                               key={h.id}
                               holding={h}
-                              isLight={isLight}
                               action={stockActions.get(h.ticker)}
                               onEdit={() => { setEditHolding(h); setShowModal(true); }}
                               onRemove={() => remove(h.id)}
@@ -1825,7 +1821,6 @@ export default function PortfolioPage() {
       <AnimatePresence>
         {showModal && (
           <HoldingModal
-            isLight={isLight}
             initial={editHolding ?? undefined}
             onClose={() => { setShowModal(false); setEditHolding(null); }}
             onSubmit={h => {
@@ -1842,7 +1837,6 @@ export default function PortfolioPage() {
       <AnimatePresence>
         {showScanner && (
           <PortfolioScanner
-            isLight={isLight}
             onClose={() => setShowScanner(false)}
             onImport={async (imported: ImportedHolding[]) => {
               for (const h of imported) {
