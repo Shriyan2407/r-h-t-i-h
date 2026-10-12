@@ -275,7 +275,7 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
               {report.currentSentiment}
             </motion.div>
             <div className="text-[9px] font-mono uppercase tracking-wider" style={{color:"var(--th-text-faint)"}}>
-              AI Confidence: <span style={{color:"var(--gold)"}}>{report.aiConfidence}%</span>
+              <span title="Scores are rule-based heuristics. No calibrated probability exists for this call.">Confidence: <span style={{color:"var(--th-text-muted)"}}>unavailable</span></span>
             </div>
           </div>
         </div>

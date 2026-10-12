@@ -194,7 +194,6 @@ export function buildDeterministicReport(
   const exchange      = quote?.exchange ?? "NSE";
 
   const composite = clamp(Math.round(tech * 0.30 + fund * 0.25 + mom * 0.25 + vol * 0.10 + rr * 0.10));
-  const aiConfidence  = clamp(60 + Math.round(Math.abs(composite - 50) / 2), 60, 88);
 
   let currentSentiment: "BULLISH" | "BEARISH" | "NEUTRAL" | "MIXED" = "NEUTRAL";
   if (composite >= 65 && newsRatio >= 0)       currentSentiment = "BULLISH";
@@ -234,7 +233,6 @@ export function buildDeterministicReport(
     exchange,
     currentTrend,
     currentSentiment,
-    aiConfidence,
     oneLiner: oneLiner(ticker, s, sectorProfile),
     trendState,
     scores: {

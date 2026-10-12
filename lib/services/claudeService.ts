@@ -147,8 +147,9 @@ export function parseIntelligenceResponse(raw: string, ticker: string): any {
     }));
   }
 
-  /* Clamp aiConfidence */
-  data.aiConfidence = Math.max(60, Math.min(95, Math.round(data.aiConfidence ?? 75)));
+  /* A model-written "confidence" is not a calibrated probability, so it is discarded: it was
+     previously clamped into 60-95 (and defaulted to 75), which made every report look confident. */
+  delete data.aiConfidence;
 
   return data;
 }

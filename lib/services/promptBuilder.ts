@@ -576,7 +576,6 @@ Return ONLY valid JSON matching this exact structure. No markdown, no commentary
   "exchange": "NSE",
   "currentTrend": "6-8 word current trend description",
   "currentSentiment": "BULLISH|BEARISH|NEUTRAL|MIXED",
-  "aiConfidence": <65-93>,
   "oneLiner": "ONE sharp sentence capturing the current investment thesis for ${ticker} — SPECIFIC, not generic",
   "trendState": "current market structure in 4-6 words",
   "scores": {

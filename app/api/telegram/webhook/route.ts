@@ -168,8 +168,6 @@ export async function POST(req: NextRequest) {
         await tgSend(chatId, fmtStockAnalysis(ticker, {
           price: report._meta?.currentPrice ?? 0,
           verdict: sentimentToVerdict(report.currentSentiment),
-          // Only shown when the engine produced one; never substituted with a default.
-          confidence: report.aiConfidence,
           summary: report.narrativeSummary ?? report.oneLiner ?? "",
           t1: parseRupee(report.entryZone?.target1),
           t2: parseRupee(report.entryZone?.target2),

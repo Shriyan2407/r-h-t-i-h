@@ -16,7 +16,6 @@ export interface IntelligenceReport {
   exchange?:         string;
   currentTrend?:     string;
   currentSentiment?: string;
-  aiConfidence?:     number;
   oneLiner?:         string;
   trendState?:       string;
   scores?: {
@@ -122,7 +121,6 @@ export async function GET(
         companyName:      T,
         sector:           "Market Data Unavailable",
         currentSentiment: "NEUTRAL",
-        aiConfidence:     50,
         oneLiner:         `Live data temporarily unavailable for ${T}. Analysis will refresh automatically.`,
         trendState:       "Data loading",
         scores: {
