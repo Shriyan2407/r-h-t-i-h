@@ -1027,7 +1027,7 @@ function IntelFeedBar({ market }: { market: LandingMarket | null }) {
         style={{ borderRight: "1px solid rgba(255,215,0,0.08)" }}>
         <div className="w-1.5 h-1.5 rounded-full animate-live-dot" style={{ background: "#00FF9C" }} />
         <span className="text-[7.5px] font-mono font-bold uppercase tracking-[0.2em]" style={{ color: "#00FF9C" }}>
-          LIVE MARKET
+          MARKET
         </span>
       </div>
       <div className="flex items-center h-full whitespace-nowrap animate-ticker" style={{ paddingLeft: "72px" }}>
