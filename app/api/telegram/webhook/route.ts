@@ -1,37 +1,45 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/auth/prisma";
 import { tgSend, fmtHelp, fmtConnected, fmtStockAnalysis } from "@/lib/services/telegramService";
+import { checkSecret } from "@/lib/security/secrets";
+import { telegramUpdateSchema, parseStartToken, parseAnalyzeCommand } from "@/lib/telegram/updates";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  // Verify Telegram webhook secret
-  const secret = req.headers.get("x-telegram-bot-api-secret-token");
-  if (process.env.TELEGRAM_WEBHOOK_SECRET && secret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
-    return new Response("Unauthorized", { status: 401 });
+  // The webhook secret is mandatory: without it anyone could forge bot updates.
+  const check = checkSecret(
+    req.headers.get("x-telegram-bot-api-secret-token"),
+    process.env.TELEGRAM_WEBHOOK_SECRET,
+  );
+  if (!check.ok) {
+    if (check.status === 503) console.error("[telegram/webhook] TELEGRAM_WEBHOOK_SECRET is not configured");
+    return new Response(check.error, { status: check.status });
   }
 
-  let body: any;
+  let raw: unknown;
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
     return Response.json({ ok: true });
   }
 
-  const message = body?.message;
+  // Malformed updates are acknowledged (200) so Telegram does not retry them.
+  const parsed = telegramUpdateSchema.safeParse(raw);
+  const message = parsed.success ? parsed.data.message : undefined;
   if (!message) return Response.json({ ok: true });
 
-  const chatId = message.chat?.id;
+  const chatId = message.chat.id;
   const text: string = message.text ?? "";
   const firstName: string = message.from?.first_name ?? "";
   const username: string = message.from?.username ?? "";
 
-  if (!chatId || !text) return Response.json({ ok: true });
+  if (!text) return Response.json({ ok: true });
 
   try {
     // /start TOKEN — connect user account
     if (text.startsWith("/start")) {
-      const token = text.split(" ")[1]?.trim();
+      const token = parseStartToken(text);
       if (token) {
         const conn = await prisma.telegramConnection.findUnique({
           where: { connectToken: token },
@@ -129,11 +137,9 @@ export async function POST(req: NextRequest) {
     }
 
     // /analyze TICKER or "analyze TICKER" or just "TICKER analysis"
-    const analyzeMatch = text.match(/^(?:\/analyze\s+|analyze\s+)([A-Z0-9&]+)/i)
-      ?? text.match(/^([A-Z]{2,10})\s+(?:analysis|analyze|report)/i);
+    const ticker = parseAnalyzeCommand(text);
 
-    if (analyzeMatch) {
-      const ticker = analyzeMatch[1].toUpperCase().trim();
+    if (ticker) {
       await tgSend(chatId, `⏳ Analyzing <b>${ticker}</b>…`);
 
       try {

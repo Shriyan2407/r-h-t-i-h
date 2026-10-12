@@ -29,6 +29,10 @@ export async function tgSendToUser(userId: string, text: string) {
 
 export async function setWebhook(webhookUrl: string) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET ?? "";
+  // Telegram accepts 1-256 chars of [A-Za-z0-9_-]; refuse to register an unauthenticated webhook.
+  if (!/^[A-Za-z0-9_-]{1,256}$/.test(secret)) {
+    return { ok: false, error: "TELEGRAM_WEBHOOK_SECRET must be set (1-256 chars of A-Z a-z 0-9 _ -)" };
+  }
   const res = await fetch(`${BASE}/setWebhook`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
