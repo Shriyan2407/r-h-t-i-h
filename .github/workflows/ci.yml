@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches: [master, "modernization/**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Placeholders so `prisma generate` and `next build` can run in a clean checkout.
+      # No real database or secret is used: unit tests mock the database layer and no
+      # page is statically rendered with data.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      NEXTAUTH_SECRET: ci-only-placeholder-secret-not-used-anywhere-else
+      NEXTAUTH_URL: https://ci.example.test
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install (lockfile must be in sync)
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint (new violations fail; existing ones are baselined in eslint-suppressions.json)
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit and integration tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Production bundle must not contain sample data
+        run: npm run check:bundle
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # Production dependencies: any high/critical advisory fails the build.
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      # Dev tooling is reported for visibility but does not gate merges (a known
+      # `braces` advisory has no upstream fix yet).
+      - name: Audit all dependencies (informational)
+        run: npm audit || true
+
+  migrations:
+    name: Prisma schema and migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Schema is valid
+        run: npx prisma validate
+      - name: Migrations apply cleanly to an empty database
+        run: npx prisma migrate deploy
+      - name: Migrations and schema.prisma agree (no drift)
+        run: |
+          npx prisma migrate diff \
+            --from-migrations prisma/migrations \
+            --to-schema-datamodel prisma/schema.prisma \
+            --shadow-database-url "$DATABASE_URL" \
+            --exit-code
