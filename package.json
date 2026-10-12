@@ -10,7 +10,8 @@
     "postinstall": "prisma generate",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "admin:promote": "node scripts/promote-admin.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
