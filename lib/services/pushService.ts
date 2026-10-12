@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/auth/prisma";
+import { isAllowedPushEndpoint } from "@/lib/validation/push";
 
 // ── VAPID config ─────────────────────────────────────────────────────────────
 
@@ -17,6 +18,12 @@ export async function sendPushNotification(
   const vapidEmail = process.env.VAPID_EMAIL ?? "mailto:admin@example.com";
 
   if (!vapidPublic || !vapidPrivate) return false;
+
+  // Rows written before endpoint validation existed may point anywhere: refuse and purge them.
+  if (!isAllowedPushEndpoint(subscription.endpoint)) {
+    await prisma.pushSubscription.deleteMany({ where: { endpoint: subscription.endpoint } }).catch(() => {});
+    return false;
+  }
 
   try {
     const webpush = await import("web-push");
