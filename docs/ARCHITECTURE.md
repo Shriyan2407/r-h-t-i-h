@@ -45,7 +45,7 @@ but is **not version-controlled here and is not deployed**. Verified problems wi
   failure is swallowed, silently disabling the router.
 - The quant package has no data, trained models or reported results (see QUANT_ENGINE.md).
 
-Decision pending (see ENGINEERING_BASELINE / CHANGELOG): consolidate into this repo behind a
+Decision pending (see ENGINEERING_BASELINE): consolidate into this repo behind a
 clear interface, or remove. Until then, treat that tree as unmaintained reference code.
 
 ## Request lifecycle: stock analysis
@@ -59,9 +59,12 @@ clear interface, or remove. Until then, treat that tree as unmaintained referenc
    the report but cannot set the verdict's strength or probability.
 6. Result cached (default 20 min) and returned; failures return a generic error.
 
-Known defect: step 3 also calls `/api/macro` by HTTP from the server to itself. That route
-requires a session, so the call gets a 401 and macro context is always empty. Fix: call the
-macro service directly (tracked for the backend-consolidation step).
+Step 3 calls the technicals, fundamentals and macro **services in-process**
+(`lib/services/{technicals,fundamentals,macro}.ts`, shared with their HTTP routes and cache).
+It previously fetched this app's own `/api/*` routes over HTTP; those requests carried no
+session (the auth proxy answered 401) and the base URL defaulted to `http://localhost:3000`, so
+the data was always missing and every stock received a placeholder HOLD. A regression test
+(`tests/data/ai-analysis-inprocess.test.ts`) fails against the old code and passes now.
 
 ## Authentication and authorisation
 

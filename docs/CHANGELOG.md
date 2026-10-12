@@ -25,6 +25,8 @@ each theme. Hashes are for this local branch and will change if history is rewri
 - Silent mock-data fallback removed; demo mode is explicit, dev-only and labelled; verified absent from production bundles (`842ccb2`)
 - Invented "confidence %" replaced by **signal strength** + "unavailable"; LLM-written confidence discarded (`c1ab44a`, `4d374f3`)
 
+- **AI verdict was a placeholder for every stock in production**: `ai-analysis` fetched its own `/api/technicals|fundamentals|macro` over HTTP without a session (401) and via `localhost:3000`; it now calls the services in-process, guarded by a regression test that fails on the old code
+
 ## Database
 - Baseline migration and `1_auth_hardening` (role, sessionVersion, token hashes); verified on empty and populated databases; drift-checked in CI (`156c27f`, `76c7e36`)
 

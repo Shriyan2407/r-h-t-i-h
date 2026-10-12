@@ -5,6 +5,9 @@ import { callOllama, getOllamaModel } from "@/lib/ai/ollamaClient";
 import { generateDeterministicAnalysis }   from "@/lib/ai/narrativeEngine";
 import type { AIAnalysis, Verdict, TechnicalIndicators, FundamentalData } from "@/lib/types";
 import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
+import { getTechnicals } from "@/lib/services/technicals";
+import { getFundamentals } from "@/lib/services/fundamentals";
+import { getMacroIntelligence } from "@/lib/services/macro";
 import { auth } from "@/lib/auth/auth";
 import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
@@ -24,16 +27,21 @@ function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
 /* ── Internal data fetchers ──────────────────────────────── */
 
-async function fetchInternal<T>(path: string, ms = 14_000): Promise<T | null> {
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-  const ctrl = new AbortController();
-  const t    = setTimeout(() => ctrl.abort(), ms);
-  try {
-    const res = await fetch(`${base}${path}`, { signal: ctrl.signal, cache: "no-store" });
-    clearTimeout(t);
-    if (!res.ok) return null;
-    return res.json() as Promise<T>;
-  } catch { clearTimeout(t); return null; }
+/**
+ * Resolve a service call, or `null` if it fails or exceeds `ms`. Services are called
+ * IN-PROCESS: the previous implementation fetched this app's own /api routes over HTTP,
+ * which carried no session (so the auth proxy answered 401) and defaulted to
+ * http://localhost:3000, so technicals, fundamentals and macro were always missing and every
+ * stock fell through to a placeholder HOLD.
+ */
+function withTimeout<X>(p: Promise<X>, ms: number): Promise<X | null> {
+  return Promise.race([
+    p.catch((err) => {
+      console.warn("[ai-analysis] upstream failed:", (err as Error).message);
+      return null;
+    }),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
 }
 
 async function getQuoteData(ticker: string) {
@@ -56,9 +64,6 @@ async function getNewsHeadlines(ticker: string): Promise<string[]> {
   } catch { return []; }
 }
 
-async function getMacroData() {
-  return fetchInternal("/api/macro", 10_000);
-}
 
 /* ── Ollama prompt (compressed ~500 tokens) ──────────────── */
 
@@ -222,10 +227,10 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
 
   const [quote, techData, fundData, headlines, macro] = await Promise.all([
     Promise.race([getQuoteData(T), new Promise<null>(r => setTimeout(() => r(null), 12_000))]),
-    fetchInternal<TechnicalIndicators & { error?: string }>(`/api/technicals/${T}`, 12_000),
-    fetchInternal<FundamentalData & { error?: string }>(`/api/fundamentals/${T}`, 12_000),
+    withTimeout(getTechnicals(T), 12_000),
+    withTimeout(getFundamentals(T), 12_000),
     Promise.race([getNewsHeadlines(T), new Promise<string[]>(r => setTimeout(() => r([]), 8_000))]),
-    getMacroData(),
+    withTimeout(getMacroIntelligence(), 10_000),
   ]);
 
   const price = safeNum(quote?.regularMarketPrice) ?? 0;
@@ -234,8 +239,8 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
 
   // Always compute deterministic quant scores
   const emptyFund: FundamentalData = { pe_ratio: null, pb_ratio: null, ps_ratio: null, ev_ebitda: null, sector_pe: null, roe: null, roce: null, roa: null, net_margin: null, operating_margin: null, gross_margin: null, revenue_growth_yoy: null, profit_growth_yoy: null, eps_growth_3yr: null, debt_to_equity: null, current_ratio: null, quick_ratio: null, interest_coverage: null, free_cash_flow: null, promoter_holding: null, fii_holding: null, dii_holding: null, pledged_shares: null, asset_turnover: null, inventory_turnover: null, receivables_turnover: null };
-  const hasTech = techData && !techData.error;
-  const hasFund = fundData && !fundData.error;
+  const hasTech = techData !== null;
+  const hasFund = fundData !== null;
   const quantScore = hasTech && price > 0
     ? computeQuantScore(techData as TechnicalIndicators, hasFund ? fundData as FundamentalData : emptyFund, price, hi52, lo52)
     : { technical: 50, momentum: 50, fundamental: 50, volatility: 50, risk: 60, composite: 52, verdict: "HOLD" as const, signalStrength: 0, signals: { bullish: [], bearish: [], neutral: ["Insufficient data for full scoring"] } };
