@@ -8,10 +8,10 @@ export async function POST(req: NextRequest) {
   try {
     const { email } = schema.parse(await req.json());
 
-    const token = await createPasswordResetToken(email);
+    const issued = await createPasswordResetToken(email);
 
-    if (token && process.env.NODE_ENV === "development") {
-      const resetUrl = `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/auth/reset-password?token=${token}`;
+    if (issued && process.env.NODE_ENV === "development") {
+      const resetUrl = `${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/auth/reset-password?token=${issued.token}`;
       console.log(`[Password Reset] ${email} → ${resetUrl}`);
     }
 

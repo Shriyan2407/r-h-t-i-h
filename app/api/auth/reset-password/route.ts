@@ -31,11 +31,21 @@ export async function POST(req: NextRequest) {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: record.userId },
-        data:  { hashedPassword },
+        data: {
+          hashedPassword,
+          // Invalidate every existing session: JWTs carry the version they were issued under.
+          sessionVersion: { increment: 1 },
+          // Completing the emailed reset proves control of the address.
+          ...(record.user.emailVerified ? {} : { emailVerified: new Date() }),
+        },
       }),
       prisma.passwordResetToken.update({
         where: { id: record.id },
         data:  { used: true },
+      }),
+      // Any other outstanding reset links for this account are now void.
+      prisma.passwordResetToken.deleteMany({
+        where: { userId: record.userId, id: { not: record.id } },
       }),
     ]);
 
