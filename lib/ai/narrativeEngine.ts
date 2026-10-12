@@ -361,7 +361,8 @@ function buildVerdict(
 
   return {
     rating:     score.verdict as AIAnalysis["verdict"]["rating"],
-    confidence: score.confidence,
+    signal_strength: score.signalStrength,
+    probability: null,
     timeline:   score.composite >= 65 ? "6–12 months" : "3–6 months",
     entry_range: [Math.round(price * 0.97), Math.round(price * 1.01)],
     stop_loss:  sl,

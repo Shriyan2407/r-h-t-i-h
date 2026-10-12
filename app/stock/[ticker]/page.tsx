@@ -638,8 +638,8 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
               <VerdictBadge verdict={aiAnalysis.verdict.rating} size="lg" className="w-full justify-center" />
               <div className="grid grid-cols-2 gap-2 text-center">
                 <div className="p-2 rounded-lg" style={{ background: "var(--th-bg-page)", border: "1px solid var(--th-border-card)" }}>
-                  <div className="text-[9px] font-mono" style={{ color: "var(--th-text-faint)" }}>Confidence</div>
-                  <div className="text-sm font-mono font-bold" style={{ color: "var(--th-blue)" }}>{aiAnalysis.verdict.confidence}%</div>
+                  <div className="text-[9px] font-mono" style={{ color: "var(--th-text-faint)" }} title="Agreement between rule-based indicators. Not a probability of profit.">Signal strength</div>
+                  <div className="text-sm font-mono font-bold" style={{ color: "var(--th-blue)" }}>{aiAnalysis.verdict.signal_strength}/100</div>
                 </div>
                 <div className="p-2 rounded-lg" style={{ background: "var(--th-bg-page)", border: "1px solid var(--th-border-card)" }}>
                   <div className="text-[9px] font-mono" style={{ color: "var(--th-text-faint)" }}>Risk/Reward</div>

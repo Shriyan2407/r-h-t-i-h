@@ -14,7 +14,7 @@ import {
   Globe,
 } from "lucide-react";
 import type { AIAnalysis, Scenario } from "@/lib/types";
-import { VerdictBadge, ConfidenceMeter } from "@/components/ui/VerdictBadge";
+import { VerdictBadge, SignalStrengthMeter } from "@/components/ui/VerdictBadge";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 
@@ -190,7 +190,7 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
           {analysis.verdict.risk_reward && <Badge variant="blue">R/R {analysis.verdict.risk_reward.toFixed(1)}x</Badge>}
         </div>
 
-        <ConfidenceMeter confidence={analysis.verdict.confidence} verdict={analysis.verdict.rating} />
+        <SignalStrengthMeter signalStrength={analysis.verdict.signal_strength} probability={analysis.verdict.probability} verdict={analysis.verdict.rating} />
 
         <p
           className="font-medium leading-relaxed"

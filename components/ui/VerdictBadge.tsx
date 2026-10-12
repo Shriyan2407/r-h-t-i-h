@@ -103,18 +103,28 @@ export function VerdictBadge({
   );
 }
 
-interface ConfidenceMeterProps {
-  confidence: number;
+interface SignalStrengthMeterProps {
+  /** 0-100 agreement of the rule-based indicator signals. */
+  signalStrength: number;
+  /** Calibrated probability 0-1, or null when no validated model exists. */
+  probability: number | null;
   verdict: Verdict;
 }
 
-export function ConfidenceMeter({ confidence, verdict }: ConfidenceMeterProps) {
+/**
+ * Shows how strongly the rule-based signals agree - explicitly NOT a probability of
+ * success. The probability row says "unavailable" until a calibrated model exists, so
+ * the interface never displays an invented confidence figure.
+ */
+export function SignalStrengthMeter({ signalStrength, probability, verdict }: SignalStrengthMeterProps) {
   const cfg = VERDICT_CONFIG[verdict];
+  const value = Math.max(0, Math.min(100, Math.round(signalStrength)));
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-between items-center">
         <span
+          title="How strongly the rule-based indicators agree with each other. It is not the probability that the call is right."
           style={{
             fontFamily: "monospace",
             fontSize: "11px",
@@ -124,7 +134,7 @@ export function ConfidenceMeter({ confidence, verdict }: ConfidenceMeterProps) {
             color: "var(--th-text-muted)",
           }}
         >
-          AI Confidence
+          Signal strength
         </span>
         <span
           style={{
@@ -135,7 +145,7 @@ export function ConfidenceMeter({ confidence, verdict }: ConfidenceMeterProps) {
             letterSpacing: "-0.02em",
           }}
         >
-          {confidence}%
+          {value}/100
         </span>
       </div>
 
@@ -143,10 +153,15 @@ export function ConfidenceMeter({ confidence, verdict }: ConfidenceMeterProps) {
       <div
         className="w-full h-1.5 rounded-full overflow-hidden"
         style={{ background: "var(--border-muted)" }}
+        role="meter"
+        aria-label="Signal strength"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={value}
       >
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: `${confidence}%` }}
+          animate={{ width: `${value}%` }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           className="h-full rounded-full"
           style={{
@@ -156,20 +171,11 @@ export function ConfidenceMeter({ confidence, verdict }: ConfidenceMeterProps) {
         />
       </div>
 
-      {/* Segment dots */}
-      <div className="flex gap-0.5">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex-1 h-1 rounded-sm transition-all duration-300"
-            style={{
-              background: i < Math.round(confidence / 10)
-                ? cfg?.color ?? "var(--primary)"
-                : "var(--border-muted)",
-            }}
-          />
-        ))}
-      </div>
+      <p className="text-[10px] font-mono leading-snug" style={{ color: "var(--th-text-faint)" }}>
+        {probability === null
+          ? "Confidence unavailable: indicator agreement is not a probability, and no validated model backs this call."
+          : `Model probability: ${Math.round(probability * 100)}%`}
+      </p>
     </div>
   );
 }

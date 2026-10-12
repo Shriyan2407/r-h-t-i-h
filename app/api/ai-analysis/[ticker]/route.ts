@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cache, TTL }     from "@/lib/services/cache";
 import { computeQuantScore, buildQuantSummary } from "@/lib/scoring/quantEngine";
-import { callOllama, isOllamaOnline, getOllamaModel } from "@/lib/ai/ollamaClient";
+import { callOllama, getOllamaModel } from "@/lib/ai/ollamaClient";
 import { generateDeterministicAnalysis }   from "@/lib/ai/narrativeEngine";
 import type { AIAnalysis, Verdict, TechnicalIndicators, FundamentalData } from "@/lib/types";
 import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
@@ -21,7 +21,6 @@ function safeNum(v: any): number | null {
   return isNaN(n) ? null : Math.round(n * 100) / 100;
 }
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
-function clamp(v: number, lo = 50, hi = 95): number { return Math.max(lo, Math.min(hi, Math.round(v))); }
 
 /* ── Internal data fetchers ──────────────────────────────── */
 
@@ -96,7 +95,7 @@ Return ONLY valid JSON (no markdown). Schema:
   "macro":{"summary":"<2 s>","rbi_impact":"<1 s>","budget_impact":"<1 s>","sector_tailwinds":["<t1>","<t2>","<t3>"],"sector_headwinds":["<h1>","<h2>"],"policy_risks":["<r1>","<r2>"],"facts_vs_interpretation":{"facts":["<f1>","<f2>","<f3>"],"interpretations":["<i1>","<i2>","<i3>"]}},
   "sentiment":{"overall":"POSITIVE|NEGATIVE|NEUTRAL|MIXED","score":<-1 to 1>,"key_catalysts":["<c1>","<c2>"],"key_risks_from_news":["<r1>","<r2>"],"noise_filtered_summary":"<2 s>","sources":[{"headline":"<h>","source":"<s>","sentiment":"POSITIVE|NEGATIVE|NEUTRAL","signal_type":"SIGNAL|NOISE","published_at":"${new Date().toISOString()}"}]},
   "scenarios":[{"type":"BULL","target_price":<₹ ~25% above ${price.toFixed(0)}>,"probability":<35-45>,"timeline":"12 months","key_drivers":["<d1>","<d2>"],"invalidation_level":<₹>},{"type":"BASE","target_price":<₹ ~10% above ${price.toFixed(0)}>,"probability":<40-50>,"timeline":"12 months","key_drivers":["<d1>","<d2>"],"invalidation_level":<₹>},{"type":"BEAR","target_price":<₹ ~15% below ${price.toFixed(0)}>,"probability":<15-25>,"timeline":"9 months","key_drivers":["<d1>","<d2>"],"invalidation_level":<₹>}],
-  "verdict":{"rating":"STRONG BUY|BUY|HOLD|SELL|STRONG SELL","confidence":<50-90>,"timeline":"<3-6|6-12|12-18 months>","entry_range":[<₹lo>,<₹hi>],"stop_loss":<₹>,"target_1":<₹>,"target_2":<₹>,"risk_reward":<1.5-4>,"key_risks":["<r1>","<r2>","<r3>"],"key_catalysts":["<c1>","<c2>","<c3>"],"investment_thesis":"<2 sentences SPECIFIC to ${ticker}>","when_to_review":"<trigger>"}
+  "verdict":{"rating":"STRONG BUY|BUY|HOLD|SELL|STRONG SELL","timeline":"<3-6|6-12|12-18 months>","entry_range":[<₹lo>,<₹hi>],"stop_loss":<₹>,"target_1":<₹>,"target_2":<₹>,"risk_reward":<1.5-4>,"key_risks":["<r1>","<r2>","<r3>"],"key_catalysts":["<c1>","<c2>","<c3>"],"investment_thesis":"<2 sentences SPECIFIC to ${ticker}>","when_to_review":"<trigger>"}
 }
 RULES: Use price ₹${price.toFixed(2)}. Be SPECIFIC to ${ticker}. BULL+BASE+BEAR=100.`;
 }
@@ -197,7 +196,9 @@ function parseAndDefault(raw: string, ticker: string, quote: any, quantScore: an
       const valid: Verdict[] = ["STRONG BUY","BUY","HOLD","SELL","STRONG SELL"];
       return {
         rating:            valid.includes(v.rating) ? v.rating : quantScore.verdict,
-        confidence:        clamp(safeNum(v.confidence) ?? quantScore.confidence),
+        // Never taken from the LLM: a model-written "confidence" is not a calibrated probability.
+        signal_strength:   quantScore.signalStrength,
+        probability:       null,
         timeline:          v.timeline ?? "6-12 months",
         entry_range:       Array.isArray(v.entry_range) && v.entry_range.length === 2 ? v.entry_range : [Math.round(price * 0.97), Math.round(price)],
         stop_loss:         safeNum(v.stop_loss)   ?? Math.round(price * 0.90),
@@ -237,7 +238,7 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
   const hasFund = fundData && !fundData.error;
   const quantScore = hasTech && price > 0
     ? computeQuantScore(techData as TechnicalIndicators, hasFund ? fundData as FundamentalData : emptyFund, price, hi52, lo52)
-    : { technical: 50, momentum: 50, fundamental: 50, volatility: 50, risk: 60, composite: 52, verdict: "HOLD" as const, confidence: 65, signals: { bullish: [], bearish: [], neutral: ["Insufficient data for full scoring"] } };
+    : { technical: 50, momentum: 50, fundamental: 50, volatility: 50, risk: 60, composite: 52, verdict: "HOLD" as const, signalStrength: 0, signals: { bullish: [], bearish: [], neutral: ["Insufficient data for full scoring"] } };
 
   const quantSummary = buildQuantSummary(quantScore, price, T);
 

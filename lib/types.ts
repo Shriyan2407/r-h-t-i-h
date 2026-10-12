@@ -234,7 +234,13 @@ export interface AIAnalysis {
   // Final Verdict
   verdict: {
     rating: Verdict;
-    confidence: number; // 0-100
+    /** 0-100 agreement of the rule-based signals. Not a probability. */
+    signal_strength: number;
+    /**
+     * Calibrated probability that the call is right, 0-1. `null` = unavailable: no model has
+     * been validated, so the UI must say so rather than show a made-up percentage.
+     */
+    probability: number | null;
     timeline: string;
     entry_range: [number, number] | null;
     stop_loss: number | null;

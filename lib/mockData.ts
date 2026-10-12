@@ -442,7 +442,8 @@ export function generateMockAIAnalysis(
     ],
     verdict: {
       rating,
-      confidence,
+      signal_strength: confidence,
+      probability: null,
       timeline: "6-12 Months",
       entry_range: [Math.round(currentPrice * 0.985 * 100) / 100, Math.round(currentPrice * 1.015 * 100) / 100],
       stop_loss: stopLoss,
