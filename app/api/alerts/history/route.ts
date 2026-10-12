@@ -1,14 +1,19 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/auth/prisma";
+import { paginationSchema } from "@/lib/validation/portfolio";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const limit = Math.min(Number(searchParams.get("limit") ?? 50), 100);
-  const offset = Number(searchParams.get("offset") ?? 0);
+  const page = paginationSchema.safeParse({
+    limit: searchParams.get("limit") ?? undefined,
+    offset: searchParams.get("offset") ?? undefined,
+  });
+  if (!page.success) return Response.json({ error: "Invalid pagination" }, { status: 400 });
+  const { limit, offset } = page.data;
 
   const [items, total] = await Promise.all([
     prisma.alertHistory.findMany({
@@ -23,7 +28,7 @@ export async function GET(req: NextRequest) {
   return Response.json({ items, total, limit, offset });
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH() {
   const session = await auth();
   if (!session?.user?.id) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -36,7 +41,7 @@ export async function PATCH(req: NextRequest) {
   return Response.json({ ok: true });
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE() {
   const session = await auth();
   if (!session?.user?.id) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
