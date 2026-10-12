@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "admin:promote": "node scripts/promote-admin.mjs",
     "check:bundle": "node scripts/check-no-mock-in-bundle.mjs",
-    "lint:prune": "eslint . --prune-suppressions"
+    "lint:prune": "eslint . --prune-suppressions",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
