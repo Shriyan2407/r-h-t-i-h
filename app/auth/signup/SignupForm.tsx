@@ -53,17 +53,8 @@ export function SignupForm() {
         setError(json.error ?? "Signup failed");
         return;
       }
-      const result = await signIn("credentials", {
-        email:    data.email,
-        password: data.password,
-        redirect: false,
-      });
-      if (result?.error) {
-        router.push("/auth/login");
-      } else {
-        router.push("/dashboard");
-        router.refresh();
-      }
+      // The account is created unverified: the user must confirm their email before signing in.
+      router.push("/auth/verify-email?sent=1");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

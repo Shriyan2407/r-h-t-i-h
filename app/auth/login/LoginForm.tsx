@@ -26,6 +26,9 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error,        setError]        = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
+  const justVerified = searchParams.get("verified") === "1";
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -34,6 +37,8 @@ export function LoginForm() {
   const onSubmit = async (data: LoginForm) => {
     setIsSubmitting(true);
     setError(null);
+    setUnverifiedEmail(null);
+    setResendState("idle");
     try {
       const result = await signIn("credentials", {
         email:    data.email,
@@ -41,7 +46,14 @@ export function LoginForm() {
         redirect: false,
       });
       if (result?.error) {
-        setError("Invalid email or password. Please try again.");
+        if (result.code === "email_not_verified") {
+          setError("Please verify your email before signing in. Check your inbox for the link.");
+          setUnverifiedEmail(data.email);
+        } else if (result.code === "rate_limited") {
+          setError("Too many attempts. Please wait a few minutes and try again.");
+        } else {
+          setError("Invalid email or password. Please try again.");
+        }
       } else {
         router.push(callbackUrl);
         router.refresh();
@@ -50,6 +62,20 @@ export function LoginForm() {
       setError("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const resendVerification = async () => {
+    if (!unverifiedEmail) return;
+    setResendState("sending");
+    try {
+      await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+    } finally {
+      setResendState("sent");
     }
   };
 
@@ -124,6 +150,16 @@ export function LoginForm() {
           </p>
         </div>
 
+        {justVerified && !error && (
+          <div
+            role="status"
+            className="mb-5 px-4 py-3 rounded-xl text-[12px] font-mono"
+            style={{ background: "rgba(0,255,156,0.08)", border: "1px solid rgba(0,255,156,0.22)", color: "#00CC7A" }}
+          >
+            Email verified. You can sign in now.
+          </div>
+        )}
+
         {/* Error banner */}
         {error && (
           <div
@@ -135,7 +171,19 @@ export function LoginForm() {
             }}
           >
             <span className="flex-shrink-0">⚠</span>
-            {error}
+            <span>
+              {error}
+              {unverifiedEmail && (
+                <button
+                  type="button"
+                  onClick={resendVerification}
+                  disabled={resendState !== "idle"}
+                  className="block mt-2 underline disabled:opacity-60"
+                >
+                  {resendState === "sent" ? "New link sent (if the account needs one)" : resendState === "sending" ? "Sending…" : "Resend verification email"}
+                </button>
+              )}
+            </span>
           </div>
         )}
 

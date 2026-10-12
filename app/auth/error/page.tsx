@@ -13,6 +13,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   OAuthCallback:  "Could not complete the OAuth sign in. Please try again.",
   OAuthCreateAccount: "Could not create an OAuth account. Try a different sign in method.",
   EmailCreateAccount: "Could not create an email account. Try a different sign in method.",
+  OAuthAccountNotLinked: "An account with this email already exists. Sign in with your email and password instead.",
   Callback:       "There was an error during the sign in callback.",
   Default:        "An unexpected error occurred during sign in.",
 };
