@@ -11,12 +11,13 @@
 
 ## Current suite (this branch)
 
-- 25 unit files, 294 tests · 1 integration file, 16 tests (skipped unless `TEST_DATABASE_URL` is set).
+- 28 unit files, 320 tests · 1 integration file, 16 tests (skipped unless `TEST_DATABASE_URL` is set).
 - Areas: secrets and webhook auth, Telegram escaping/commands/rate limits, rate limiter backends,
   signup/verify/resend, credential sign-in, session callbacks and revocation, admin gate, profile
   (password change, deletion), password-reset and verification tokens, email sending/templates,
   ticker/portfolio/push validation, route access allow-list, market indices and briefing data,
-  signal strength and absence of invented confidence, no-silent-mock behaviour, real `sharp`
+  signal strength and absence of invented confidence, no-silent-mock behaviour, alert-engine
+  detectors/messages/de-duplication, in-process AI analysis, security headers, real `sharp`
   and SheetJS smoke tests.
 
 ## Running integration tests safely
@@ -40,6 +41,5 @@ Tests only create/delete rows whose email starts with `it-`.
 
 - **No end-to-end browser tests** (Playwright planned): login/signup/verify flows in a browser, stock page, portfolio import, alerts UI, mobile layout.
 - No React component tests; large legacy pages are untested.
-- Alert engine (`lib/services/alertEngine.ts`) detection/dedup logic has no dedicated tests yet.
 - LLM output parsing is covered only for the confidence field.
 - No load or performance tests.

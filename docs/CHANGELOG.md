@@ -15,6 +15,7 @@ each theme. Hashes are for this local branch and will change if history is rewri
 - Ticker, portfolio, pagination, upload and push validation; push SSRF closed; no internal errors returned (`f675491`, `d5cee37`, `ceabd30`, `8af9f4f`)
 - Public uncached LLM endpoint closed (`7239b0a`)
 - Account deletion needs re-authentication (`fc11d78`)
+- Security response headers (nosniff, frame denial, referrer/permissions policy, HSTS) and a report-only CSP, verified on a running production server (`da1a802`)
 - Production dependencies: 11 findings (4 critical, 6 high) → **0**; Next 16.2.6 → 16.4.0 fixes a critical proxy bypass (`7030585`)
 
 ## Honesty / fake data removed
@@ -24,6 +25,7 @@ each theme. Hashes are for this local branch and will change if history is rewri
 - Dashboard and login panel hardcoded values and fake verdict cards removed (`66e811e`)
 - Silent mock-data fallback removed; demo mode is explicit, dev-only and labelled; verified absent from production bundles (`842ccb2`)
 - Invented "confidence %" replaced by **signal strength** + "unavailable"; LLM-written confidence discarded (`c1ab44a`, `4d374f3`)
+- Alerts: the "AI Buy/Sell Signal" was a momentum rule shown with a hardcoded 72%/68% confidence and fixed +8%/+15%/-5% targets; it is now an honest rule-based momentum alert with no invented numbers, and "Broke above" wording is only used when true (`176d87b`)
 
 - **AI verdict was a placeholder for every stock in production**: `ai-analysis` fetched its own `/api/technicals|fundamentals|macro` over HTTP without a session (401) and via `localhost:3000`; it now calls the services in-process, guarded by a regression test that fails on the old code
 
@@ -34,7 +36,7 @@ each theme. Hashes are for this local branch and will change if history is rewri
 - Restored files deleted in the working tree; lockfile synced (`2d9bc1c`); typecheck script (`4551f98`); `middleware.ts` → `proxy.ts` (`d6b0825`)
 - ESLint baseline + warning cap (`deae33f`)
 - CI: lint, typecheck, tests, build, bundle guard, audit, migrations + DB integration (`d23cf9f`, `2ecbb31`, `4a6d205`)
-- Vitest harness, 294 unit tests, 16 real-database integration tests (`88fdefd` and throughout)
+- Vitest harness, 320 unit tests, 16 real-database integration tests (`88fdefd` and throughout); alert engine covered end to end (`c5da8e1`)
 - Engineering baseline recorded (`d6ee83f`)
 
 ## Known issues carried forward

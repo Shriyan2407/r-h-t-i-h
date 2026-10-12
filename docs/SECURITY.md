@@ -20,6 +20,7 @@ Use [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md) for the findings that mot
 | SSRF | Web-push endpoints restricted to real push-service hosts, re-checked at send time | `lib/validation/push.ts`, `pushService.ts` | `push.test.ts` |
 | Cost abuse | Intelligence endpoint requires a session, no longer busts its cache, limits cache misses | `app/api/intelligence/*` | `route-access.test.ts` |
 | Errors | Internal error text is logged, not returned | `app/api/ai-analysis` | `rate-limited-routes.test.ts` |
+| Headers | `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, COOP, HSTS (production); `X-Powered-By` removed; CSP in **report-only** mode | `lib/security/headers.ts`, `next.config.ts` | `tests/security/headers.test.ts` + verified on a running production server |
 | Dependencies | `npm audit --omit=dev`: **0** vulnerabilities; CI fails on high/critical | `.github/workflows/ci.yml` | CI |
 | Integrity | Production bundle must contain no sample data | `scripts/check-no-mock-in-bundle.mjs` | CI |
 
@@ -37,7 +38,7 @@ The app fails closed on these; set them before deploying (see DEPLOYMENT.md):
 - **JWT sessions** are revalidated against the DB with a 30 s per-instance cache, so a revoked
   session or demoted admin can persist up to 30 s on an instance that cached the old state
   (admin actions read fresh).
-- **No CSP / security headers** are configured yet. (Planned.)
+- **CSP is report-only**, and still allows `'unsafe-inline'` scripts (Next.js bootstrap + theme/service-worker snippets). It must be validated in a real browser, moved to per-request nonces, and enforced.
 - **No error tracking or audit log** yet. (Planned.)
 - `braces` (dev tooling) has an unfixed advisory; not shipped to production.
 - `xlsx` is installed from SheetJS's own registry (cdn.sheetjs.com), the vendor's supported

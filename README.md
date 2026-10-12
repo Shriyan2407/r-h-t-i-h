@@ -20,7 +20,7 @@ This README describes only what exists in this repository. Anything planned is i
 | Market data | Index and rate bar, quotes, candles, technical indicators (RSI, MACD, EMA, Bollinger, ATR, ADX, stochastic, VWAP, OBV), fundamentals, news from public RSS feeds, keyword-based social sentiment |
 | Analysis | `quantEngine` turns indicators and ratios into a verdict plus a **signal strength** (indicator agreement, *not* a probability). An LLM narrative is added when one is reachable; otherwise a rule-based template is used. Confidence is shown as "unavailable" — no calibrated model exists. |
 | Portfolio | Holdings CRUD with validation; import from CSV, XLSX, PDF or a broker screenshot (OCR) |
-| Alerts | Vercel cron jobs detect breakouts, volume spikes, news and send a market briefing to Telegram and Web Push, with per-user de-duplication |
+| Alerts | Vercel cron jobs detect 52-week high/low proximity, volume spikes, rule-based momentum moves and news, and send a market briefing to Telegram and Web Push, with per-user de-duplication |
 | Admin | Role-based (`ADMIN` in the database + verified email) alert dashboard |
 
 Not built (despite earlier docs): multi-agent AI in production, ML price prediction,
