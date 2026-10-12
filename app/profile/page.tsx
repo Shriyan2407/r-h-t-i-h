@@ -20,6 +20,7 @@ const passwordSchema = z.object({
 }).refine(d => d.newPassword === d.confirmPassword, { message: "Passwords do not match", path: ["confirmPassword"] });
 
 interface UserProfile {
+  hasPassword: boolean;
   name: string | null;
   email: string;
   createdAt: string;
@@ -40,6 +41,8 @@ export default function ProfilePage() {
   const [showCurr,     setShowCurr]     = useState(false);
   const [showNew,      setShowNew]      = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteInput,   setDeleteInput]   = useState("");
+  const [deleteError,   setDeleteError]   = useState<string | null>(null);
 
   const profileForm  = useForm({ resolver: zodResolver(profileSchema)  });
   const passwordForm = useForm({ resolver: zodResolver(passwordSchema) });
@@ -79,9 +82,10 @@ export default function ProfilePage() {
     });
     const json = await res.json();
     if (res.ok) {
-      setPasswordMsg({ type: "ok", text: "Password changed successfully" });
+      // The server revokes every session on a password change, including this one.
+      setPasswordMsg({ type: "ok", text: "Password changed. Signing you out - please sign in again." });
       passwordForm.reset();
-      setTimeout(() => setPasswordMsg(null), 3000);
+      setTimeout(() => signOut({ callbackUrl: "/auth/login" }), 1500);
     } else {
       setPasswordMsg({ type: "err", text: json.error ?? "Failed" });
     }
@@ -89,7 +93,19 @@ export default function ProfilePage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) { setDeleteConfirm(true); return; }
-    await fetch("/api/user/profile", { method: "DELETE" });
+    setDeleteError(null);
+    // Re-authentication: password accounts re-enter their password, OAuth-only accounts type their email.
+    const body = profile?.hasPassword ? { password: deleteInput } : { confirmEmail: deleteInput };
+    const res = await fetch("/api/user/profile", {
+      method:  "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setDeleteError(json.error ?? "Could not delete the account");
+      return;
+    }
     await signOut({ callbackUrl: "/" });
   };
 
@@ -356,10 +372,27 @@ export default function ProfilePage() {
                 >
                   <LogOut size={11} /> Sign Out
                 </button>
+                {deleteConfirm && (
+                  <input
+                    type={profile?.hasPassword ? "password" : "email"}
+                    value={deleteInput}
+                    onChange={e => setDeleteInput(e.target.value)}
+                    placeholder={profile?.hasPassword ? "Enter your password" : "Type your account email"}
+                    aria-label={profile?.hasPassword ? "Password to confirm deletion" : "Email to confirm deletion"}
+                    autoComplete={profile?.hasPassword ? "current-password" : "off"}
+                    className="px-3 py-2 rounded-lg text-[11px] font-mono"
+                    style={{
+                      background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,77,77,0.30)",
+                      color: textP,
+                      outline: "none",
+                    }}
+                  />
+                )}
                 <button
                   onClick={handleDelete}
-                  onBlur={() => setDeleteConfirm(false)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-mono transition-all"
+                  disabled={deleteConfirm && !deleteInput}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[11px] font-mono transition-all disabled:opacity-50"
                   style={{
                     background: deleteConfirm ? "rgba(255,77,77,0.10)" : "transparent",
                     border: `1px solid ${deleteConfirm ? "rgba(255,77,77,0.30)" : "rgba(255,77,77,0.18)"}`,
@@ -368,8 +401,20 @@ export default function ProfilePage() {
                   }}
                 >
                   <Trash2 size={11} />
-                  {deleteConfirm ? "Confirm delete?" : "Delete Account"}
+                  {deleteConfirm ? "Permanently delete" : "Delete Account"}
                 </button>
+                {deleteConfirm && (
+                  <button
+                    onClick={() => { setDeleteConfirm(false); setDeleteInput(""); setDeleteError(null); }}
+                    className="px-3 py-2 rounded-lg text-[11px] font-mono"
+                    style={{ color: textM, cursor: "pointer" }}
+                  >
+                    Cancel
+                  </button>
+                )}
+                {deleteError && (
+                  <span role="alert" className="text-[11px] font-mono" style={{ color: "#FF4D4D" }}>{deleteError}</span>
+                )}
               </div>
             </div>
           </div>
