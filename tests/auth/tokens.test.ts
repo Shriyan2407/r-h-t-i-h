@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const db = vi.hoisted(() => ({
-  user: { findUnique: vi.fn() },
+  user: { findUnique: vi.fn(), findFirst: vi.fn() },
   passwordResetToken: {
     deleteMany: vi.fn(),
     create: vi.fn(),
@@ -32,6 +32,7 @@ describe("hashToken", () => {
 describe("createPasswordResetToken", () => {
   it("returns null for an unknown email and writes nothing", async () => {
     db.user.findUnique.mockResolvedValue(null);
+    db.user.findFirst.mockResolvedValue(null);
     expect(await createPasswordResetToken("nobody@example.com")).toBeNull();
     expect(db.passwordResetToken.create).not.toHaveBeenCalled();
   });

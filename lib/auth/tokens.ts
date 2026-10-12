@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "./prisma";
+import { findUserByEmail } from "./users";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -29,7 +30,7 @@ export interface IssuedResetToken {
  * Returns null when no account exists - callers must not reveal that to the requester.
  */
 export async function createPasswordResetToken(email: string): Promise<IssuedResetToken | null> {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await findUserByEmail(email);
   if (!user) return null;
 
   await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
