@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import type { LandingMarket } from "@/lib/services/landingMarket";
 import {
   TrendingUp, BarChart2, Brain, Zap, Shield,
   Activity, Globe, Cpu, ArrowRight, Lock,
@@ -13,8 +14,8 @@ import {
 const FEATURES = [
   {
     icon: Brain,
-    title: "Multi-Agent AI Research",
-    description: "7 specialized AI agents — technical, fundamental, macro, news, lifecycle, sentiment, and trade opportunity — synthesized into a single institutional report.",
+    title: "Quant-First AI Research",
+    description: "Technical and fundamental scores are computed deterministically from market data, then explained in plain language by an AI model when one is available. Scores are rule-based heuristics, not predictions.",
     color: "var(--gold)",
     tag: "Core Engine",
   },
@@ -55,22 +56,24 @@ const FEATURES = [
   },
 ];
 
-const TRENDING_STOCKS = [
-  { ticker: "RELIANCE",   name: "Reliance Industries",       change:  1.24, price: 2847.50, sector: "Energy"     },
-  { ticker: "TCS",        name: "Tata Consultancy Services", change: -0.38, price: 4123.80, sector: "Technology" },
-  { ticker: "HDFCBANK",   name: "HDFC Bank",                 change:  0.92, price: 1678.25, sector: "Banking"    },
-  { ticker: "INFY",       name: "Infosys",                   change: -1.15, price: 1889.40, sector: "Technology" },
-  { ticker: "ICICIBANK",  name: "ICICI Bank",                change:  1.87, price: 1234.60, sector: "Banking"    },
-  { ticker: "BHARTIARTL", name: "Bharti Airtel",             change:  2.11, price: 1876.90, sector: "Telecom"    },
-  { ticker: "WIPRO",      name: "Wipro",                     change: -0.65, price: 548.30,  sector: "Technology" },
-  { ticker: "HCLTECH",    name: "HCL Technologies",          change:  0.44, price: 1632.75, sector: "Technology" },
-];
+/** Static company metadata (not market data) for the tickers shown in the live movers strip. */
+const TICKER_META: Record<string, { name: string; sector: string }> = {
+  RELIANCE:   { name: "Reliance Industries",       sector: "Energy"     },
+  TCS:        { name: "Tata Consultancy Services", sector: "Technology" },
+  HDFCBANK:   { name: "HDFC Bank",                 sector: "Banking"    },
+  INFY:       { name: "Infosys",                   sector: "Technology" },
+  ICICIBANK:  { name: "ICICI Bank",                sector: "Banking"    },
+  BHARTIARTL: { name: "Bharti Airtel",             sector: "Telecom"    },
+  SBIN:       { name: "State Bank of India",       sector: "Banking"    },
+  ITC:        { name: "ITC Limited",               sector: "FMCG"       },
+};
 
+/** Only facts that are true of the shipped product. */
 const STATS = [
-  { label: "NSE Listed",          value: "1,900+", sub: "equities"    },
-  { label: "BSE Listed",          value: "5,500+", sub: "securities"  },
-  { label: "AI Agents",           value: "7",      sub: "specialized" },
-  { label: "Analysis Dimensions", value: "8",      sub: "layers"      },
+  { label: "Exchanges",        value: "NSE · BSE", sub: "Indian equities"                 },
+  { label: "Alert channels",   value: "2",         sub: "Telegram · Web Push"             },
+  { label: "Portfolio import", value: "4",         sub: "CSV · XLSX · PDF · screenshot"   },
+  { label: "Market data",      value: "Yahoo",     sub: "Finance feed · may be delayed"   },
 ];
 
 const SECTOR_COLORS: Record<string, string> = {
@@ -80,11 +83,12 @@ const SECTOR_COLORS: Record<string, string> = {
   Telecom:    "#3B82F6",
 };
 
-const AI_SIGNALS = [
-  { label: "RELIANCE",  verdict: "BUY",        confidence: 78, color: "#34D399", bg: "rgba(52,211,153,0.08)"  },
-  { label: "TCS",       verdict: "HOLD",       confidence: 62, color: "#FFB800", bg: "rgba(255,184,0,0.08)"   },
-  { label: "HDFCBANK",  verdict: "STRONG BUY", confidence: 84, color: "#00FF9C", bg: "rgba(0,255,156,0.09)"   },
-  { label: "INFY",      verdict: "SELL",       confidence: 71, color: "#FF7A00", bg: "rgba(255,122,0,0.08)"   },
+const REPORT_LAYERS = [
+  { title: "Technicals",   body: "RSI, MACD, moving averages, Bollinger Bands, ADX, stochastic - computed from price history." },
+  { title: "Fundamentals", body: "Valuation, profitability, growth and leverage ratios from reported financials." },
+  { title: "News & mood",  body: "Headlines from public RSS feeds, scored with a keyword model." },
+  { title: "Macro context", body: "Index, volatility and currency moves for the wider market backdrop." },
+  { title: "AI narrative", body: "A plain-language summary written by an AI model when one is available." },
 ];
 
 /* ═══════════════════════════════════════════
@@ -247,7 +251,7 @@ function AuthCTAButtons({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
    HERO SECTION
 ═══════════════════════════════════════════ */
 
-function HeroSection() {
+function HeroSection({ market }: { market: LandingMarket | null }) {
   return (
     <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-4 pt-12 pb-20 overflow-hidden">
       <GlowOrbs />
@@ -277,7 +281,7 @@ function HeroSection() {
         >
           <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] animate-live-dot" />
           <span className="text-[9.5px] font-mono uppercase tracking-[0.22em]" style={{ color: "var(--th-text-muted)" }}>
-            NSE · BSE · Multi-Agent AI · Live Intelligence
+            NSE · BSE · Quant-First AI Research
           </span>
           <div
             className="px-2 py-0.5 rounded-full text-[8.5px] font-mono font-bold uppercase tracking-wider"
@@ -355,8 +359,8 @@ function HeroSection() {
           className="max-w-2xl mx-auto mb-3 leading-relaxed"
           style={{ fontSize: "clamp(13px, 1.8vw, 16px)", color: "var(--th-text-dim)" }}
         >
-          Institutional-grade research, technical intelligence, macro analysis,
-          and multi-agent AI systems built for serious investors.
+          Structured research, technical intelligence, macro analysis,
+          and AI-assisted narratives built for Indian equity investors.
         </motion.p>
 
         <motion.p
@@ -389,34 +393,32 @@ function HeroSection() {
           Free to join · No credit card required · Instant access
         </motion.p>
 
-        {/* Market pulse strip */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="flex items-center justify-center gap-6"
-        >
-          {[
-            { label: "NIFTY 50", value: "24,832", change: "+0.34%" },
-            { label: "SENSEX",   value: "81,547", change: "+0.28%" },
-            { label: "VIX",      value: "14.2",   change: "-2.1%"  },
-          ].map(item => (
-            <div key={item.label} className="flex items-center gap-2">
-              <span className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
-                {item.label}
-              </span>
-              <span className="text-[11px] font-mono font-semibold" style={{ color: "var(--th-text-secondary)" }}>
-                {item.value}
-              </span>
-              <span
-                className="text-[9px] font-mono"
-                style={{ color: item.change.startsWith("+") ? "var(--positive)" : "var(--negative)" }}
-              >
-                {item.change}
-              </span>
-            </div>
-          ))}
-        </motion.div>
+        {/* Market pulse strip - live data only; hidden when unavailable */}
+        {market && market.indices.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="flex items-center justify-center gap-6 flex-wrap"
+          >
+            {market.indices.map(item => (
+              <div key={item.label} className="flex items-center gap-2">
+                <span className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
+                  {item.label}
+                </span>
+                <span className="text-[11px] font-mono font-semibold" style={{ color: "var(--th-text-secondary)" }}>
+                  {item.value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                </span>
+                <span
+                  className="text-[9px] font-mono"
+                  style={{ color: item.change >= 0 ? "var(--positive)" : "var(--negative)" }}
+                >
+                  {item.change >= 0 ? "+" : ""}{item.change.toFixed(2)}%
+                </span>
+              </div>
+            ))}
+          </motion.div>
+        )}
       </div>
     </section>
   );
@@ -485,7 +487,8 @@ function StatsSection() {
    MARKET MOVERS TEASER (non-interactive)
 ═══════════════════════════════════════════ */
 
-function MarketMoversTeaser() {
+function MarketMoversTeaser({ market }: { market: LandingMarket | null }) {
+  const quotes = (market?.quotes ?? []).slice(0, 8);
   return (
     <section className="px-4 pb-16">
       <div className="max-w-5xl mx-auto">
@@ -508,7 +511,7 @@ function MarketMoversTeaser() {
                 Market Movers
               </div>
               <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
-                Nifty 50 — Preview
+                {market ? `Large-cap basket · Yahoo Finance · ${formatAsOf(market.asOf)}` : "Live data unavailable"}
               </div>
             </div>
           </div>
@@ -521,8 +524,9 @@ function MarketMoversTeaser() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {TRENDING_STOCKS.map((stock, i) => {
-            const color = SECTOR_COLORS[stock.sector] || "#8A8A8A";
+          {quotes.map((stock, i) => {
+            const meta  = TICKER_META[stock.ticker] ?? { name: stock.ticker, sector: "Equity" };
+            const color = SECTOR_COLORS[meta.sector] || "#8A8A8A";
             const isUp  = stock.change >= 0;
 
             return (
@@ -578,7 +582,7 @@ function MarketMoversTeaser() {
                         className="text-[8.5px] font-mono font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-sm inline-block"
                         style={{ color, background: `${color}18`, border: `1px solid ${color}30` }}
                       >
-                        {stock.sector}
+                        {meta.sector}
                       </div>
                     </div>
                     <div
@@ -599,7 +603,7 @@ function MarketMoversTeaser() {
                     </div>
                     <div className="flex items-center gap-1" style={{ color: "var(--th-text-faint)" }}>
                       <span className="text-[9px] font-mono truncate max-w-[70px]">
-                        {stock.name.split(" ").slice(0, 2).join(" ")}
+                        {meta.name.split(" ").slice(0, 2).join(" ")}
                       </span>
                       <ArrowRight size={10} />
                     </div>
@@ -609,6 +613,11 @@ function MarketMoversTeaser() {
             );
           })}
         </div>
+        {quotes.length === 0 && (
+          <p className="text-[11px] font-mono text-center py-6" style={{ color: "var(--th-text-muted)" }}>
+            Live market data is temporarily unavailable. Nothing is shown rather than showing stale or sample prices.
+          </p>
+        )}
       </div>
     </section>
   );
@@ -637,54 +646,35 @@ function AISignalsTeaser() {
           />
 
           <div className="relative grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left — AI signals */}
+            {/* Left - what a report really contains */}
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Cpu size={12} style={{ color: "var(--gold)" }} />
                 <span className="text-[9.5px] font-mono font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--th-text-muted)" }}>
-                  AI Verdicts Preview
+                  What every report contains
                 </span>
-                <div className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] animate-live-dot ml-1" />
               </div>
 
               <div className="space-y-2.5">
-                {AI_SIGNALS.map((sig, i) => (
+                {REPORT_LAYERS.map((layer, i) => (
                   <motion.div
-                    key={sig.label}
+                    key={layer.title}
                     initial={{ opacity: 0, x: -12 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    className="flex items-center gap-3 p-3 rounded-xl cursor-default"
+                    className="p-3 rounded-xl cursor-default"
                     style={{
                       background: "rgba(255,255,255,0.015)",
                       border: "1px solid var(--th-border-subtle)",
                     }}
                   >
-                    <span className="text-[12px] font-mono font-bold w-24" style={{ color: "var(--th-text-primary)" }}>
-                      {sig.label}
-                    </span>
-                    <span
-                      className="text-[9px] font-mono font-bold px-2 py-0.5 rounded"
-                      style={{ color: sig.color, background: sig.bg, border: `1px solid ${sig.color}30` }}
-                    >
-                      {sig.verdict}
-                    </span>
-                    <div className="flex-1 ml-2">
-                      <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                        <motion.div
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${sig.confidence}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.8, delay: i * 0.1 + 0.2 }}
-                          className="h-full rounded-full"
-                          style={{ background: sig.color }}
-                        />
-                      </div>
+                    <div className="text-[12px] font-mono font-bold mb-0.5" style={{ color: "var(--th-text-primary)" }}>
+                      {layer.title}
                     </div>
-                    <span className="text-[10px] font-mono font-semibold" style={{ color: "var(--th-text-muted)" }}>
-                      {sig.confidence}%
-                    </span>
+                    <div className="text-[11px] leading-relaxed" style={{ color: "var(--th-text-dim)" }}>
+                      {layer.body}
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -710,12 +700,12 @@ function AISignalsTeaser() {
                   Full AI Reports
                 </div>
                 <div className="text-[12px] leading-relaxed" style={{ color: "var(--th-text-dim)" }}>
-                  8-layer institutional analysis with technical, fundamental, macro, and trade opportunity intelligence.
+                  Technical, fundamental, news and macro analysis in one structured report. Informational only - not investment advice.
                 </div>
               </div>
               <AuthCTAButtons size="sm" />
               <div className="flex flex-wrap justify-center gap-4">
-                {["7 AI Agents", "< 30s Reports", "NSE + BSE"].map(label => (
+                {["Rule-based scoring", "Telegram alerts", "NSE + BSE"].map(label => (
                   <div key={label} className="flex items-center gap-1.5">
                     <span style={{ color: "var(--gold)", fontSize: "10px" }}>◈</span>
                     <span className="text-[9.5px] font-mono font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
@@ -801,7 +791,7 @@ function FeaturesSection() {
             className="text-[13px] font-medium"
             style={{ color: "var(--th-text-dim)" }}
           >
-            Six specialized intelligence layers. One decisive verdict.
+            Six analysis layers. One structured report.
           </motion.p>
         </div>
 
@@ -934,7 +924,7 @@ function CTASection() {
             {[
               "Free Account",
               "Real Market Data",
-              "Multi-Agent AI",
+              "Quant-First AI",
             ].map(label => (
               <div key={label} className="flex items-center gap-2">
                 <span style={{ color: "var(--gold)", fontSize: "10px" }}>◈</span>
@@ -1004,19 +994,22 @@ function Footer() {
    LIVE INTELLIGENCE FEED
 ═══════════════════════════════════════════ */
 
-const INTEL_FEED = [
-  { ticker: "RELIANCE",   action: "AI Verdict", value: "STRONG BUY", color: "#00FF9C" },
-  { ticker: "TCS",        action: "Confidence", value: "84%",        color: "#38BDF8" },
-  { ticker: "HDFCBANK",   action: "Signal",     value: "BUY",        color: "#34D399" },
-  { ticker: "NIFTY 50",   action: "Trend",      value: "+0.34%",     color: "#00FF9C" },
-  { ticker: "INFY",       action: "AI Verdict", value: "HOLD",       color: "#FFB800" },
-  { ticker: "BHARTIARTL", action: "Signal",     value: "STRONG BUY", color: "#00FF9C" },
-  { ticker: "ICICIBANK",  action: "Confidence", value: "71%",        color: "#38BDF8" },
-  { ticker: "WIPRO",      action: "AI Verdict", value: "BUY",        color: "#34D399" },
-];
+function formatAsOf(iso: string): string {
+  const time = new Date(iso).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit",
+  });
+  return `as of ${time} IST`;
+}
 
-function IntelFeedBar() {
-  const doubled = [...INTEL_FEED, ...INTEL_FEED];
+function IntelFeedBar({ market }: { market: LandingMarket | null }) {
+  // Live data only: with no data, the bar is omitted instead of showing sample values.
+  if (!market) return null;
+  const items = [
+    ...market.indices.map(i => ({ label: i.label, change: i.change })),
+    ...market.quotes.slice(0, 8).map(q => ({ label: q.ticker, change: q.change })),
+  ];
+  if (items.length === 0) return null;
+  const doubled = [...items, ...items];
   return (
     <div
       className="relative overflow-hidden"
@@ -1034,16 +1027,17 @@ function IntelFeedBar() {
         style={{ borderRight: "1px solid rgba(255,215,0,0.08)" }}>
         <div className="w-1.5 h-1.5 rounded-full animate-live-dot" style={{ background: "#00FF9C" }} />
         <span className="text-[7.5px] font-mono font-bold uppercase tracking-[0.2em]" style={{ color: "#00FF9C" }}>
-          AI FEED
+          LIVE MARKET
         </span>
       </div>
       <div className="flex items-center h-full whitespace-nowrap animate-ticker" style={{ paddingLeft: "72px" }}>
         {doubled.map((item, i) => (
           <div key={i} className="inline-flex items-center gap-2 px-4 h-full"
             style={{ borderRight: "1px solid rgba(255,215,0,0.06)" }}>
-            <span className="text-[8.5px] font-mono font-bold" style={{ color: "rgba(255,215,0,0.65)" }}>{item.ticker}</span>
-            <span className="text-[7.5px] font-mono uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>{item.action}</span>
-            <span className="text-[9px] font-mono font-bold" style={{ color: item.color }}>{item.value}</span>
+            <span className="text-[8.5px] font-mono font-bold" style={{ color: "rgba(255,215,0,0.65)" }}>{item.label}</span>
+            <span className="text-[9px] font-mono font-bold" style={{ color: item.change >= 0 ? "#00FF9C" : "#FF4D4D" }}>
+              {item.change >= 0 ? "+" : ""}{item.change.toFixed(2)}%
+            </span>
           </div>
         ))}
       </div>
@@ -1136,15 +1130,15 @@ function LandingHeader() {
    EXPORT
 ═══════════════════════════════════════════ */
 
-export function LandingPage() {
+export function LandingPage({ market }: { market: LandingMarket | null }) {
   return (
     <div className="min-h-screen" style={{ background: "var(--th-bg-page)" }}>
       <LandingHeader />
       <div className="pt-14">
-        <IntelFeedBar />
-        <HeroSection />
+        <IntelFeedBar market={market} />
+        <HeroSection market={market} />
         <StatsSection />
-        <MarketMoversTeaser />
+        <MarketMoversTeaser market={market} />
         <AISignalsTeaser />
         <FeaturesSection />
         <CTASection />
