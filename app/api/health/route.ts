@@ -30,7 +30,7 @@ export async function GET() {
       intelligence: "/api/intelligence/[ticker]",
       news:         "/api/news/[ticker]",
       sentiment:    "/api/sentiment/[ticker]",
-      market:       "/api/market/overview",
+      market:       "/api/market/indices",
     },
     env: {
       node: process.version,
