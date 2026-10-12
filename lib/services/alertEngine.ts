@@ -2,7 +2,7 @@ import { prisma } from "@/lib/auth/prisma";
 import {
   tgSendToUser,
   fmtBreakout, fmtBreakdown, fmtVolumeSpike,
-  fmtBuySignal, fmtSellSignal, fmtDailyBriefing,
+  fmtMomentumAlert, fmtDailyBriefing,
   fmtNewsAlert, fmtEarningsAlert,
 } from "./telegramService";
 import { sendPushToUser } from "./pushService";
@@ -39,7 +39,7 @@ type PrefWithUser = Awaited<ReturnType<typeof loadPrefs>>[number];
 // ── Alert detection ──────────────────────────────────────────────────────────
 
 export function detectBreakout(q: QuoteData): boolean {
-  // Breakout above 52-week high (within 0.2%)
+  // At or within 0.2% of the 52-week high
   return q.price >= q.fiftyTwoWeekHigh * 0.998;
 }
 
@@ -382,31 +382,28 @@ export async function processMarketAlerts(): Promise<{
         }
       }
 
-      // AI signals (non-free tier) — cooldown 8h
+      // Momentum screen (non-free tier) — cooldown 8h. Stored under the legacy "ai_buy" /
+      // "ai_sell" types so existing preferences and history keep working; it is a rule, not AI.
       if ((pref.aiBuySignals || pref.aiSellSignals) && pref.tier !== "free") {
-        const signal = deriveSimpleSignal(q);
-        if (signal === "BUY" && pref.aiBuySignals) {
-          if (!(await isDuplicate(pref.userId, "ai_buy", ticker, 8))) {
-            const sl = q.price * 0.95;
-            const t1 = q.price * 1.08;
-            const t2 = q.price * 1.15;
+        const m = detectMomentum(q);
+        if (m.direction) {
+          const wantsIt = m.direction === "up" ? pref.aiBuySignals : pref.aiSellSignals;
+          const type = m.direction === "up" ? "ai_buy" : "ai_sell";
+          if (wantsIt && !(await isDuplicate(pref.userId, type, ticker, 8))) {
+            const sign = q.changePercent >= 0 ? "+" : "";
             await notifyUser(pref.userId, pref, {
-              type:      "ai_buy",
+              type,
               ticker,
-              title:     `💡 AI Buy Signal: ${ticker}`,
-              message:   `AI buy signal for ${ticker} at ₹${q.price.toFixed(2)} | Target ₹${t1.toFixed(2)}`,
-              tgMessage: fmtBuySignal(ticker, q.price, t1, t2, sl, 72),
-            });
-            priceAlerts++;
-          }
-        } else if (signal === "SELL" && pref.aiSellSignals) {
-          if (!(await isDuplicate(pref.userId, "ai_sell", ticker, 8))) {
-            await notifyUser(pref.userId, pref, {
-              type:      "ai_sell",
-              ticker,
-              title:     `🔴 AI Sell Signal: ${ticker}`,
-              message:   `AI sell signal for ${ticker} at ₹${q.price.toFixed(2)}`,
-              tgMessage: fmtSellSignal(ticker, q.price, 68),
+              title:     `${m.direction === "up" ? "📈" : "📉"} ${ticker} momentum ${m.direction} (${sign}${q.changePercent.toFixed(1)}%)`,
+              message:   `${ticker} ${sign}${q.changePercent.toFixed(2)}% on ${m.volumeMultiple.toFixed(1)}x volume at ₹${q.price.toFixed(2)}`,
+              tgMessage: fmtMomentumAlert({
+                ticker,
+                direction:        m.direction,
+                price:            q.price,
+                changePercent:    q.changePercent,
+                volumeMultiple:   m.volumeMultiple,
+                rangePositionPct: m.rangePositionPct,
+              }),
             });
             priceAlerts++;
           }
@@ -428,11 +425,29 @@ export async function processMarketAlerts(): Promise<{
   };
 }
 
-function deriveSimpleSignal(q: QuoteData): "BUY" | "SELL" | "HOLD" {
-  const rangePos = (q.price - q.fiftyTwoWeekLow) / (q.fiftyTwoWeekHigh - q.fiftyTwoWeekLow);
-  if (q.changePercent > 2.5 && rangePos > 0.6 && q.volume > q.averageVolume * 1.5) return "BUY";
-  if (q.changePercent < -2.5 && rangePos < 0.4 && q.volume > q.averageVolume * 1.5) return "SELL";
-  return "HOLD";
+export interface MomentumResult {
+  direction: "up" | "down" | null;
+  volumeMultiple: number;
+  /** 0-100 position within the 52-week range; 50 when the range is degenerate. */
+  rangePositionPct: number;
+}
+
+/**
+ * Momentum screen: a move of more than 2.5% in either direction on volume above 1.5x the
+ * average, with price in the upper (up) or lower (down) part of its 52-week range.
+ * Returns facts, never a recommendation. Pure and exported for testing.
+ */
+export function detectMomentum(q: QuoteData): MomentumResult {
+  const span = q.fiftyTwoWeekHigh - q.fiftyTwoWeekLow;
+  const rangePos = span > 0 ? (q.price - q.fiftyTwoWeekLow) / span : 0.5;
+  const volumeMultiple = q.averageVolume > 0 ? q.volume / q.averageVolume : 1;
+  const heavyVolume = volumeMultiple > 1.5;
+
+  let direction: MomentumResult["direction"] = null;
+  if (q.changePercent > 2.5 && rangePos > 0.6 && heavyVolume) direction = "up";
+  else if (q.changePercent < -2.5 && rangePos < 0.4 && heavyVolume) direction = "down";
+
+  return { direction, volumeMultiple, rangePositionPct: Math.max(0, Math.min(100, rangePos * 100)) };
 }
 
 // ── Daily briefing ────────────────────────────────────────────────────────────

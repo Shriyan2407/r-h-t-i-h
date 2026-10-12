@@ -56,36 +56,36 @@ export function getBotUsername() {
 
 // ── Message formatters ───────────────────────────────────────────────────────
 
-export function fmtBreakout(ticker: string, price: number, prevHigh: number): string {
-  const pct = (((price - prevHigh) / prevHigh) * 100).toFixed(2);
-  return `🚀 <b>BREAKOUT ALERT</b>
+export function fmtBreakout(ticker: string, price: number, high52: number): string {
+  const pct = (((price - high52) / high52) * 100).toFixed(2);
+  const above = price >= high52;
+  return `🚀 <b>52-WEEK HIGH ALERT</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
 📊 <b>${esc(ticker)}</b>
 
 💰 Price: ₹${price.toFixed(2)}
-📈 Broke Above: ₹${prevHigh.toFixed(2)} (+${pct}%)
-⚡ Signal: <b>BULLISH BREAKOUT</b>
+📈 ${above ? "Above" : "Within 0.2% of"} its 52-week high: ₹${high52.toFixed(2)} (${above ? "+" : ""}${pct}%)
 
-Act fast — breakouts reverse quickly.
+Price level only. This is not a recommendation.
 
-<i>Market Ka Baadshah AI</i>`;
+<i>Market Ka Baadshah</i>`;
 }
 
-export function fmtBreakdown(ticker: string, price: number, prevLow: number): string {
-  const pct = (((prevLow - price) / prevLow) * 100).toFixed(2);
-  return `🔴 <b>BREAKDOWN ALERT</b>
+export function fmtBreakdown(ticker: string, price: number, low52: number): string {
+  const pct = (((low52 - price) / low52) * 100).toFixed(2);
+  const below = price <= low52;
+  return `🔴 <b>52-WEEK LOW ALERT</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
 📊 <b>${esc(ticker)}</b>
 
 💰 Price: ₹${price.toFixed(2)}
-📉 Broke Below: ₹${prevLow.toFixed(2)} (-${pct}%)
-⚠️ Signal: <b>BEARISH BREAKDOWN</b>
+📉 ${below ? "Below" : "Within 0.2% of"} its 52-week low: ₹${low52.toFixed(2)} (${below ? "-" : ""}${pct}%)
 
-Consider trailing stop or exit.
+Price level only. This is not a recommendation.
 
-<i>Market Ka Baadshah AI</i>`;
+<i>Market Ka Baadshah</i>`;
 }
 
 export function fmtVolumeSpike(ticker: string, price: number, volumeMultiple: number): string {
@@ -95,40 +95,43 @@ export function fmtVolumeSpike(ticker: string, price: number, volumeMultiple: nu
 📊 <b>${esc(ticker)}</b>
 
 💰 Price: ₹${price.toFixed(2)}
-🔊 Volume: <b>${volumeMultiple.toFixed(1)}x</b> above average
+🔊 Volume: <b>${volumeMultiple.toFixed(1)}x</b> its recent average
 
-Unusual activity detected — potential big move incoming.
+Heavy volume can accompany news or large orders. It does not indicate direction.
 
-<i>Market Ka Baadshah AI</i>`;
+<i>Market Ka Baadshah</i>`;
 }
 
-export function fmtBuySignal(ticker: string, price: number, t1: number, t2: number, sl: number, confidence: number): string {
-  const rr = ((t1 - price) / (price - sl)).toFixed(1);
-  return `💡 <b>AI BUY SIGNAL</b>
-━━━━━━━━━━━━━━━━━━━━━━
-
-📊 <b>${esc(ticker)}</b>
-🧠 Confidence: <b>${confidence}%</b>
-
-💰 Entry: ₹${price.toFixed(2)}
-🎯 T1: ₹${t1.toFixed(2)}   T2: ₹${t2.toFixed(2)}
-🛡️ Stop Loss: ₹${sl.toFixed(2)}
-📐 Risk/Reward: ${rr}:1
-
-<i>Market Ka Baadshah AI</i>`;
+export interface MomentumAlertData {
+  ticker: string;
+  direction: "up" | "down";
+  price: number;
+  changePercent: number;
+  volumeMultiple: number;
+  /** 0-100: where price sits between its 52-week low (0) and high (100). */
+  rangePositionPct: number;
 }
 
-export function fmtSellSignal(ticker: string, price: number, confidence: number): string {
-  return `🔴 <b>AI SELL SIGNAL</b>
+/**
+ * Momentum screen result. States only the measured facts that triggered the rule. It carries
+ * no confidence, target or stop-loss: those would be invented, because the rule is a
+ * screen, not a forecast.
+ */
+export function fmtMomentumAlert(d: MomentumAlertData): string {
+  const up = d.direction === "up";
+  const sign = d.changePercent >= 0 ? "+" : "";
+  return `${up ? "📈" : "📉"} <b>MOMENTUM ALERT — ${up ? "UP" : "DOWN"}</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
-📊 <b>${esc(ticker)}</b>
-🧠 Confidence: <b>${confidence}%</b>
+📊 <b>${esc(d.ticker)}</b>
 
-💰 Current: ₹${price.toFixed(2)}
-📉 Signal: Exit / Book Profits
+💰 Price: ₹${d.price.toFixed(2)} (${sign}${d.changePercent.toFixed(2)}% today)
+🔊 Volume: ${d.volumeMultiple.toFixed(1)}x recent average
+📏 ${d.rangePositionPct.toFixed(0)}% of the way up its 52-week range
 
-<i>Market Ka Baadshah AI</i>`;
+Rule-based screen: a ${up ? "rise" : "fall"} of more than 2.5% on heavy volume, ${up ? "in the upper" : "in the lower"} part of the 52-week range. It is not a forecast or a recommendation.
+
+<i>Market Ka Baadshah</i>`;
 }
 
 export function fmtStockAnalysis(ticker: string, data: {
@@ -294,7 +297,7 @@ Welcome${firstName ? `, ${esc(firstName)}` : ""} to <b>Market Ka Baadshah AI</b>
 
 You'll now receive:
 • 🚀 Breakout & breakdown alerts
-• 💡 AI buy/sell signals
+• 💡 Momentum alerts (rule-based)
 • 📊 Daily market briefings
 • ⚡ Volume spike alerts
 

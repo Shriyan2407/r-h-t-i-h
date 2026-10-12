@@ -59,8 +59,8 @@ interface AlertItem {
 const ALERT_TYPES = [
   { key: "breakoutAlerts",  label: "Breakout Alerts",   desc: "52-week high breakouts",    icon: TrendingUp,  color: "#00FF9C", tier: "free"  },
   { key: "breakdownAlerts", label: "Breakdown Alerts",  desc: "52-week low breakdowns",    icon: TrendingDown,color: "#FF4D6A", tier: "free"  },
-  { key: "aiBuySignals",    label: "AI Buy Signals",    desc: "AI-generated entry signals",icon: Brain,       color: "#FFD700", tier: "pro"   },
-  { key: "aiSellSignals",   label: "AI Sell Signals",   desc: "AI exit / profit booking",  icon: Target,      color: "#FF8C00", tier: "pro"   },
+  { key: "aiBuySignals",    label: "Momentum Up",        desc: "Sharp rises on heavy volume",icon: Brain,       color: "#FFD700", tier: "pro"   },
+  { key: "aiSellSignals",   label: "Momentum Down",      desc: "Sharp falls on heavy volume",icon: Target,      color: "#FF8C00", tier: "pro"   },
   { key: "volumeAlerts",    label: "Volume Spikes",     desc: "3x+ above-average volume",  icon: BarChart2,   color: "#4FC3F7", tier: "pro"   },
   { key: "slHitAlerts",     label: "Stop Loss Hit",     desc: "Price hits your SL level",  icon: Shield,      color: "#FF4D6A", tier: "free"  },
   { key: "targetAlerts",    label: "Target Hit",        desc: "Price hits your target",    icon: Star,        color: "#00FF9C", tier: "free"  },
@@ -799,7 +799,7 @@ export default function AlertsPage() {
               {
                 tier: "pro", label: "PRO", color: "#FFD700",
                 price: "₹999", period: "/month",
-                features: ["Everything in Free", "AI buy/sell signals", "Volume spike alerts", "Earnings alerts", "Unlimited watchlist", "Real-time alerts"],
+                features: ["Everything in Free", "Momentum alerts (rule-based)", "Volume spike alerts", "Earnings alerts", "Unlimited watchlist", "Real-time alerts"],
                 badge: "POPULAR",
               },
               {
