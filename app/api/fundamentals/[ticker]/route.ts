@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import YFClass from "yahoo-finance2";
 import { cache, TTL } from "@/lib/services/cache";
 import type { FundamentalData } from "@/lib/types";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
 
 /* yahoo-finance2 v3: default export is the class — must instantiate */
 const yf = new (YFClass as any)();
@@ -88,7 +89,8 @@ export async function GET(
   { params }: { params: Promise<{ ticker: string }> },
 ) {
   const { ticker } = await params;
-  const T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
+  const T = parseTicker(ticker);
+  if (!T) return invalidTickerResponse();
 
   try {
     const result = await cache.wrap(

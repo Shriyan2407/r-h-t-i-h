@@ -4,6 +4,7 @@ import { computeQuantScore, buildQuantSummary } from "@/lib/scoring/quantEngine"
 import { callOllama, isOllamaOnline, getOllamaModel } from "@/lib/ai/ollamaClient";
 import { generateDeterministicAnalysis }   from "@/lib/ai/narrativeEngine";
 import type { AIAnalysis, Verdict, TechnicalIndicators, FundamentalData } from "@/lib/types";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
 
 /* ═══════════════════════════════════════════════════════════════
    R.H.T.I.H — Compressed Intelligence AI Analysis
@@ -314,7 +315,9 @@ export async function GET(
   let T = "UNKNOWN";
   try {
     const { ticker } = await params;
-    T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
+    const parsedTicker = parseTicker(ticker);
+    if (!parsedTicker) return invalidTickerResponse();
+    T = parsedTicker;
 
     const analysis = await cache.wrap(`ai-analysis-v3:${T}`, TTL.INTELLIGENCE, () => generateAnalysis(T));
 

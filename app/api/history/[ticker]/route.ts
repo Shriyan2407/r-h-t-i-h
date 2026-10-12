@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cache, TTL } from "@/lib/services/cache";
 import { getStockHistory }  from "@/lib/stockHistory";
 import type { StockHistoryProfile, EventSentiment } from "@/lib/stockHistory";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
 
 /* ═══════════════════════════════════════════════════════════════
    R.H.T.I.H — Company History API Route
@@ -96,7 +97,8 @@ export async function GET(
   { params }: { params: Promise<{ ticker: string }> },
 ) {
   const { ticker } = await params;
-  const T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
+  const T = parseTicker(ticker);
+  if (!T) return invalidTickerResponse();
   const cacheKey = `history:${T}`;
 
   /* ── Cache hit ───────────────────────────────────────────── */

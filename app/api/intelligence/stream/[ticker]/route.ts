@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
 
 /* ═══════════════════════════════════════════════════════════════
    R.H.T.I.H — Intelligence SSE Streaming Route
@@ -46,7 +47,8 @@ export async function GET(
   { params }: { params: Promise<{ ticker: string }> },
 ) {
   const { ticker } = await params;
-  const T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
+  const T = parseTicker(ticker);
+  if (!T) return invalidTickerResponse();
 
   const stream = new ReadableStream({
     async start(controller) {

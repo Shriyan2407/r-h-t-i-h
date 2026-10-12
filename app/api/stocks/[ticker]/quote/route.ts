@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import YFConstructor from "yahoo-finance2";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
 
 const yf = new (YFConstructor as any)();
 
@@ -12,7 +13,9 @@ export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ ticker: string }> }
 ) {
-  const { ticker } = await context.params;
+  const { ticker: rawTicker } = await context.params;
+  const ticker = parseTicker(rawTicker);
+  if (!ticker) return invalidTickerResponse();
   const symbols = buildSymbols(ticker);
 
   let data: any = null;

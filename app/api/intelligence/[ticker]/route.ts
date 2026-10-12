@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
 
 /* ═══════════════════════════════════════════════════════════════
    R.H.T.I.H — Intelligence API Route
@@ -65,7 +66,9 @@ export async function GET(
 
   try {
     const { ticker } = await params;
-    T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
+    const parsedTicker = parseTicker(ticker);
+    if (!parsedTicker) return invalidTickerResponse();
+    T = parsedTicker;
 
     // Always bust cache — never serve a cached error object to the UI
     const { getIntelligenceReport } = await import("@/lib/services/intelligenceEngine");

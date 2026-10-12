@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStockNews } from "@/lib/services/newsAggregator";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ ticker: string }> },
 ) {
   const { ticker } = await params;
-  const T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
+  const T = parseTicker(ticker);
+  if (!T) return invalidTickerResponse();
 
   try {
     const news = await getStockNews(T);
