@@ -9,6 +9,7 @@ import {
   Activity, ChevronRight, Cpu, Shield, AlertTriangle,
 } from "lucide-react";
 import { Navbar }       from "@/components/Navbar";
+import { useMarketIndices } from "@/lib/hooks/useMarketIndices";
 import { MarketTicker } from "@/components/MarketTicker";
 import { useTheme }     from "@/lib/context/ThemeContext";
 import { useWatchlistStore } from "@/store/watchlistStore";
@@ -34,20 +35,6 @@ const TIER_STYLES: Record<string, { bg: string; text: string; border: string; gl
   institutional: { bg: "rgba(0,255,156,0.08)",  text: "#00FF9C", border: "rgba(0,255,156,0.28)",  glow: "0 0 12px rgba(0,255,156,0.12)" },
 };
 
-const MARKET_PULSE = [
-  { label: "NIFTY 50", value: "24,832", change: "+0.34%", up: true  },
-  { label: "SENSEX",   value: "81,547", change: "+0.28%", up: true  },
-  { label: "VIX",      value: "14.2",   change: "-2.1%",  up: false },
-  { label: "USD/INR",  value: "83.42",  change: "+0.05%", up: true  },
-];
-
-const TRENDING_AI = [
-  { ticker: "RELIANCE",  verdict: "BUY",        confidence: 78, color: "#34D399" },
-  { ticker: "HDFCBANK",  verdict: "STRONG BUY", confidence: 84, color: "#00FF9C" },
-  { ticker: "TCS",       verdict: "HOLD",       confidence: 62, color: "#FFB800" },
-  { ticker: "ICICIBANK", verdict: "BUY",        confidence: 71, color: "#34D399" },
-];
-
 export default function DashboardPage() {
   const { data: session } = useSession();
   const { theme }         = useTheme();
@@ -59,6 +46,13 @@ export default function DashboardPage() {
   // Single source of truth — same store the watchlist page and WatchButton use
   const watchlist        = useWatchlistStore(s => s.items);
   const watchlistLoaded  = useWatchlistStore(s => s.loaded);
+
+  // Real quotes only (shared poller). Nothing is shown for an index we have no data for.
+  const market = useMarketIndices();
+  const pulse = market.status === "ready"
+    ? market.data.indices.filter(i => ["NIFTY 50", "SENSEX", "INDIA VIX", "USD/INR"].includes(i.label))
+    : [];
+  const movers = market.status === "ready" ? market.data.movers : null;
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -122,18 +116,24 @@ export default function DashboardPage() {
               className="hidden lg:flex items-center gap-4 px-4 py-2 rounded-xl"
               style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}
             >
-              {MARKET_PULSE.map(item => (
-                <div key={item.label} className="flex items-center gap-1.5">
-                  {/* Label — subtle */}
+              {market.status === "loading" && (
+                <span className="text-[10px] font-mono" style={{ color: "var(--th-text-faint)" }}>Loading market data…</span>
+              )}
+              {market.status === "error" && (
+                <span className="text-[10px] font-mono" style={{ color: "var(--th-text-faint)" }}>Market data unavailable</span>
+              )}
+              {pulse.map(item => (
+                <div key={item.symbol} className="flex items-center gap-1.5">
                   <span style={{ fontFamily: "monospace", fontSize: "9px", fontWeight: 400, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--th-text-faint)" }}>
                     {item.label}
                   </span>
-                  {/* Value — dominant */}
                   <span style={{ fontFamily: "monospace", fontSize: "13px", fontWeight: 700, letterSpacing: "-0.01em", color: "var(--th-text-secondary)" }}>
-                    {item.value}
+                    {item.kind === "rate"
+                      ? item.value.toFixed(2)
+                      : item.value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                   </span>
-                  <span style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 600, color: item.up ? "var(--positive)" : "var(--negative)" }}>
-                    {item.change}
+                  <span style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 600, color: item.changePct >= 0 ? "var(--positive)" : "var(--negative)" }}>
+                    {item.changePct >= 0 ? "+" : ""}{item.changePct.toFixed(2)}%
                   </span>
                 </div>
               ))}
@@ -390,9 +390,8 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2.5">
                   <Cpu size={12} style={{ color: "var(--gold)" }} />
                   <span className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
-                    AI Signal Radar
+                    Large-Cap Movers
                   </span>
-                  <div className="w-1.5 h-1.5 rounded-full animate-live-dot" style={{ background: "var(--positive)" }} />
                 </div>
                 <Link
                   href="/ai"
@@ -401,83 +400,56 @@ export default function DashboardPage() {
                   onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = "var(--gold)"}
                   onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = "var(--th-text-muted)"}
                 >
-                  Run Analysis <ArrowRight size={9} />
+                  Analyse a stock <ArrowRight size={9} />
                 </Link>
               </div>
-              <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {TRENDING_AI.map((sig, i) => (
-                  <motion.div
-                    key={sig.ticker}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                  >
-                    <Link
-                      href={`/stock/${sig.ticker}`}
-                      className="flex flex-col gap-2.5 p-3 rounded-xl transition-all duration-200 group block"
-                      style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}
-                      onMouseEnter={e => {
-                        const el = e.currentTarget as HTMLAnchorElement;
-                        el.style.borderColor = `${sig.color}40`;
-                        el.style.background  = `${sig.color}08`;
-                        el.style.transform   = "translateY(-2px)";
-                      }}
-                      onMouseLeave={e => {
-                        const el = e.currentTarget as HTMLAnchorElement;
-                        el.style.borderColor = "var(--th-border-subtle)";
-                        el.style.background  = "var(--th-bg-elevated)";
-                        el.style.transform   = "translateY(0)";
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        {/* Ticker — name weight (Layer 2) */}
-                        <span
-                          style={{
-                            fontFamily: "monospace",
-                            fontSize: "14px",
-                            fontWeight: 600,
-                            color: "var(--th-text-primary)",
-                          }}
-                        >
-                          {sig.ticker}
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: "monospace",
-                            fontSize: "9px",
-                            fontWeight: 700,
-                            padding: "2px 7px",
-                            borderRadius: "4px",
-                            color: sig.color,
-                            background: `${sig.color}18`,
-                            border: `1px solid ${sig.color}30`,
-                          }}
-                        >
-                          {sig.verdict}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="h-1 rounded-full overflow-hidden mb-1.5" style={{ background: "rgba(255,255,255,0.06)" }}>
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${sig.confidence}%`, background: sig.color }}
-                          />
-                        </div>
-                        {/* Confidence — micro label */}
-                        <div
-                          style={{
-                            fontFamily: "monospace",
-                            fontSize: "11px",
-                            fontWeight: 400,
-                            color: "var(--th-text-muted)",
-                          }}
-                        >
-                          {sig.confidence}% confidence
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
+              <div className="p-4">
+                {market.status === "loading" && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="status" aria-label="Loading movers">
+                    {[0, 1, 2, 3].map(i => (
+                      <div key={i} className="h-[74px] rounded-xl animate-pulse" style={{ background: "var(--th-bg-elevated)" }} />
+                    ))}
+                  </div>
+                )}
+                {market.status === "error" && (
+                  <p className="text-[12px] font-mono py-4 text-center" style={{ color: "var(--th-text-muted)" }}>
+                    Market data is temporarily unavailable.
+                  </p>
+                )}
+                {movers && movers.gainers.length + movers.losers.length === 0 && (
+                  <p className="text-[12px] font-mono py-4 text-center" style={{ color: "var(--th-text-muted)" }}>
+                    No movers to show right now.
+                  </p>
+                )}
+                {movers && movers.gainers.length + movers.losers.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[...movers.gainers.slice(0, 2), ...movers.losers.slice(0, 2)].map((m, i) => {
+                      const up = m.change >= 0;
+                      const color = up ? "#00FF9C" : "#FF4D4D";
+                      return (
+                        <motion.div key={m.ticker} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+                          <Link
+                            href={`/stock/${m.ticker}`}
+                            className="flex flex-col gap-2 p-3 rounded-xl transition-all duration-200 block"
+                            style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}
+                          >
+                            <span style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: 600, color: "var(--th-text-primary)" }}>
+                              {m.ticker}
+                            </span>
+                            <span style={{ fontFamily: "monospace", fontSize: "13px", fontWeight: 700, color }}>
+                              {up ? "▲ +" : "▼ "}{m.change.toFixed(2)}%
+                            </span>
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+                {market.status === "ready" && (
+                  <p className="text-[10px] font-mono mt-3" style={{ color: "var(--th-text-faint)" }}>
+                    Day change from Yahoo Finance for a fixed large-cap basket. Quotes may be delayed. Not investment advice.
+                  </p>
+                )}
               </div>
             </div>
           </div>
