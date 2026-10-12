@@ -53,3 +53,17 @@ describe("fmtDailyBriefing", () => {
     }
   });
 });
+
+describe("toBasketQuotes", () => {
+  it("keeps only real prices, strips suffixes and follows basket order", async () => {
+    const { toBasketQuotes } = await import("@/lib/services/marketSnapshot");
+    const out = toBasketQuotes([
+      { symbol: "TCS.NS", regularMarketPrice: 4000, regularMarketChangePercent: -1 },
+      { symbol: "RELIANCE.NS", regularMarketPrice: 2900, regularMarketChangePercent: 0.5 },
+      { symbol: "NOTINBASKET.NS", regularMarketPrice: 1, regularMarketChangePercent: 1 },
+      { symbol: "INFY.NS", regularMarketChangePercent: 2 },
+    ]);
+    expect(out.map((q) => q.ticker)).toEqual(["RELIANCE", "TCS"]);
+    expect(out[0]).toEqual({ ticker: "RELIANCE", price: 2900, change: 0.5 });
+  });
+});

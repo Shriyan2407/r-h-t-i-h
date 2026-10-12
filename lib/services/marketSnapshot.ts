@@ -17,10 +17,21 @@ export interface Mover {
   change: number;
 }
 
+export interface BasketQuote {
+  ticker: string;
+  price: number;
+  /** Day change in percent. */
+  change: number;
+}
+
 export interface MarketSnapshot {
   nifty?: IndexQuote;
   banknifty?: IndexQuote;
+  sensex?: IndexQuote;
+  indiaVix?: IndexQuote;
   usdinr?: number;
+  /** Quotes for every symbol of MOVER_BASKET that Yahoo returned, in basket order. */
+  quotes: BasketQuote[];
   topGainers: Mover[];
   topLosers: Mover[];
   /** ISO timestamp of when the snapshot was taken. */
@@ -49,6 +60,24 @@ function toIndex(q: RawQuote | null | undefined): IndexQuote | undefined {
   return { price: q.regularMarketPrice, change: q.regularMarketChangePercent ?? 0 };
 }
 
+/** Convert raw Yahoo quotes into basket quotes, dropping anything without a real price. Pure. */
+export function toBasketQuotes(quotes: RawQuote[]): BasketQuote[] {
+  const bySymbol = new Map<string, BasketQuote>();
+  for (const q of quotes) {
+    if (typeof q.symbol !== "string" || typeof q.regularMarketPrice !== "number") continue;
+    const ticker = q.symbol.replace(/\.(NS|BO)$/i, "");
+    bySymbol.set(ticker, {
+      ticker,
+      price: q.regularMarketPrice,
+      change: q.regularMarketChangePercent ?? 0,
+    });
+  }
+  return (MOVER_BASKET as readonly string[]).flatMap((t) => {
+    const hit = bySymbol.get(t);
+    return hit ? [hit] : [];
+  });
+}
+
 /** Rank movers from raw quotes. Pure, so it can be unit-tested without the network. */
 export function rankMovers(quotes: RawQuote[], n = 3): { gainers: Mover[]; losers: Mover[] } {
   const rows: Mover[] = [];
@@ -70,9 +99,11 @@ export async function getMarketSnapshot(): Promise<MarketSnapshot> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const yf = new (YFClass as any)();
 
-  const [nifty, bank, fx, basket] = await Promise.allSettled([
+  const [nifty, bank, sensex, vix, fx, basket] = await Promise.allSettled([
     yf.quote("^NSEI"),
     yf.quote("^NSEBANK"),
+    yf.quote("^BSESN"),
+    yf.quote("^INDIAVIX"),
     yf.quote("INR=X"),
     yf.quote(MOVER_BASKET.map((t) => `${t}.NS`)),
   ]);
@@ -81,11 +112,15 @@ export async function getMarketSnapshot(): Promise<MarketSnapshot> {
 
   const fxQuote = value(fx) as RawQuote | null;
   const basketQuotes = value(basket) as RawQuote[] | null;
-  const { gainers, losers } = rankMovers(Array.isArray(basketQuotes) ? basketQuotes : []);
+  const rawBasket = Array.isArray(basketQuotes) ? basketQuotes : [];
+  const { gainers, losers } = rankMovers(rawBasket);
 
   return {
     nifty: toIndex(value(nifty) as RawQuote | null),
     banknifty: toIndex(value(bank) as RawQuote | null),
+    sensex: toIndex(value(sensex) as RawQuote | null),
+    indiaVix: toIndex(value(vix) as RawQuote | null),
+    quotes: toBasketQuotes(rawBasket),
     usdinr: typeof fxQuote?.regularMarketPrice === "number" ? fxQuote.regularMarketPrice : undefined,
     topGainers: gainers,
     topLosers: losers,
