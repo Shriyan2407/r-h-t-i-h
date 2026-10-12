@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/auth/prisma";
 import { tgSend, fmtHelp, fmtConnected, fmtStockAnalysis, fmtDailyBriefing } from "@/lib/services/telegramService";
 import { getMarketSnapshot } from "@/lib/services/marketSnapshot";
+import { rateLimit } from "@/lib/ratelimit/limiter";
+import type { IntelligenceReport } from "@/app/api/intelligence/[ticker]/route";
 import { checkSecret } from "@/lib/security/secrets";
 import { telegramUpdateSchema, parseStartToken, parseAnalyzeCommand } from "@/lib/telegram/updates";
 
@@ -126,48 +128,57 @@ export async function POST(req: NextRequest) {
     const ticker = parseAnalyzeCommand(text);
 
     if (ticker) {
+      // Analysis costs real money (data fetches + an LLM call), so it is limited to
+      // linked accounts and rate limited per chat. Excess requests are dropped quietly
+      // with a 200 so Telegram does not retry them.
+      const linked = await prisma.telegramConnection.findUnique({ where: { chatId: String(chatId) } });
+      if (!linked?.isActive) {
+        await tgSend(chatId, "❌ Link your account first: Market Ka Baadshah → Alerts → Connect Telegram.");
+        return Response.json({ ok: true });
+      }
+      const limit = await rateLimit({ key: `rl:tg-analyze:${chatId}`, limit: 10, windowSec: 60 * 60 });
+      if (!limit.allowed) {
+        await tgSend(chatId, "⏳ You have reached the hourly analysis limit. Please try again later.");
+        return Response.json({ ok: true });
+      }
+
       await tgSend(chatId, `⏳ Analyzing <b>${ticker}</b>…`);
 
       try {
-        const baseUrl = process.env.NEXTAUTH_URL ?? "https://r-h-t-i-h.vercel.app";
-        const res = await fetch(`${baseUrl}/api/intelligence/${ticker}`, {
-          signal: AbortSignal.timeout ? AbortSignal.timeout(30000) : undefined,
-          headers: { "x-internal-call": "1" },
-        });
-        if (res.ok) {
-          const data: any = await res.json();
-          const report = data.report ?? data;
+        // In-process call: no public hop, no shared-IP rate-limit bucket, and the result
+        // is served from the shared cache when fresh.
+        const { getIntelligenceReport } = await import("@/lib/services/intelligenceEngine");
+        const report: IntelligenceReport = await Promise.race([
+          getIntelligenceReport(ticker) as Promise<IntelligenceReport>,
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("analysis timed out")), 25_000)),
+        ]);
 
-          // Map IntelligenceReport fields → fmtStockAnalysis fields
-          const parseRupee = (s?: string) => s ? parseFloat(s.replace(/[^\d.]/g, "")) || undefined : undefined;
+        // Map IntelligenceReport fields → fmtStockAnalysis fields
+        const parseRupee = (s?: string) => s ? parseFloat(s.replace(/[^\d.]/g, "")) || undefined : undefined;
 
-          const sentimentToVerdict = (s?: string) =>
-            s === "BULLISH" ? "BUY" : s === "BEARISH" ? "SELL/AVOID" : s === "MIXED" ? "WATCH" : "HOLD";
+        const sentimentToVerdict = (s?: string) =>
+          s === "BULLISH" ? "BUY" : s === "BEARISH" ? "SELL/AVOID" : s === "MIXED" ? "WATCH" : "HOLD";
 
-          const scoreToRisk = (scores?: Record<string, number>) => {
-            if (!scores) return "MODERATE";
-            const avg = (scores.technical + scores.riskReward + scores.fundamental) / 3;
-            return avg >= 65 ? "LOW" : avg <= 40 ? "HIGH" : "MODERATE";
-          };
+        const scoreToRisk = (scores?: Record<string, number>) => {
+          if (!scores) return "MODERATE";
+          const avg = (scores.technical + scores.riskReward + scores.fundamental) / 3;
+          return avg >= 65 ? "LOW" : avg <= 40 ? "HIGH" : "MODERATE";
+        };
 
-          await tgSend(chatId, fmtStockAnalysis(ticker, {
-            price: report._meta?.currentPrice ?? report.price ?? report.quote?.regularMarketPrice ?? 0,
-            verdict: sentimentToVerdict(report.currentSentiment) ?? report.verdict ?? "HOLD",
-            confidence: report.aiConfidence ?? report.confidence ?? 65,
-            summary: report.narrativeSummary ?? report.oneLiner ?? report.summary ?? "",
-            t1: parseRupee(report.entryZone?.target1) ?? report.target1,
-            t2: parseRupee(report.entryZone?.target2) ?? report.target2,
-            sl: parseRupee(report.entryZone?.stopLoss) ?? report.stopLoss,
-            riskLevel: scoreToRisk(report.scores) ?? report.riskLevel ?? "MODERATE",
-            newsSentiment: report.currentSentiment ?? report.newsSentiment ?? "NEUTRAL",
-          }));
-        } else {
-          const errBody = await res.text().catch(() => "");
-          console.error(`[TelegramBot] Intelligence API ${res.status} for ${ticker}:`, errBody.slice(0, 200));
-          await tgSend(chatId, `❌ Could not fetch analysis for <b>${ticker}</b>. Please try again.`);
-        }
+        await tgSend(chatId, fmtStockAnalysis(ticker, {
+          price: report._meta?.currentPrice ?? 0,
+          verdict: sentimentToVerdict(report.currentSentiment),
+          // Only shown when the engine produced one; never substituted with a default.
+          confidence: report.aiConfidence,
+          summary: report.narrativeSummary ?? report.oneLiner ?? "",
+          t1: parseRupee(report.entryZone?.target1),
+          t2: parseRupee(report.entryZone?.target2),
+          sl: parseRupee(report.entryZone?.stopLoss),
+          riskLevel: scoreToRisk(report.scores),
+          newsSentiment: report.currentSentiment ?? "NEUTRAL",
+        }));
       } catch (e) {
-        console.error(`[TelegramBot] fetch/parse error for ${ticker}:`, (e as Error).message);
+        console.error(`[TelegramBot] analysis failed for ${ticker}:`, (e as Error).message);
         await tgSend(chatId, `❌ Analysis timed out for <b>${ticker}</b>. Try again in a moment.`);
       }
       return Response.json({ ok: true });

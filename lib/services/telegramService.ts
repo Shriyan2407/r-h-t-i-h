@@ -134,7 +134,7 @@ export function fmtSellSignal(ticker: string, price: number, confidence: number)
 export function fmtStockAnalysis(ticker: string, data: {
   price: number;
   verdict: string;
-  confidence: number;
+  confidence?: number;
   summary: string;
   t1?: number;
   t2?: number;
@@ -150,8 +150,9 @@ export function fmtStockAnalysis(ticker: string, data: {
 ━━━━━━━━━━━━━━━━━━━━━━
 
 ${verdictEmoji} Verdict: <b>${esc(data.verdict ?? "HOLD")}</b>
-💪 Confidence: <b>${data.confidence ?? 0}%</b>
 💰 Price: ₹${data.price.toFixed(2)}`;
+  if (typeof data.confidence === "number") msg += `
+💪 Confidence: <b>${data.confidence}%</b>`;
 
   if (data.t1 && data.sl) {
     msg += `

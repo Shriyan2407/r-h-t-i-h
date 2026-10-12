@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
+import { auth } from "@/lib/auth/auth";
+import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 /* ═══════════════════════════════════════════════════════════════
    R.H.T.I.H — Intelligence API Route
@@ -70,9 +72,17 @@ export async function GET(
     if (!parsedTicker) return invalidTickerResponse();
     T = parsedTicker;
 
-    // Always bust cache — never serve a cached error object to the UI
+    // Fresh reports are shared via the cache (getIntelligenceReport already evicts cached
+    // error objects). Only a cache MISS costs real work, so only misses are rate limited.
+    const { cache } = await import("@/lib/services/cache");
+    if (cache.get(`intelligence:${T}`) === null) {
+      const session = await auth();
+      const limited = await enforceRateLimit(req, POLICIES.intelligence, session?.user?.id ? `user:${session.user.id}` : undefined);
+      if (limited) return limited;
+    }
+
     const { getIntelligenceReport } = await import("@/lib/services/intelligenceEngine");
-    const report = await getIntelligenceReport(T, true);
+    const report = await getIntelligenceReport(T);
 
     if (isValidReport(report)) {
       return NextResponse.json(report, {
