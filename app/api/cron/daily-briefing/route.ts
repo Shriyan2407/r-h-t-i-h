@@ -1,14 +1,15 @@
 import { NextRequest } from "next/server";
 import { generateAndSendDailyBriefing } from "@/lib/services/alertEngine";
+import { checkBearer } from "@/lib/security/secrets";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
-  // Secure with CRON_SECRET (set in vercel.json authorization)
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = checkBearer(req, process.env.CRON_SECRET);
+  if (!auth.ok) {
+    if (auth.status === 503) console.error("[cron/daily-briefing] CRON_SECRET is not configured");
+    return Response.json({ error: auth.error }, { status: auth.status });
   }
 
   try {
