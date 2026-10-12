@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
 import sharp from "sharp";
+import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
+
+const ALLOWED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -11,12 +14,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const limited = await enforceRateLimit(req, POLICIES.portfolioScan, `user:${session.user.id}`);
+  if (limited) return limited;
+
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const file = formData.get("file");
 
-    if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    if (!(file instanceof File)) return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    if (file.size === 0) return NextResponse.json({ error: "Empty file" }, { status: 400 });
     if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "Max 10 MB" }, { status: 400 });
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      return NextResponse.json({ error: "Unsupported file type. Upload a PNG, JPEG or WebP image." }, { status: 415 });
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
 

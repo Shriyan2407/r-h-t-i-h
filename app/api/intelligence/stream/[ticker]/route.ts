@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
+import { auth } from "@/lib/auth/auth";
+import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 /* ═══════════════════════════════════════════════════════════════
    R.H.T.I.H — Intelligence SSE Streaming Route
@@ -43,12 +45,18 @@ function mergeAiNarrative(base: any, ai: any): any {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ ticker: string }> },
 ) {
   const { ticker } = await params;
   const T = parseTicker(ticker);
   if (!T) return invalidTickerResponse();
+
+  const session = await auth();
+  const limited = await enforceRateLimit(
+    req, POLICIES.intelligence, session?.user?.id ? `user:${session.user.id}` : undefined,
+  );
+  if (limited) return limited;
 
   const stream = new ReadableStream({
     async start(controller) {

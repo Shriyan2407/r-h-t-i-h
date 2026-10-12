@@ -4,6 +4,7 @@ import { createPasswordResetToken } from "@/lib/auth/tokens";
 import { sendEmail } from "@/lib/email/send";
 import { resetPasswordMessage } from "@/lib/email/templates";
 import { getAppUrl } from "@/lib/config/appUrl";
+import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 const schema = z.object({ email: z.string().trim().toLowerCase().email().max(254) });
 
@@ -19,6 +20,11 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
+
+  const byIp = await enforceRateLimit(req, POLICIES.passwordReset);
+  if (byIp) return byIp;
+  const byEmail = await enforceRateLimit(req, POLICIES.passwordReset, `email:${email}`);
+  if (byEmail) return byEmail;
 
   // The response is identical whether or not the account exists, and whether or not
   // delivery succeeds, so this endpoint cannot be used to enumerate users. Failures

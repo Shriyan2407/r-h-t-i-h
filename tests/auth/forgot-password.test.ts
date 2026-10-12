@@ -9,6 +9,7 @@ vi.mock("@/lib/auth/tokens", () => ({ createPasswordResetToken: mocks.createPass
 vi.mock("@/lib/email/send", () => ({ sendEmail: mocks.sendEmail }));
 
 import { POST } from "@/app/api/auth/forgot-password/route";
+import { MemoryBackend, setRateLimitBackend } from "@/lib/ratelimit/limiter";
 
 const call = (body: unknown) =>
   POST(
@@ -21,11 +22,20 @@ const call = (body: unknown) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  setRateLimitBackend(new MemoryBackend());
   process.env.APP_URL = "https://app.example.test";
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 describe("POST /api/auth/forgot-password", () => {
+  it("is rate limited per address and per IP", async () => {
+    mocks.createPasswordResetToken.mockResolvedValue(null);
+    const statuses: number[] = [];
+    for (let i = 0; i < 7; i++) statuses.push((await call({ email: "flood@example.com" })).status);
+    expect(statuses.slice(0, 5).every((s) => s === 200)).toBe(true);
+    expect(statuses.slice(5).every((s) => s === 429)).toBe(true);
+  });
+
   it("rejects malformed requests", async () => {
     expect((await call("not json")).status).toBe(400);
     expect((await call({ email: "nope" })).status).toBe(400);

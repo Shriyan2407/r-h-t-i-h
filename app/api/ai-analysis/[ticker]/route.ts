@@ -5,6 +5,8 @@ import { callOllama, isOllamaOnline, getOllamaModel } from "@/lib/ai/ollamaClien
 import { generateDeterministicAnalysis }   from "@/lib/ai/narrativeEngine";
 import type { AIAnalysis, Verdict, TechnicalIndicators, FundamentalData } from "@/lib/types";
 import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
+import { auth } from "@/lib/auth/auth";
+import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 /* ═══════════════════════════════════════════════════════════════
    R.H.T.I.H — Compressed Intelligence AI Analysis
@@ -309,7 +311,7 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
 /* ── Route handler ─────────────────────────────────────────── */
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ ticker: string }> },
 ) {
   let T = "UNKNOWN";
@@ -319,7 +321,17 @@ export async function GET(
     if (!parsedTicker) return invalidTickerResponse();
     T = parsedTicker;
 
-    const analysis = await cache.wrap(`ai-analysis-v3:${T}`, TTL.INTELLIGENCE, () => generateAnalysis(T));
+    // Only a cache miss costs real work (Yahoo, news, an LLM call), so only misses are limited.
+    const cacheKey = `ai-analysis-v3:${T}`;
+    if (cache.get(cacheKey) === null) {
+      const session = await auth();
+      const limited = await enforceRateLimit(
+        req, POLICIES.aiAnalysis, session?.user?.id ? `user:${session.user.id}` : undefined,
+      );
+      if (limited) return limited;
+    }
+
+    const analysis = await cache.wrap(cacheKey, TTL.INTELLIGENCE, () => generateAnalysis(T));
 
     return NextResponse.json(analysis, {
       headers: {
@@ -332,6 +344,7 @@ export async function GET(
   } catch (err) {
     const msg = (err as Error).message ?? String(err);
     console.error(`[ai-analysis/${T}]`, msg);
-    return NextResponse.json({ error: msg, code: "ANALYSIS_FAILED", ticker: T }, { status: 500 });
+    // Internal error text can contain upstream URLs, stack details or provider messages.
+    return NextResponse.json({ error: "Analysis is temporarily unavailable.", code: "ANALYSIS_FAILED", ticker: T }, { status: 500 });
   }
 }

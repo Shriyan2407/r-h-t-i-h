@@ -3,13 +3,17 @@ import { z } from "zod";
 import { validatePasswordResetToken } from "@/lib/auth/tokens";
 import { hashPassword } from "@/lib/auth/password";
 import { prisma } from "@/lib/auth/prisma";
+import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 const schema = z.object({
-  token:    z.string().min(1),
+  token:    z.string().regex(/^[a-f0-9]{64}$/, "This reset link is invalid or has expired."),
   password: z.string().min(8, "Password must be at least 8 characters").max(100),
 });
 
 export async function POST(req: NextRequest) {
+  const limited = await enforceRateLimit(req, POLICIES.passwordReset);
+  if (limited) return limited;
+
   try {
     const parsed = schema.safeParse(await req.json());
     if (!parsed.success) {
