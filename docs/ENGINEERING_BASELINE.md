@@ -1,5 +1,9 @@
 # Engineering Baseline
 
+> **Snapshot taken BEFORE the hardening work.** It is kept unchanged as the record of the starting
+> state. For what has been fixed since, see [CHANGELOG.md](CHANGELOG.md); for the current design see
+> [ARCHITECTURE.md](ARCHITECTURE.md) and [SECURITY.md](SECURITY.md).
+
 Recorded on branch `modernization/production-hardening` at commit `e12f053`
 (on top of `master` @ `80ea5e6`), before any hardening work. Everything below was
 observed by running the command or reading the file; items we could not check are
