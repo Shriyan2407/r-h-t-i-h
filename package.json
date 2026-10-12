@@ -6,13 +6,14 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint . --max-warnings 113",
     "postinstall": "prisma generate",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "admin:promote": "node scripts/promote-admin.mjs",
-    "check:bundle": "node scripts/check-no-mock-in-bundle.mjs"
+    "check:bundle": "node scripts/check-no-mock-in-bundle.mjs",
+    "lint:prune": "eslint . --prune-suppressions"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
