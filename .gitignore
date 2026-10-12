@@ -43,3 +43,6 @@ next-env.d.ts
 .vercel
 
 /lib/generated/prisma
+
+# Template with no secrets: must be tracked so a fresh clone has it.
+!.env.example
