@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/context/ThemeContext";
 import { AuthSessionProvider } from "@/components/auth/SessionProvider";
+import { DemoBanner } from "@/components/ui/DemoBanner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -111,6 +112,7 @@ export default function RootLayout({
         <AuthSessionProvider>
           <ThemeProvider>
             {children}
+            <DemoBanner />
           </ThemeProvider>
         </AuthSessionProvider>
       </body>

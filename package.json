@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "admin:promote": "node scripts/promote-admin.mjs"
+    "admin:promote": "node scripts/promote-admin.mjs",
+    "check:bundle": "node scripts/check-no-mock-in-bundle.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
