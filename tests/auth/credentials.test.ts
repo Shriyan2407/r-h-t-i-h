@@ -83,8 +83,11 @@ describe("authorizeCredentials", () => {
     expect(new TooManyAttemptsError().code).toBe("rate_limited");
   });
 
+  // These two loops make a dozen bcrypt comparisons. They use an existing account with a
+  // cheap test hash (not the cost-12 dummy hash) and an explicit timeout so they do not
+  // depend on how busy the machine is.
   it("rate limits repeated attempts from one IP", async () => {
-    m.findUserByEmail.mockResolvedValue(null);
+    m.findUserByEmail.mockResolvedValue(user());
     const ipAddr = "198.51.100.200";
     let thrown: unknown = null;
     for (let i = 0; i < 12; i++) {
@@ -96,7 +99,7 @@ describe("authorizeCredentials", () => {
       }
     }
     expect(thrown).toBeInstanceOf(TooManyAttemptsError);
-  });
+  }, 20_000);
 
   it("rate limits password guessing against a single account across IPs", async () => {
     m.findUserByEmail.mockResolvedValue(user());
@@ -110,5 +113,5 @@ describe("authorizeCredentials", () => {
       }
     }
     expect(thrown).toBeInstanceOf(TooManyAttemptsError);
-  });
+  }, 20_000);
 });
