@@ -32,7 +32,7 @@ admin dashboard.
 | "7 specialised AI agents" in production | Exists only in unmaintained, undeployed Python code |
 | ML price/direction prediction, calibrated probabilities | Not built; no validation evidence |
 | Real-time streaming prices / signal changes | Not built (polling every 60 s only) |
-| Backtesting module | Not built in the app |
+| Backtesting module | Engine + `POST /api/backtest` built and unit-tested; **no UI yet**. It reports what a rule did historically, not a prediction |
 | Portfolio factor exposure, correlation matrix, beta, stress tests, liquidity risk | Not built |
 | AI research workspace with evidence per claim | Not built |
 | Direct NSE/BSE feed | Not built; Yahoo only |

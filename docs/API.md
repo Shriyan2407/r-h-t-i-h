@@ -43,6 +43,7 @@ otherwise `400 INVALID_TICKER`.
 | `/api/history/[ticker]` | GET | Company history (curated / LLM / template) | **Unverified content**, see AI_SYSTEM.md |
 | `/api/ai-analysis/[ticker]` | GET | Verdict + narrative | 15/h per user on cache misses |
 | `/api/intelligence/[ticker]` · `/intelligence/stream/[ticker]` | GET | Full report / SSE stream | 20/h per user on cache misses; stream always counts |
+| `/api/backtest` | POST | `{ticker, strategy, years?, initialCapital?, feeBps?, slippageBps?}` -> `BACKTEST_RESULT` (equity curve, benchmark, trades, metrics, assumptions) | session required; 20/h per user; strategies: `buy_and_hold`, `sma_crossover`, `rsi_mean_reversion`; 1-10 years of daily bars; **API only, no UI yet** |
 | `/api/health` | GET | Service health | requires a session today (monitoring-friendly endpoint is planned) |
 
 ## Admin

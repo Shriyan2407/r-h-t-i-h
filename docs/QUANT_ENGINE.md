@@ -65,3 +65,22 @@ A model is only described as predictive after all of these exist and are reprodu
 6. Confidence intervals / multiple-testing awareness (a strategy picked from many trials is overfit by default).
 
 Until then the product shows signal strength and "confidence unavailable".
+
+## Backtest engine (`lib/backtest/`)
+
+Built and unit-tested (see `tests/backtest/`). It is separate from the verdict scorer above and
+makes no claim about the scorer's accuracy.
+
+- **No look-ahead**: a strategy's position for bar *i* is computed from bars `0..i` and filled at
+  the **open of bar *i+1***; the last bar's signal is never traded. A test asserts every built-in
+  strategy is causal (truncating future bars never changes earlier signals).
+- **Costs**: per-side fee (bps) plus slippage (bps) applied to every fill and to the final
+  mark-to-market exit.
+- **Metrics**: total return, CAGR, Sharpe, Sortino (0% risk-free, 252 days), max drawdown, win
+  rate, profit factor, trade count, exposure. Undefined ratios are `null`, never `0`.
+- **Walk-forward** (`walkForward.ts`): per fold, choose the best in-sample-Sharpe candidate on
+  the training window and evaluate only that choice on the next unseen window; windows never
+  overlap. Tested for window ordering; **not yet exposed in the API or UI**.
+- **Not done**: precision/recall/F1 and probability calibration (need a classifier, which does not
+  exist), dividends/taxes, shorting, position sizing, survivorship-bias handling, any
+  claim that these strategies have edge.
