@@ -23,7 +23,8 @@ interface MacroData {
     type:        "RISK_ON" | "RISK_OFF" | "NEUTRAL";
     label:       string;
     description: string;
-    confidence:  number;
+    signalStrength: number;
+    inputs:      number;
   };
   pressure_score: number;
   rbi_stance:    "HAWKISH" | "NEUTRAL" | "DOVISH";
@@ -42,7 +43,7 @@ interface MacroData {
 
 /* ── Subcomponents ─────────────────────────────────────── */
 
-function RegimeBadge({ type, label, confidence }: { type: string; label: string; confidence: number }) {
+function RegimeBadge({ type, label, signalStrength, inputs }: { type: string; label: string; signalStrength: number; inputs: number }) {
   const cfg = {
     RISK_ON:  { color: "#00ff88", bg: "rgba(0,255,136,0.08)", border: "rgba(0,255,136,0.3)", icon: TrendingUp  },
     RISK_OFF: { color: "#ff4466", bg: "rgba(255,68,102,0.08)",  border: "rgba(255,68,102,0.3)",  icon: TrendingDown },
@@ -54,7 +55,7 @@ function RegimeBadge({ type, label, confidence }: { type: string; label: string;
     <div className="flex items-center gap-2 px-3 py-2 rounded-xl border" style={{ background: cfg.bg, borderColor: cfg.border }}>
       <Icon size={13} style={{ color: cfg.color }} />
       <span className="text-xs font-mono font-bold" style={{ color: cfg.color }}>{label}</span>
-      <span className="text-[10px] font-mono text-[#484f58] ml-1">{confidence}% confidence</span>
+      <span className="text-[10px] font-mono text-[#484f58] ml-1" title="How one-sided the rule inputs are (0-100). Not a probability.">signal strength {signalStrength}/100 · {inputs} inputs</span>
     </div>
   );
 }
@@ -237,7 +238,7 @@ export function MacroPanel({ ticker }: { ticker?: string }) {
 
       {/* Regime */}
       <div className="flex flex-col gap-2">
-        <RegimeBadge type={data.regime.type} label={data.regime.label} confidence={data.regime.confidence} />
+        <RegimeBadge type={data.regime.type} label={data.regime.label} signalStrength={data.regime.signalStrength} inputs={data.regime.inputs} />
         <p className="text-[11px] text-[#8b949e] leading-relaxed px-1">{data.regime.description}</p>
       </div>
 

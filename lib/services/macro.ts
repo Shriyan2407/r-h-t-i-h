@@ -98,7 +98,10 @@ function computeRegime(data: Record<string, any>): {
   type: "RISK_ON" | "RISK_OFF" | "NEUTRAL";
   label: string;
   description: string;
-  confidence: number;
+  /** 0-100: how one-sided the rule inputs are. Not a probability. */
+  signalStrength: number;
+  /** Number of inputs that were available. */
+  inputs: number;
 } {
   let score = 0;
   let signals = 0;
@@ -143,11 +146,13 @@ function computeRegime(data: Record<string, any>): {
   }
 
   const normalised = signals > 0 ? score / signals : 0;
-  const confidence = Math.min(90, Math.round(40 + Math.abs(normalised) * 50));
+  // Each input scores in [-2, 2], so |normalised| / 2 is the share of the maximum possible agreement.
+  const signalStrength = Math.round(Math.min(1, Math.abs(normalised) / 2) * 100);
+  const base = { signalStrength, inputs: signals };
 
-  if (normalised > 0.4) return { type: "RISK_ON",  label: "Risk-On",  description: "Broad market risk appetite is positive. Equities outperforming, volatility subdued.", confidence };
-  if (normalised < -0.4) return { type: "RISK_OFF", label: "Risk-Off", description: "Risk aversion elevated. Capital rotating to defensive assets, VIX expanding.", confidence };
-  return { type: "NEUTRAL", label: "Neutral", description: "Mixed signals — no clear risk-on or risk-off regime. Selective stock-picking environment.", confidence };
+  if (normalised > 0.4) return { type: "RISK_ON",  label: "Risk-On",  description: "Most inputs (India VIX, NIFTY and S&P 500 moves, USD/INR) point to lower risk today.", ...base };
+  if (normalised < -0.4) return { type: "RISK_OFF", label: "Risk-Off", description: "Most inputs (India VIX, NIFTY and S&P 500 moves, USD/INR) point to higher risk today.", ...base };
+  return { type: "NEUTRAL", label: "Neutral", description: "The inputs disagree or are close to normal levels.", ...base };
 }
 
 function computePressureScore(data: Record<string, any>): number {
