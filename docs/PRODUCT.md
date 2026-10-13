@@ -15,7 +15,7 @@ fundamental indicators, news and portfolio holdings, with optional Telegram/push
 ## What it is not
 
 - Not investment advice, a broker, or a signal service. No order placement.
-- Not a prediction engine: there is no validated model (see QUANT_ENGINE.md).
+- Not a price-prediction engine: direction models were tested and rejected. The one validated model forecasts volatility (how much, not which way); see MODEL_EVALUATION.md.
 - Not real-time: quotes come from Yahoo Finance and may be delayed.
 
 ## Built
@@ -23,18 +23,19 @@ fundamental indicators, news and portfolio holdings, with optional Telegram/push
 Accounts with verification, market bar, quotes/charts/technicals/fundamentals, news and keyword
 sentiment, rule-based verdict with signal strength, optional LLM narrative, portfolio CRUD and
 import (CSV/XLSX/PDF/screenshot), Telegram and Web Push alerts with de-duplication, role-based
-admin dashboard.
+admin dashboard, a validated 5-day volatility model with regime and evidence, a model evidence page,
+backtesting with walk-forward validation, and portfolio risk analytics with stress scenarios.
 
 ## Not built (do not claim)
 
 | Idea | Status |
 |---|---|
-| "7 specialised AI agents" in production | Exists only in unmaintained, undeployed Python code |
-| ML price/direction prediction, calibrated probabilities | Not built; no validation evidence |
+| Price-direction prediction, up/down probabilities, price targets | **Tested and rejected** (MODEL_EVALUATION.md); deliberately not shown |
+| Multi-agent AI | Not built; the Python prototype is retired (ARCHITECTURE.md) |
+| Fundamentals / news / macro as model inputs | Not built: no point-in-time history in the data source |
+| Free-form AI research chat ("why is X moving?") | Not built; the Risk Model tab shows evidence-backed explanations for one forecast |
+| Factor exposures beyond beta (size, value, momentum) | Not built |
 | Real-time streaming prices / signal changes | Not built (polling every 60 s only) |
-| Backtesting module | Engine, `POST /api/backtest` and a `/backtest` page (3 rules, costs, equity curve vs buy-and-hold, metrics, assumptions). Engine/API unit-tested; the page compiles and builds but has **not been checked in a browser or by an automated UI test**. Walk-forward is not exposed. It reports what a rule did historically, not a prediction |
-| Portfolio factor exposure, correlation matrix, beta, stress tests, liquidity risk | Not built |
-| AI research workspace with evidence per claim | Not built |
 | Direct NSE/BSE feed | Not built; Yahoo only |
 | Command palette, full accessibility audit, redesigned mobile layout | Not built |
 | Email/SMS alert channels, subscriptions/billing | Not built (`subscriptionTier` is a stored label only; nothing is gated on it) |
