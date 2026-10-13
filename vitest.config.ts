@@ -7,7 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts", "lib/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx", "lib/**/*.test.ts"],
     // Needs a real database; run via `npm run test:integration` (vitest.integration.config.ts).
     exclude: ["tests/integration/**", "node_modules/**"],
     globals: false,
