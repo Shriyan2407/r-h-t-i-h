@@ -201,10 +201,6 @@ export function buildDeterministicReport(
   else if (composite <= 40 && newsRatio <= 0)   currentSentiment = "BEARISH";
   else if (composite <= 45 || newsRatio < -0.2) currentSentiment = "MIXED";
 
-  const stopLoss  = price * 0.93;
-  const target1   = price * 1.12;
-  const target2   = Math.min(price * 1.24, hi52 * 0.98);
-  const rrRatio   = (target1 - price) / Math.max(price - stopLoss, 1);
 
   const fiiHolding = summary?.majorHoldersBreakdown?.institutionsPercentHeld ?? null;
 
@@ -267,13 +263,6 @@ export function buildDeterministicReport(
     macroConnections: `${sectorProfile.macroFactors.slice(0, 2).join(". ")}. ${sectorProfile.label} stocks are influenced by these macro drivers at this juncture.`,
     techAnalysis:     techAnalysisText(ticker, s),
     graphAnalysis:    graphAnalysisText(ticker, s),
-    entryZone: {
-      entry:      `${fmtInr(price * 0.98)}–${fmtInr(price)}`,
-      stopLoss:   `${fmtInr(stopLoss)} (−7%)`,
-      target1:    fmtInr(target1),
-      target2:    fmtInr(target2),
-      riskReward: `1:${rrRatio.toFixed(1)}`,
-    },
     timeframes: {
       intraday:  {
         trend:    change1d > 0 ? "Bullish intraday" : "Bearish intraday",
@@ -285,7 +274,7 @@ export function buildDeterministicReport(
         trend:    rangePos > 0.5 ? "Upward bias" : "Cautious",
         strength: rangePos > 0.65 || rangePos < 0.35 ? "Moderate" : "Weak",
         risk:     "Medium",
-        note:     `Swing target ${fmtInr(target1)}, stop ${fmtInr(stopLoss)}`,
+        note:     `Price is ${(rangePos * 100).toFixed(0)}% of the way from its 52-week low to its 52-week high`,
       },
       positional:{
         trend:    composite >= 60 ? "Positive" : composite <= 45 ? "Cautious" : "Neutral",
