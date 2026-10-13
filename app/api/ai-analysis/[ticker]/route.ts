@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cache, TTL }     from "@/lib/services/cache";
+import { TTL }               from "@/lib/services/cache";
+import { sharedPeek, sharedWrap } from "@/lib/cache/shared";
+import { timed }             from "@/lib/observability/metrics";
 import { computeQuantScore, buildQuantSummary } from "@/lib/scoring/quantEngine";
 import { callOllama, getOllamaModel } from "@/lib/ai/ollamaClient";
 import { generateDeterministicAnalysis }   from "@/lib/ai/narrativeEngine";
@@ -329,7 +331,7 @@ export async function GET(
 
     // Only a cache miss costs real work (Yahoo, news, an LLM call), so only misses are limited.
     const cacheKey = `ai-analysis-v3:${T}`;
-    if (cache.get(cacheKey) === null) {
+    if (!(await sharedPeek("ai-analysis", cacheKey))) {
       const session = await auth();
       const limited = await enforceRateLimit(
         req, POLICIES.aiAnalysis, session?.user?.id ? `user:${session.user.id}` : undefined,
@@ -337,7 +339,7 @@ export async function GET(
       if (limited) return limited;
     }
 
-    const analysis = await cache.wrap(cacheKey, TTL.INTELLIGENCE, () => generateAnalysis(T));
+    const analysis = await sharedWrap("ai-analysis", cacheKey, TTL.INTELLIGENCE, () => timed("ai.analysis.generate", () => generateAnalysis(T)));
 
     return NextResponse.json(analysis, {
       headers: {

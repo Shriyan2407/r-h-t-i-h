@@ -1,5 +1,5 @@
 import YFConstructor from "yahoo-finance2";
-import { cache } from "@/lib/services/cache";
+import { sharedGet, sharedSet } from "@/lib/cache/shared";
 import type { Bar } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,8 +29,8 @@ export function cleanBars(quotes: readonly RawQuote[]): Bar[] {
 
 /** Daily bars for an NSE (then BSE) symbol. Returns null when Yahoo has nothing. */
 export async function fetchDailyBars(ticker: string, years: number): Promise<{ symbol: string; bars: Bar[] } | null> {
-  const key = `bars:${ticker}:${years}`;
-  const hit = cache.get<{ symbol: string; bars: Bar[] }>(key);
+  const key = `${ticker}:${years}`;
+  const hit = await sharedGet<{ symbol: string; bars: Bar[] }>("bars", key);
   if (hit) return hit;
 
   const period1 = new Date();
@@ -45,7 +45,7 @@ export async function fetchDailyBars(ticker: string, years: number): Promise<{ s
       const bars = cleanBars(raw?.quotes ?? []);
       if (bars.length > 0) {
         const out = { symbol, bars };
-        cache.set(key, out, 6 * 3600); // daily history changes once per session
+        await sharedSet("bars", key, out, 6 * 3600); // daily history changes once per session
         return out;
       }
     } catch {

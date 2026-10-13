@@ -13,6 +13,11 @@ vi.mock("@/lib/services/cache", () => ({
   cache: { get: m.cacheGet, wrap: m.cacheWrap },
   TTL: { INTELLIGENCE: 1200, NEWS: 600, SENTIMENT: 300, MARKET: 60, STATIC: 86400 },
 }));
+// Routes now use the shared cache; keep the same hit/miss/wrap controls for these tests.
+vi.mock("@/lib/cache/shared", () => ({
+  sharedPeek: async (ns: string, key: string) => m.cacheGet(`${ns}:${key}`) !== null,
+  sharedWrap: (_ns: string, key: string, ttl: number, fn: () => unknown) => m.cacheWrap(key, ttl, fn),
+}));
 vi.mock("yahoo-finance2", () => ({
   default: class {
     search = m.yfSearch;

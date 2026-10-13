@@ -17,7 +17,10 @@ describe("logger", () => {
       password: "hunter2",
       nested: { Authorization: "Bearer x", ok: 1, list: [{ apiKey: "k" }] },
       err: new Error("boom"),
-    }) as any;
+    }) as {
+      email: string; password: string; err: { message: string };
+      nested: { Authorization: string; ok: number; list: { apiKey: string }[] };
+    };
     expect(out.email).toBe("a@b.c");
     expect(out.password).toBe("[redacted]");
     expect(out.nested.Authorization).toBe("[redacted]");
@@ -27,7 +30,7 @@ describe("logger", () => {
   });
 
   it("does not hang on cyclic objects", () => {
-    const a: any = { n: 1 };
+    const a: Record<string, unknown> = { n: 1 };
     a.self = a;
     expect(() => JSON.stringify(redact(a))).not.toThrow();
   });

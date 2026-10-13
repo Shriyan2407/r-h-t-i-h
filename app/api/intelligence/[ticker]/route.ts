@@ -73,8 +73,8 @@ export async function GET(
 
     // Fresh reports are shared via the cache (getIntelligenceReport already evicts cached
     // error objects). Only a cache MISS costs real work, so only misses are rate limited.
-    const { cache } = await import("@/lib/services/cache");
-    if (cache.get(`intelligence:${T}`) === null) {
+    const { sharedPeek } = await import("@/lib/cache/shared");
+    if (!(await sharedPeek("intelligence", T))) {
       const session = await auth();
       const limited = await enforceRateLimit(req, POLICIES.intelligence, session?.user?.id ? `user:${session.user.id}` : undefined);
       if (limited) return limited;

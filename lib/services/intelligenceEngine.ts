@@ -15,22 +15,9 @@ import { buildInstitutionalPrompt } from "./promptBuilder";
 import { callOllama }             from "@/lib/ai/ollamaClient";
 import { callClaude, parseIntelligenceResponse } from "./claudeService";
 import { buildDeterministicReport } from "./deterministicIntelligence";
-import { cache, TTL }             from "./cache";
-
-/* ── Startup: flush any stale NO_API_KEY error objects ───── */
-(function purgeStaleCacheErrors() {
-  try {
-    const stats = cache.stats();
-    for (const key of stats.keys) {
-      if (!key.startsWith("intelligence:")) continue;
-      const val = cache.get<any>(key);
-      if (val && (val.error || val.code)) {
-        cache.del(key);
-        console.log(`[Intelligence] Purged stale cache error for key: ${key}`);
-      }
-    }
-  } catch { /* non-critical */ }
-})();
+import { TTL }                    from "./cache";
+import { sharedDel, sharedWrap }   from "@/lib/cache/shared";
+import { timed }                   from "@/lib/observability/metrics";
 
 /* ── Yahoo Finance data fetcher ─────────────────────────── */
 
@@ -158,14 +145,18 @@ export async function generateIntelligence(ticker: string) {
 /* ── Cached wrapper (public API) ─────────────────────────── */
 
 export async function getIntelligenceReport(ticker: string, bustCache = false) {
-  const T   = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
-  const key = `intelligence:${T}`;
+  const T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
 
-  // Always evict stale error objects — they must never be served to the frontend
-  const cached = cache.get<any>(key);
-  if (bustCache || (cached !== null && (cached.error || cached.code))) {
-    cache.del(key);
-  }
+  // Error-shaped results must never be cached or served to the frontend.
+  const isHealthy = (r: any) => !!r && !r.error && !r.code;
 
-  return cache.wrap(key, TTL.INTELLIGENCE, () => generateIntelligence(T));
+  if (bustCache) await sharedDel("intelligence", T);
+
+  return sharedWrap(
+    "intelligence",
+    T,
+    TTL.INTELLIGENCE,
+    () => timed("ai.intelligence.generate", () => generateIntelligence(T)),
+    isHealthy,
+  );
 }

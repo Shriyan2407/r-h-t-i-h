@@ -93,6 +93,16 @@ export async function sharedGet<T>(namespace: string, key: string): Promise<T | 
   }
 }
 
+/** Existence check that does not touch hit/miss metrics (used to decide whether work is needed). */
+export async function sharedPeek(namespace: string, key: string): Promise<boolean> {
+  backend ??= createCacheBackend();
+  try {
+    return (await backend.get(`${PREFIX}${namespace}:${key}`)) !== null;
+  } catch {
+    return false;
+  }
+}
+
 export async function sharedSet<T>(namespace: string, key: string, value: T, ttlSec: number): Promise<void> {
   if (value === null || value === undefined) return;
   backend ??= createCacheBackend();

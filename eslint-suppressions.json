@@ -201,7 +201,7 @@
   },
   "lib/services/intelligenceEngine.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 8
+      "count": 7
     }
   },
   "lib/services/macro.ts": {
