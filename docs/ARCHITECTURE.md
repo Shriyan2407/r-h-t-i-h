@@ -18,9 +18,12 @@ Route handlers  app/api/**                (Vercel serverless functions, Node run
 Services  lib/services/**, lib/scoring/**, lib/auth/**, lib/ratelimit/**, lib/email/**
    ├─ Yahoo Finance via yahoo-finance2 (quotes, history, fundamentals)   — unofficial API
    ├─ Public RSS feeds + Reddit/StockTwits (news, keyword sentiment)
-   ├─ LLM narrative: Claude if ANTHROPIC_API_KEY is set, Ollama if reachable, else templates
+   ├─ ML inference (lib/ml): point-in-time features -> registered JSON artifact (volatility-ridge)
+   │     -> regime -> evidence contract -> optional Claude explanation behind a numeric guard (lib/ai)
+   ├─ Backtesting (lib/backtest) and portfolio risk (lib/portfolio): pure TypeScript
+   ├─ LLM narrative: Claude if ANTHROPIC_API_KEY is set, Ollama only if OLLAMA_BASE_URL is set, else templates
    ├─ Resend (transactional email)        ├─ Telegram Bot API   ├─ Web Push (VAPID)
-   └─ Upstash Redis REST (rate limits; optional, in-memory fallback)
+   └─ Upstash Redis REST (rate limits + shared cache; optional, in-memory fallback)
    ▼
 PostgreSQL via Prisma  (users, portfolios, watchlists, alert preferences/history, push, telegram)
 ```
@@ -33,20 +36,37 @@ Scheduled work: `vercel.json` defines cron entries that call `/api/cron/market-a
 Only this Next.js application. `lib/api.ts` calls relative `/api/*` routes; nothing in the
 frontend references any other backend.
 
-## What is NOT part of this repository
+## Offline ML (not deployed)
 
-A Python tree (`backend/`: FastAPI, multi-agent Claude orchestration, a quant/ML research
-package, `ai-service`, `ocr-service`, a Socket.IO `ws-hub`) lives next to this repository
-but is **not version-controlled here and is not deployed**. Verified problems with it:
+```
+ml/download.ts (Yahoo) -> ml/build-dataset.ts (same TS feature code) -> dataset.csv
+  -> ml/train/*.py (scikit-learn: purged walk-forward, gate, holdout, export)
+  -> lib/ml/artifacts/*.json + lib/ml/registry.json  (committed; read by the app at build time)
+```
 
-- `requirements.txt` removed `anthropic` and `tenacity`, yet `agents/base_agent.py` imports them.
-- `api/routes/analysis.py` can report job status but nothing creates a job.
-- `api/routes/quant.py` uses relative imports that fail under `uvicorn main:app`, and the
-  failure is swallowed, silently disabling the router.
-- The quant package has no data, trained models or reported results (see QUANT_ENGINE.md).
+Python is used **only offline** for training and evaluation. Inference runs in TypeScript from the JSON artifact
+(ridge regression is a dot product), so there is no Python service to deploy, scale or secure. Parity between the two
+is tested to 1e-6. See ML_PIPELINE.md.
 
-Decision pending (see ENGINEERING_BASELINE): consolidate into this repo behind a
-clear interface, or remove. Until then, treat that tree as unmaintained reference code.
+## Decision: the Python `backend/` directory
+
+A Python tree (`backend/`: FastAPI, "multi-agent" Claude orchestration, a quant package with tree, LSTM,
+transformer and RL model code, `ai-service`, `ocr-service`, a Socket.IO `ws-hub`) sits next to this repository. It is
+**not version-controlled, not deployed and not referenced** by the app.
+
+**Decision: retire it.** Reasons:
+
+- Nothing calls it, and it duplicates logic that now exists here with tests (indicators four times over).
+- Its ML code never produced data, trained models or reported results; the validated pipeline in `ml/` supersedes it,
+  and its LSTM/transformer/RL models were never justified by evidence (the simpler direction models here already fail).
+- Verified defects: `requirements.txt` omits `anthropic` and `tenacity` that `agents/base_agent.py` imports; the analysis
+  job route can report status but nothing creates jobs; `api/routes/quant.py` fails on import under `uvicorn` and the
+  failure is swallowed.
+- If Python is ever needed at serving time, the boundary is defined: Next.js -> an ML service that loads registry
+  artifacts by `id@version`; not before a model requires it.
+
+**Not yet deleted**: the directory is unversioned, so deleting it cannot be undone from git. It is left for the owner
+to delete or archive.
 
 ## Request lifecycle: stock analysis
 
@@ -78,10 +98,10 @@ the data was always missing and every stock received a placeholder HOLD. A regre
 
 ## Caching
 
-`lib/services/cache.ts` is an in-process Map: on Vercel each instance has its own, so it only
-smooths bursts within one warm instance. `unstable_cache` (Vercel Data Cache) is used for the
-market bar and landing page so they are shared. A shared Redis cache for expensive AI results is
-planned, not built.
+`lib/cache/shared.ts` stores JSON in Upstash Redis when configured (shared by all instances) and in the per-process
+map (`lib/services/cache.ts`) otherwise; Redis errors fail open. It serves intelligence reports, AI analysis, backtest
+bars and ML price history, never caches error-shaped results, and records hit/miss counters. News, sentiment,
+technicals, fundamentals and macro still use the per-process map. `unstable_cache` serves the market bar and landing page.
 
 ## Directory map
 
@@ -95,7 +115,14 @@ lib/email/           Resend client + templates
 lib/validation/      Zod schemas (ticker, portfolio, push)
 lib/security/        constant-time secrets, HTML escaping
 lib/services/        market data, news, alerts, Telegram, push, intelligence engines
-lib/scoring/         deterministic quant scoring
+lib/scoring/         deterministic rule scoring (evaluated: not predictive)
+lib/ml/              features, indicators, dataset/labels, volatility inference, regime, risk contract, registry
+lib/ai/              evidence contract, numeric guard, risk explainer, LLM clients
+lib/backtest/        backtest engine, metrics, strategies, walk-forward
+lib/portfolio/       portfolio risk analytics and service
+lib/observability/   structured logger, metrics, health
+ml/                  offline data download, dataset build, Python training/evaluation, reports
+e2e/                 Playwright tests (public tier + signed-in tier)
 prisma/              schema + migrations
 tests/               unit tests; tests/integration needs a real database
 scripts/             operator tools and build guards
