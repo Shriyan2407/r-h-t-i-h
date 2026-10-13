@@ -72,6 +72,48 @@ jobs:
       - name: Python unit tests
         run: python -m unittest discover -s ml/tests -t . -v
 
+  e2e:
+    name: Playwright E2E (public + signed-in flows)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: e2e
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/e2e
+      E2E_DATABASE_URL: postgresql://ci:ci@localhost:5432/e2e
+      NEXTAUTH_SECRET: ci-only-placeholder-secret-not-used-anywhere-else
+      NEXTAUTH_URL: http://localhost:3100
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      # Signed-in flows call Yahoo Finance; a provider outage can fail this job without a code defect.
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
