@@ -162,3 +162,21 @@ describe("alert history pagination", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("GET /api/user/portfolio (Decimal columns)", () => {
+  it("returns quantity and avgPrice as exact JSON numbers, not Decimal strings", async () => {
+    const { Prisma } = await import("@prisma/client");
+    m.prisma.portfolio.findUnique.mockResolvedValue({
+      id: "p1", userId: "u1",
+      holdings: [{
+        id: "h1", ticker: "INFY", name: "Infosys", exchange: "NSE", sector: "IT", notes: null, addedAt: new Date("2026-01-01"),
+        quantity: new Prisma.Decimal("12.5"), avgPrice: new Prisma.Decimal("1534.2500"),
+      }],
+    });
+    const { GET } = await import("@/app/api/user/portfolio/route");
+    const body = await (await GET()).json();
+    expect(body.holdings[0].quantity).toBe(12.5);
+    expect(body.holdings[0].avgPrice).toBe(1534.25);
+    expect(typeof body.holdings[0].quantity).toBe("number");
+  });
+});

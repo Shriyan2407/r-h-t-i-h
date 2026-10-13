@@ -23,8 +23,9 @@ export async function GET() {
         name:     h.name,
         exchange: h.exchange,
         sector:   h.sector ?? "Other",
-        quantity: h.quantity,
-        avgPrice: h.avgPrice,
+        // Decimal columns: return JSON numbers (a Decimal would serialise as a string and break the client).
+        quantity: Number(h.quantity),
+        avgPrice: Number(h.avgPrice),
         notes:    h.notes ?? undefined,
         addedAt:  h.addedAt.toISOString(),
       })),

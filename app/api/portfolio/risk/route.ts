@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
   try {
     const portfolio = await prisma.portfolio.findUnique({ where: { userId: session.user.id }, include: { holdings: true } });
-    const rows = (portfolio?.holdings ?? []).map((h) => ({ ticker: h.ticker, quantity: h.quantity, sector: h.sector ?? "Other", exchange: h.exchange }));
+    const rows = (portfolio?.holdings ?? []).map((h) => ({ ticker: h.ticker, quantity: Number(h.quantity), sector: h.sector ?? "Other", exchange: h.exchange }));
     if (rows.length === 0) return NextResponse.json({ empty: true }, { headers });
 
     const [index, vix] = await Promise.all([fetchAdjustedBars(INDEX_SYMBOL, 8), fetchAdjustedBars(VIX_SYMBOL, 8)]);
