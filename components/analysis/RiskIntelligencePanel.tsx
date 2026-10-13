@@ -99,7 +99,7 @@ export function RiskIntelligencePanel({ ticker }: { ticker: string }) {
     );
   }
   if (state.phase === "unavailable") {
-    const msg = state.reason === "INSUFFICIENT_HISTORY" ? "Not enough trading history for a forecast (about 13 months are needed)."
+    const msg = state.reason === "INSUFFICIENT_HISTORY" ? "Not enough trading history for a forecast (about a year, 260 trading days, is needed)."
       : state.reason === "MARKET_DATA_UNAVAILABLE" ? "Index or India VIX data is unavailable right now, so no forecast is made."
       : state.reason === "NO_DATA" ? "No price history was found for this symbol." : "A forecast is not available for this symbol.";
     return <div style={card}><p style={{ margin: 0 }}>{msg}</p>{state.detail && <p style={{ margin: "6px 0 0", fontSize: 12, ...muted }}>{state.detail}</p>}</div>;
