@@ -30,7 +30,7 @@ each theme. Hashes are for this local branch and will change if history is rewri
 - **AI verdict was a placeholder for every stock in production**: `ai-analysis` fetched its own `/api/technicals|fundamentals|macro` over HTTP without a session (401) and via `localhost:3000`; it now calls the services in-process, guarded by a regression test that fails on the old code
 
 ## Quant / backtesting
-- Causal backtest engine with costs, slippage, risk metrics and walk-forward validation; `POST /api/backtest` (no UI yet)
+- Causal backtest engine with costs, slippage, risk metrics and walk-forward validation; `POST /api/backtest` and `/backtest` page (UI not browser-verified)
 - Ollama is opt-in via `OLLAMA_BASE_URL`; no more 3 s localhost probe on every uncached AI call
 
 ## Observability / performance

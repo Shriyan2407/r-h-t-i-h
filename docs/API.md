@@ -43,7 +43,7 @@ otherwise `400 INVALID_TICKER`.
 | `/api/history/[ticker]` | GET | Company history (curated / LLM / template) | **Unverified content**, see AI_SYSTEM.md |
 | `/api/ai-analysis/[ticker]` | GET | Verdict + narrative | 15/h per user on cache misses |
 | `/api/intelligence/[ticker]` · `/intelligence/stream/[ticker]` | GET | Full report / SSE stream | 20/h per user on cache misses; stream always counts |
-| `/api/backtest` | POST | `{ticker, strategy, years?, initialCapital?, feeBps?, slippageBps?}` -> `BACKTEST_RESULT` (equity curve, benchmark, trades, metrics, assumptions) | session required; 20/h per user; strategies: `buy_and_hold`, `sma_crossover`, `rsi_mean_reversion`; 1-10 years of daily bars; **API only, no UI yet** |
+| `/api/backtest` | POST | `{ticker, strategy, years?, initialCapital?, feeBps?, slippageBps?}` -> `BACKTEST_RESULT` (equity curve, benchmark, trades, metrics, assumptions) | session required; 20/h per user; strategies: `buy_and_hold`, `sma_crossover`, `rsi_mean_reversion`; 1-10 years of daily bars; used by the `/backtest` page |
 | `/api/health` | GET | **Public**: `{status, ts, checks:{database}}`, 503 when degraded. With `Authorization: Bearer $HEALTH_SECRET` (or `CRON_SECRET`): adds market-data/AI/cache/rate-limit config status, version and single-instance latency + cache hit-rate metrics | detail fails closed (503) if no secret is configured |
 
 ## Admin
