@@ -24,7 +24,7 @@ from .walkforward import HOLDOUT_START
 REPORTS = ROOT / "ml" / "artifacts" / "reports"
 ARTIFACTS = ROOT / "lib" / "ml" / "artifacts"
 MODEL_ID = "volatility-ridge"
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 
 def fit_with_calibration(df: pd.DataFrame):
@@ -58,6 +58,8 @@ def holdout() -> dict:
         "mseVsPersist": sse(p) / sse(persist.predict(design(test))) - 1,
         "interval80Coverage": float(np.mean((y >= p + q10) & (y <= p + q90))),
         "mae": float(np.mean(np.abs(y - p))),
+        # v1.0.0 was scored on this same holdout before the v1.1 specification fix, so this is a SECOND look.
+        "holdoutPristine": False,
     }
     out.write_text(json.dumps(rep, indent=2), encoding="utf-8")
     return rep
@@ -88,6 +90,23 @@ def export() -> dict:
     return art
 
 
+def parity(n: int = 25) -> dict:
+    """Reference predictions from the *exported* model for real dataset rows. A TypeScript test must reproduce
+    them, which proves the inference code and feature vectors agree with the training code."""
+    art = json.loads((ARTIFACTS / f"{MODEL_ID}-{VERSION}.json").read_text(encoding="utf-8"))
+    df = load_dataset()
+    pick = df.iloc[np.linspace(0, len(df) - 1, n).astype(int)]
+    X = design(pick)[art["columns"]].to_numpy()
+    Z = (np.clip(X, art["winsorLo"], art["winsorHi"]) - np.array(art["mean"])) / np.array(art["scale"])
+    pred = Z @ np.array(art["coef"]) + art["intercept"]
+    out = {"model": MODEL_ID, "version": VERSION, "cases": [
+        {"ticker": r.ticker, "date": str(r.date.date()), "features": [float(r[f]) for f in FEATURES], "expectedLogRv5": float(p)}
+        for (_, r), p in zip(pick.iterrows(), pred)]}
+    (ROOT / "tests" / "ml" / "fixtures").mkdir(parents=True, exist_ok=True)
+    (ROOT / "tests" / "ml" / "fixtures" / "volatility-parity.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
+    return out
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "holdout":
@@ -95,5 +114,7 @@ if __name__ == "__main__":
     elif cmd == "export":
         a = export()
         print("exported", a["id"], a["version"], "sha256", a["_sha256"], "fit", a["fitRange"], "calib", a["calibRange"])
+    elif cmd == "parity":
+        print("wrote", len(parity()["cases"]), "parity cases")
     else:
         raise SystemExit(__doc__)
