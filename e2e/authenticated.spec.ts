@@ -45,8 +45,8 @@ test("backtest runs and is labelled as not a prediction", async ({ page }) => {
 test("model evidence publishes rejected models", async ({ page }) => {
   await login(page);
   await page.goto("/models");
-  await expect(page.getByText("REJECTED")).toBeVisible();
-  await expect(page.getByText("DEPLOYED")).toBeVisible();
+  await expect(page.getByText("REJECTED", { exact: true })).toBeVisible();
+  await expect(page.getByText("DEPLOYED", { exact: true })).toBeVisible();
   await expect(page.getByText("rule_trend_ema50").first()).toBeVisible();
 });
 
@@ -55,5 +55,5 @@ test("portfolio risk analysis runs on the saved holdings", async ({ page }) => {
   await page.goto("/portfolio");
   await page.getByRole("button", { name: "Run risk analysis" }).click();
   await expect(page.getByText("Stress scenarios (estimates, not forecasts)")).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByText(/COVID crash/)).toBeVisible();
+  await expect(page.getByText("COVID crash (Feb-Mar 2020)", { exact: true })).toBeVisible();
 });
