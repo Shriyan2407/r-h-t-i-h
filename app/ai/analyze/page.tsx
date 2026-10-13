@@ -196,9 +196,9 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
     {label:"Technical Structure",     score:sc.technical,     delay:0.05},
     {label:"Fundamental Strength",    score:sc.fundamental,   delay:0.10},
     {label:"Momentum Quality",        score:sc.momentum,      delay:0.15},
-    {label:"Institutional Confidence",score:sc.institutional, delay:0.20},
+    {label:"Institutional Holding (heuristic)",score:sc.institutional, delay:0.20},
     {label:"Risk / Reward",           score:sc.riskReward,    delay:0.25},
-    {label:"Smart Money Activity",    score:sc.smartMoney,    delay:0.30},
+    {label:"Flow Proxy (heuristic)",  score:sc.smartMoney,    delay:0.30},
     {label:"Volatility Profile",      score:sc.volatility,    delay:0.35},
     {label:"Long-Term Quality",       score:sc.ltInvestment,  delay:0.40},
     {label:"Swing Trade Quality",     score:sc.swingTrade,    delay:0.45},
@@ -285,10 +285,10 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="md:col-span-2 rounded-2xl p-5 flex flex-col items-center justify-center"
           style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
-          <div className="text-[9px] font-mono uppercase tracking-[0.2em] mb-3" style={{color:"var(--th-text-faint)"}}>Overall AI Score</div>
+          <div className="text-[9px] font-mono uppercase tracking-[0.2em] mb-3" style={{color:"var(--th-text-faint)"}}>Overall Rule-Based Score</div>
           <ScoreArc score={overall} size={130}/>
           <div className="mt-3 text-[11px] font-mono text-center" style={{color:`${scoreColor(overall)}80`}}>
-            {overall>=75?"Institutional Grade":overall>=62?"Above Average":overall>=50?"Average Profile":"Below Average — Caution"}
+            {overall>=75?"High":overall>=62?"Above Average":overall>=50?"Average Profile":"Below Average — Caution"}
           </div>
         </div>
         <div className="md:col-span-3 rounded-2xl p-5"
@@ -542,7 +542,7 @@ function QueryInput({ onAnalyze }:{ onAnalyze:(t:string)=>void }) {
           </span>
         </h1>
         <p className="text-[13px] mb-10" style={{color:"var(--th-text-muted)"}}>
-          Live Yahoo Finance data + AI-powered analysis. Every report is unique. No hardcoded content.
+          Yahoo Finance data (may be delayed) + rule-based scores, with an optional AI-written narrative. Not investment advice.
         </p>
       </motion.div>
       <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.7,delay:0.15}}
