@@ -23,6 +23,7 @@ import { AIResearchPanel }  from "@/components/analysis/AIResearchPanel";
 import { MacroPanel }       from "@/components/analysis/MacroPanel";
 import { NewsPanel }        from "@/components/analysis/NewsPanel";
 import { RiskIntelligencePanel } from "@/components/analysis/RiskIntelligencePanel";
+import { useMediaQuery, LG_QUERY } from "@/lib/hooks/useMediaQuery";
 import { RelatedIntelligence } from "@/components/RelatedIntelligence";
 import { VerdictBadge }     from "@/components/ui/VerdictBadge";
 import { Badge }            from "@/components/ui/Badge";
@@ -57,6 +58,9 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
   const upperTicker    = ticker.toUpperCase();
 
   const [activeTab,       setActiveTab]       = useState<AnalysisTab>("ai-report");
+  // The desktop sidebar and the mobile panel are both in the DOM (one hidden by CSS). Data-fetching panels
+  // must mount in only the visible one, or every view costs two API calls.
+  const isDesktop = useMediaQuery(LG_QUERY);
   const [quote,           setQuote]           = useState<StockQuote | null>(null);
   const [technicals,      setTechnicals]      = useState<TechnicalIndicators | null>(null);
   const [fundamentals,    setFundamentals]    = useState<FundamentalData | null>(null);
@@ -479,7 +483,7 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                   <MacroPanel ticker={upperTicker} />
                 )}
 
-                {activeTab === "risk" && (
+                {activeTab === "risk" && isDesktop && (
                   <div className="p-4"><RiskIntelligencePanel ticker={upperTicker} /></div>
                 )}
 
@@ -576,7 +580,7 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                 {activeTab === "fundamentals" && fundamentals && <FundamentalsPanel data={fundamentals} redFlags={aiAnalysis?.fundamentals.red_flags} summary={aiAnalysis?.fundamentals.summary} strengths={aiAnalysis?.fundamentals.strengths} />}
                 {activeTab === "news" && <NewsPanel news={news} sentimentSummary={aiAnalysis?.sentiment.noise_filtered_summary} overallSentiment={aiAnalysis?.sentiment.overall} />}
                 {activeTab === "ai-report" && aiAnalysis && <AIResearchPanel analysis={aiAnalysis} />}
-                {activeTab === "risk" && <RiskIntelligencePanel ticker={upperTicker} />}
+                {activeTab === "risk" && !isDesktop && <RiskIntelligencePanel ticker={upperTicker} />}
               </>
             )}
           </div>
