@@ -14,7 +14,9 @@
     "admin:promote": "node scripts/promote-admin.mjs",
     "check:bundle": "node scripts/check-no-mock-in-bundle.mjs",
     "lint:prune": "eslint . --prune-suppressions",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "ml:download": "tsx ml/download.ts",
+    "ml:dataset": "tsx ml/build-dataset.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
@@ -67,6 +69,7 @@
     "eslint": "^9",
     "eslint-config-next": "^16.4.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.4"
   }

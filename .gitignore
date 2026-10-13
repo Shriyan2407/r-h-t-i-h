@@ -46,3 +46,10 @@ next-env.d.ts
 
 # Template with no secrets: must be tracked so a fresh clone has it.
 !.env.example
+
+# ML pipeline: raw downloads and generated datasets are reproducible from ml/data/manifest.json
+/ml/data/raw/
+/ml/data/dataset.csv
+/ml/artifacts/_work/
+__pycache__/
+*.pyc
