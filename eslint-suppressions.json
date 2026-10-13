@@ -73,11 +73,6 @@
       "count": 1
     }
   },
-  "app/news/page.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "app/portfolio/page.tsx": {
     "react-hooks/immutability": {
       "count": 1
