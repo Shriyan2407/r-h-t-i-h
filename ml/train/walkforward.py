@@ -26,8 +26,22 @@ HOLDOUT_START = "2025-10-01"
 OUT = ROOT / "ml" / "artifacts" / "reports"
 
 
-def run(first_test: str = FIRST_TEST, end: str = HOLDOUT_START, months: int = 6, verbose: bool = True) -> dict:
-    df = load_dataset()
+def apply_target(df: pd.DataFrame, target: str) -> pd.DataFrame:
+    """'abs': 1 if the 5-day return is positive. 'rel': 1 if it beats that date's cross-sectional median
+    (removes the market-wide move, which the features cannot predict). Labels only; features untouched."""
+    if target == "abs":
+        return df
+    if target == "rel":
+        med = df.groupby("date")["fwd_ret"].transform("median")
+        n = df.groupby("date")["fwd_ret"].transform("size")
+        df = df[n >= 10].copy()
+        df["label"] = (df["fwd_ret"] > med[df.index]).astype(int)
+        return df
+    raise ValueError(target)
+
+
+def run(first_test: str = FIRST_TEST, end: str = HOLDOUT_START, months: int = 6, verbose: bool = True, target: str = "abs") -> dict:
+    df = apply_target(load_dataset(), target)
     folds = make_folds(first_test, end, months)
     oos: dict[str, list[pd.DataFrame]] = {}
     fold_rows: list[dict] = []
@@ -85,14 +99,14 @@ def run(first_test: str = FIRST_TEST, end: str = HOLDOUT_START, months: int = 6,
         results.append(row)
 
     report = {
-        "datasetSha256": META["csvSha256"], "featureVersion": META["featureVersion"], "target": META["target"],
+        "datasetSha256": META["csvSha256"], "featureVersion": META["featureVersion"], "target": META["target"] if target == "abs" else "beats_median_5d", "targetKind": target,
         "firstTest": first_test, "selectionEnd": end, "foldMonths": months, "folds": len(folds),
         "purge": "train rows kept only if label exit_date < test start; calibration = last 365d of train, purged",
         "costBpsPerSide": 15.0, "strategy": "long top 20% by score, non-overlapping 5-day cohorts, equal weight",
         "results": results, "perFold": fold_rows,
     }
     OUT.mkdir(parents=True, exist_ok=True)
-    path = OUT / "walkforward.json"
+    path = OUT / ("walkforward.json" if target == "abs" else f"walkforward_{target}.json")
     path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     if verbose:
         print(f"\nwrote {path}")
@@ -100,7 +114,7 @@ def run(first_test: str = FIRST_TEST, end: str = HOLDOUT_START, months: int = 6,
 
 
 if __name__ == "__main__":
-    rep = run()
+    rep = run(target=sys.argv[1] if len(sys.argv) > 1 else "abs")
     print(f"\n{'model':26s} {'AUC':>6s} {'BrierSk':>8s} {'ECE':>6s} {'IC':>7s} {'Sharpe':>7s} {'MaxDD':>7s} | bench Sharpe")
     for r in rep["results"]:
         c, s = r["classification"], r["strategy"]
