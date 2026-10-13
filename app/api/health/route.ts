@@ -5,6 +5,7 @@ import { checkBearer } from "@/lib/security/secrets";
 import { deepHealth, publicHealth, type HealthProbes } from "@/lib/observability/health";
 import { cacheHitRate, snapshot } from "@/lib/observability/metrics";
 import { log } from "@/lib/observability/logger";
+import registry from "@/lib/ml/registry.json";
 
 export const dynamic = "force-dynamic";
 
@@ -43,12 +44,14 @@ export async function GET(req: Request) {
       {
         ...health,
         version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+        models: registry.models.filter((x) => x.status === "production").map((x) => ({ id: x.id, version: x.version, trainedAt: x.trainedAt })),
         metrics: {
           ...m,
           cacheHitRate: {
             intelligence: cacheHitRate("intelligence"),
             "ai-analysis": cacheHitRate("ai-analysis"),
             bars: cacheHitRate("bars"),
+            mlbars: cacheHitRate("mlbars"),
           },
         },
       },
