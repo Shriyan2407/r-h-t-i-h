@@ -27,6 +27,8 @@
       "mseVsPersist": 0.0,
       "addsValueOverPersist": true,
       "coverageOk": true,
+      "ownVolMonotoneRate": 1.0,
+      "monotoneOk": true,
       "eligible": true
     },
     {
@@ -40,19 +42,23 @@
       "mseVsPersist": -0.11014668838777186,
       "addsValueOverPersist": true,
       "coverageOk": true,
+      "ownVolMonotoneRate": 1.0,
+      "monotoneOk": true,
       "eligible": true
     },
     {
       "model": "ridge_all",
-      "r2VsNaive": 0.2734226389578258,
-      "mse": 0.2283953597765842,
-      "mae": 0.37201318453797655,
-      "interval80Coverage": 0.7921067401398031,
+      "r2VsNaive": 0.2747080321207199,
+      "mse": 0.2279913039256388,
+      "mae": 0.37157852822757415,
+      "interval80Coverage": 0.7925659472422062,
       "foldsBeatingPersist": 14,
       "folds": 14,
-      "mseVsPersist": -0.11937992568286859,
+      "mseVsPersist": -0.120937836902413,
       "addsValueOverPersist": true,
       "coverageOk": true,
+      "ownVolMonotoneRate": 1.0,
+      "monotoneOk": true,
       "eligible": true
     },
     {
@@ -66,6 +72,8 @@
       "mseVsPersist": -0.1216645645180906,
       "addsValueOverPersist": true,
       "coverageOk": true,
+      "ownVolMonotoneRate": 1.0,
+      "monotoneOk": true,
       "eligible": true
     }
   ]

@@ -9,6 +9,8 @@ PRE-REGISTERED RULES (declared before results were examined):
     more than half of the folds.
   * Choose the SIMPLEST model among those within 0.005 R^2 of the best eligible one
     (order: persist_ols < har_ols < ridge_all < hgb_reg).
+  * (added in v1.1 after a defect was found in v1.0, see own_vol_monotone_rate) the forecast must RISE when the
+    stock's own recent volatility rises, in >= 99% of sampled rows.
   * 80% prediction interval (residual quantiles from the calibration slice) must cover 75-85% of test rows.
   * The final holdout (>= 2025-10-01) is scored exactly once, for the chosen model, by `holdout()`.
 """
@@ -33,10 +35,25 @@ EPS = 1e-5
 
 
 def design(df: pd.DataFrame) -> pd.DataFrame:
-    X = df[FEATURES].copy()
+    """v1.1 specification: each volatility-type measure enters ONLY in log form. v1.0 also included the raw
+    values, which are collinear with their logs; the ridge then gave `rv_20` a negative coefficient, so a stock
+    with higher recent volatility could receive a LOWER forecast (18/25 sampled cases)."""
+    X = df[[f for f in FEATURES if f not in LOG_COLS]].copy()
     for c in LOG_COLS:
         X[f"log_{c}"] = np.log(np.maximum(df[c].to_numpy(), EPS))
     return X
+
+
+OWN_VOL = ["rv_20", "atr_pct", "bb_width", "hl_range"]
+
+
+def own_vol_monotone_rate(model, df: pd.DataFrame, factor: float = 1.5, n: int = 3000) -> float:
+    """Share of rows whose forecast RISES when all own-volatility measures are scaled up. Must be >= 0.99."""
+    d = df.sample(min(n, len(df)), random_state=0)
+    up = d.copy()
+    for c in OWN_VOL:
+        up[c] = up[c] * factor
+    return float(np.mean(model.predict(design(up)) > model.predict(design(d))))
 
 
 def target(df: pd.DataFrame) -> np.ndarray:
@@ -88,7 +105,7 @@ def run(verbose: bool = True) -> dict:
     folds = make_folds(FIRST_TEST, HOLDOUT_START, 6)
     pooled: dict[str, list[np.ndarray]] = {}
     per_fold = []
-    ys, cover_lo, cover_hi = [], {}, {}
+    ys, cover_lo, cover_hi, last_models = [], {}, {}, {}
     for f in folds:
         train, test = split_fold(df, f)
         fit, calib = split_calibration(train)
@@ -102,6 +119,7 @@ def run(verbose: bool = True) -> dict:
                 naive_pred = pt
             res = yc - m.predict(Xc)
             q10, q90 = np.quantile(res, [0.10, 0.90])
+            last_models[m.name] = (m, test)
             pooled.setdefault(m.name, []).append(pt)
             cover_lo.setdefault(m.name, []).append(pt + q10)
             cover_hi.setdefault(m.name, []).append(pt + q90)
@@ -132,7 +150,10 @@ def run(verbose: bool = True) -> dict:
             adds = r["model"] == "persist_ols" or (r["mseVsPersist"] <= -0.01 and r["foldsBeatingPersist"] > len(folds) / 2)
             r["addsValueOverPersist"] = bool(adds)
             r["coverageOk"] = 0.75 <= r["interval80Coverage"] <= 0.85
-            r["eligible"] = bool(r["r2VsNaive"] > 0 and adds and r["coverageOk"])
+            mdl, tst = last_models[r["model"]]
+            r["ownVolMonotoneRate"] = own_vol_monotone_rate(mdl, tst)
+            r["monotoneOk"] = r["ownVolMonotoneRate"] >= 0.99
+            r["eligible"] = bool(r["r2VsNaive"] > 0 and adds and r["coverageOk"] and r["monotoneOk"])
     eligible = [r for r in results if r.get("eligible")]
     chosen = None
     if eligible:
@@ -147,7 +168,7 @@ def run(verbose: bool = True) -> dict:
 
 if __name__ == "__main__":
     r = run()
-    print(f"\n{'model':14s} {'R2':>7s} {'MSE':>7s} {'vsPersist':>10s} {'cov80':>6s} {'wins':>6s} eligible")
+    print(f"\n{'model':14s} {'R2':>7s} {'MSE':>7s} {'vsPersist':>10s} {'cov80':>6s} {'wins':>6s} {'mono':>6s} eligible")
     for x in r["results"]:
-        print(f"{x['model']:14s} {x['r2VsNaive']:7.3f} {x['mse']:7.4f} {x.get('mseVsPersist', float('nan')):10.3%} {x['interval80Coverage']:6.3f} {str(x['foldsBeatingPersist']):>6s} {x.get('eligible')}")
+        print(f"{x['model']:14s} {x['r2VsNaive']:7.3f} {x['mse']:7.4f} {x.get('mseVsPersist', float('nan')):10.3%} {x['interval80Coverage']:6.3f} {str(x['foldsBeatingPersist']):>6s} {x.get('ownVolMonotoneRate', float('nan')):6.3f} {x.get('eligible')}")
     print("\nCHOSEN:", r["chosen"])
