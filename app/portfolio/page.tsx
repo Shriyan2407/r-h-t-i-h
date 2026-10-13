@@ -1078,7 +1078,7 @@ export default function PortfolioPage() {
               </span>
             </h1>
             <p className="text-[10px] font-mono mt-0.5" style={{ color: "var(--th-text-ultra-faint)" }}>
-              AI-powered portfolio operating system · {holdings.length} holdings tracked
+              Portfolio tracking and risk analysis · {holdings.length} holdings
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1197,7 +1197,7 @@ export default function PortfolioPage() {
                 Your portfolio is empty
               </h2>
               <p className="text-[12px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                Add your first holding to unlock AI-powered portfolio intelligence
+                Add your first holding to see allocation and risk analysis
               </p>
             </div>
             <div className="flex items-center gap-3 flex-wrap justify-center">
@@ -1814,10 +1814,10 @@ export default function PortfolioPage() {
       <footer className="px-4 sm:px-6 py-4 mt-4" style={{ borderTop: "1px solid var(--th-border-subtle)" }}>
         <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-ultra-faint)" }}>
-            MARKET KA BAADSHAH · Portfolio Intelligence v2.0 · AI-powered · Not investment advice
+            MARKET KA BAADSHAH · Portfolio · Not investment advice
           </span>
           <span className="text-[8.5px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>
-            Live quotes update every 30s · Data from NSE via Yahoo Finance
+            Quotes from Yahoo Finance; may be delayed
           </span>
         </div>
       </footer>

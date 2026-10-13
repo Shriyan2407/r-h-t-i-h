@@ -474,7 +474,7 @@ export default function DashboardPage() {
               <div className="p-3 flex flex-col gap-1">
                 {[
                   { icon: Search,    label: "Search Stocks",  href: "/",         desc: "Any NSE/BSE stock"        },
-                  { icon: Brain,     label: "AI Analysis",    href: "/ai",       desc: "Multi-agent intelligence" },
+                  { icon: Brain,     label: "AI Analysis",    href: "/ai",       desc: "How the analysis works" },
                   { icon: TrendingUp,label: "Markets",        href: "/",         desc: "Live market overview"     },
                   { icon: BarChart2, label: "History",        href: "/history",  desc: "Price & event history"    },
                   { icon: Star,      label: "Watchlist",      href: "/watchlist",desc: "Your tracked stocks"      },
@@ -645,7 +645,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="text-[12px] font-bold" style={{ color: "var(--gold)" }}>Run AI Analysis</div>
-                  <div className="text-[9.5px] font-mono" style={{ color: "rgba(255,215,0,0.55)" }}>7 agents · Full report in &lt;30s</div>
+                  <div className="text-[9.5px] font-mono" style={{ color: "rgba(255,215,0,0.55)" }}>Rule-based scores · optional AI narrative</div>
                 </div>
               </div>
               <div className="relative flex items-center gap-1.5 text-[10px] font-mono font-bold"

@@ -92,7 +92,7 @@ export default function SignupPage() {
               className="text-[13px] leading-relaxed max-w-sm"
               style={{ color: "rgba(255,255,255,0.35)" }}
             >
-              Access multi-agent AI analysis, live NSE/BSE data, personalized
+              Access stock analysis, NSE/BSE market data, personalized
               watchlists, and decisive equity research — all in one platform.
             </p>
           </div>
@@ -100,8 +100,8 @@ export default function SignupPage() {
           <div className="mt-auto">
             {[
               "Personalized AI equity reports",
-              "Real-time NSE/BSE watchlists",
-              "Multi-agent technical analysis",
+              "NSE/BSE watchlists",
+              "Technical and fundamental analysis",
               "Macro & sentiment intelligence",
             ].map(feature => (
               <div

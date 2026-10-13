@@ -21,9 +21,9 @@ const spaceGrotesk = Space_Grotesk({
 
 const SITE_URL = "https://market-ka-baadshah.vercel.app";
 const SITE_NAME = "Market Ka Baadshah";
-const SITE_TITLE = "MARKET KA BAADSHAH — AI-Powered Indian Equity Intelligence";
+const SITE_TITLE = "MARKET KA BAADSHAH — Indian Equity Research and Risk Analytics";
 const SITE_DESC =
-  "Institutional-grade AI equity research terminal for NSE and BSE. Multi-agent technical analysis, fundamental research, macro intelligence, and decisive AI verdicts. India ka sabse powerful stock analysis platform.";
+  "Research NSE and BSE stocks: prices, technical and fundamental indicators, news, backtesting, portfolio risk and a validated 5-day volatility forecast. Informational only; not investment advice.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     "NSE", "BSE", "Indian stocks", "equity research", "technical analysis",
     "AI trading", "stock market", "institutional research", "market ka baadshah",
     "Indian equity intelligence", "stock analysis India", "Nifty 50", "Sensex",
-    "AI stock analysis", "multi-agent AI", "market intelligence",
+    "AI stock analysis", "market intelligence",
   ],
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,

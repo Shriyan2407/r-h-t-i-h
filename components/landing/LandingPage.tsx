@@ -339,7 +339,7 @@ function HeroSection({ market }: { market: LandingMarket | null }) {
             letterSpacing: "-0.025em",
           }}
         >
-          AI-Powered Indian{" "}
+          Indian Equity{" "}
           <span
             style={{
               background: "linear-gradient(135deg, #FFD700 0%, #C9A227 50%, #FFB800 100%)",
@@ -348,7 +348,7 @@ function HeroSection({ market }: { market: LandingMarket | null }) {
               backgroundClip: "text",
             }}
           >
-            Equity Intelligence
+            Research, Measured
           </span>
         </motion.h2>
 
@@ -912,7 +912,7 @@ function CTASection() {
           </h2>
 
           <p className="mb-10 text-[14px] font-medium leading-relaxed" style={{ color: "var(--th-text-dim)" }}>
-            Create your account and get full access to AI-powered equity intelligence
+            Create your account to research stocks, backtest rules and analyse portfolio risk
             for every NSE and BSE listed stock.
           </p>
 
@@ -965,7 +965,7 @@ function Footer() {
             MARKET KA BAADSHAH
           </span>
           <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-ultra-faint)" }}>
-            AI-Powered Indian Equity Intelligence
+            Indian Equity Research and Risk Analytics
           </span>
         </div>
         <div className="flex items-center gap-4">

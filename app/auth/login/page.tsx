@@ -85,7 +85,7 @@ export default async function LoginPage() {
               className="text-[10px] font-mono uppercase tracking-[0.28em] mb-5"
               style={{ color: "rgba(255,215,0,0.55)" }}
             >
-              Institutional Grade · Multi-Agent AI
+              Research · Risk · Backtesting
             </div>
             <h1
               className="font-bold leading-[1.1] mb-5"
@@ -113,7 +113,7 @@ export default async function LoginPage() {
               className="text-[13.5px] leading-relaxed max-w-[380px]"
               style={{ color: "rgba(255,255,255,0.38)" }}
             >
-              NSE/BSE real-time intelligence. Multi-agent technical analysis,
+              NSE/BSE prices (may be delayed), technical and fundamental analysis,
               fundamental research, macro signals. Decisive AI verdicts for every
               serious investor.
             </p>
@@ -122,7 +122,7 @@ export default async function LoginPage() {
             <div className="flex flex-wrap gap-2 mt-7">
               {[
                 { icon: Shield,     label: "Bank-Grade Security" },
-                { icon: Zap,        label: "Real-Time Intelligence" },
+                { icon: Zap,        label: "Volatility forecasts" },
                 { icon: TrendingUp, label: "AI Equity Research" },
               ].map(({ icon: Icon, label }) => (
                 <div

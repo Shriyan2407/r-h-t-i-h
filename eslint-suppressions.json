@@ -11,7 +11,7 @@
   },
   "app/alerts/page.tsx": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 3
+      "count": 2
     },
     "react-hooks/set-state-in-effect": {
       "count": 1
