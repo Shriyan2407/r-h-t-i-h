@@ -30,7 +30,7 @@ test("stock risk model shows a forecast with evidence and no direction call", as
   await page.getByRole("button", { name: "Why?" }).click();
   await expect(page.getByText("What the model does not know")).toBeVisible();
   // The model id also appears in each evidence source; assert the model card line specifically.
-  await expect(page.getByText(/volatility-ridge@d+.d+.d+ · production · trained/)).toBeVisible();
+  await expect(page.getByText(/volatility-ridge@\d+\.\d+\.\d+ · production · trained/)).toBeVisible();
 });
 
 test("backtest runs and is labelled as not a prediction", async ({ page }) => {
