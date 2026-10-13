@@ -36,29 +36,41 @@ def register(entry: dict, reg: dict) -> None:
 
 def sync() -> dict:
     reg = load()
-    vol_art_path = ARTIFACTS / "volatility-ridge-1.0.0.json"
-    art = json.loads(vol_art_path.read_text(encoding="utf-8"))
-    sel = json.loads((REPORTS / "volatility.json").read_text(encoding="utf-8"))
-    hold = json.loads((REPORTS / "volatility_holdout.json").read_text(encoding="utf-8"))
-    ridge = next(r for r in sel["results"] if r["model"] == "ridge_all")
-    persist = next(r for r in sel["results"] if r["model"] == "persist_ols")
-    register({
-        "id": "volatility-ridge", "version": "1.0.0", "task": "volatility_forecast", "status": "production",
-        "artifact": "lib/ml/artifacts/volatility-ridge-1.0.0.json", "artifactSha256": sha256_file(vol_art_path),
-        "trainedAt": art["trainedAt"], "featureVersion": art["featureVersion"], "datasetSha256": art["datasetSha256"],
-        "fitRange": art["fitRange"], "calibRange": art["calibRange"], "hyperparameters": art["hyperparameters"],
-        "validation": {"method": "purged expanding-window walk-forward, 14 six-month folds", "range": [sel["firstTest"], sel["selectionEnd"]],
-                       "rows": sel["rows"], "r2VsNaive": ridge["r2VsNaive"], "mseVsPersist": ridge["mseVsPersist"],
-                       "foldsBeatingPersist": ridge["foldsBeatingPersist"], "folds": ridge["folds"],
-                       "interval80Coverage": ridge["interval80Coverage"], "persistR2": persist["r2VsNaive"]},
-        "holdout": {"range": [hold["holdoutStart"], hold["holdoutEnd"]], "rows": hold["rows"], "r2VsNaive": hold["r2VsNaive"],
-                    "mseVsPersist": hold["mseVsPersist"], "interval80Coverage": hold["interval80Coverage"]},
-        "limitations": [
-            "Forecasts the size of moves (volatility), NOT their direction.",
-            "Trained on 47 current Nifty-50 constituents (survivorship bias); behaviour on small caps is untested.",
-            "Log-scale intervals are calibrated on average; coverage can degrade in unprecedented regimes.",
-        ],
-    }, reg)
+    def vol_entry(version: str, status: str, sel_file: str, hold_file: str, extra: dict) -> dict:
+        path = ARTIFACTS / f"volatility-ridge-{version}.json"
+        art = json.loads(path.read_text(encoding="utf-8"))
+        sel = json.loads((REPORTS / sel_file).read_text(encoding="utf-8"))
+        hold = json.loads((REPORTS / hold_file).read_text(encoding="utf-8"))
+        ridge = next(r for r in sel["results"] if r["model"] == "ridge_all")
+        persist = next(r for r in sel["results"] if r["model"] == "persist_ols")
+        return {
+            "id": "volatility-ridge", "version": version, "task": "volatility_forecast", "status": status,
+            "artifact": f"lib/ml/artifacts/volatility-ridge-{version}.json", "artifactSha256": sha256_file(path),
+            "trainedAt": art["trainedAt"], "featureVersion": art["featureVersion"], "datasetSha256": art["datasetSha256"],
+            "fitRange": art["fitRange"], "calibRange": art["calibRange"], "hyperparameters": art["hyperparameters"],
+            "validation": {"method": "purged expanding-window walk-forward, 14 six-month folds", "range": [sel["firstTest"], sel["selectionEnd"]],
+                           "rows": sel["rows"], "r2VsNaive": ridge["r2VsNaive"], "mseVsPersist": ridge["mseVsPersist"],
+                           "foldsBeatingPersist": ridge["foldsBeatingPersist"], "folds": ridge["folds"],
+                           "interval80Coverage": ridge["interval80Coverage"], "persistR2": persist["r2VsNaive"],
+                           "ownVolMonotoneRate": ridge.get("ownVolMonotoneRate")},
+            "holdout": {"range": [hold["holdoutStart"], hold["holdoutEnd"]], "rows": hold["rows"], "r2VsNaive": hold["r2VsNaive"],
+                        "mseVsPersist": hold["mseVsPersist"], "interval80Coverage": hold["interval80Coverage"],
+                        "pristine": hold.get("holdoutPristine", True)},
+            "limitations": [
+                "Forecasts the size of moves (volatility), NOT their direction.",
+                "Trained on 47 current Nifty-50 constituents (survivorship bias); behaviour on small caps is untested.",
+                "Log-scale intervals are calibrated on average; coverage can degrade in unprecedented regimes.",
+            ], **extra,
+        }
+
+    register(vol_entry("1.0.0", "superseded", "volatility_v1.0.json", "volatility_holdout_v1.0.json", {
+        "supersededBy": "1.1.0",
+        "reason": "Specification defect: raw and log volatility features were collinear, so the forecast FELL when a stock's own "
+                  "volatility rose in 18 of 25 sampled cases. Fixed in 1.1.0 (log-only volatility features, monotonicity gate).",
+    }), reg)
+    register(vol_entry("1.1.0", "production", "volatility.json", "volatility_holdout.json", {
+        "notes": "Holdout 2025-10-01.. was first scored on v1.0.0; v1.1.0's holdout is a second look and is NOT pristine.",
+    }), reg)
 
     for rep_name, tgt in (("walkforward.json", "next-5-day return > 0"), ("walkforward_rel.json", "5-day return beats same-day median")):
         rep = json.loads((REPORTS / rep_name).read_text(encoding="utf-8"))

@@ -5,7 +5,7 @@
       "id": "volatility-ridge",
       "version": "1.0.0",
       "task": "volatility_forecast",
-      "status": "production",
+      "status": "superseded",
       "artifact": "lib/ml/artifacts/volatility-ridge-1.0.0.json",
       "artifactSha256": "a5832937739c37e6d5abe0cb01c1b1265545a8309e2fe24f7d79309bcbf4d3de",
       "trainedAt": "2026-10-14",
@@ -39,7 +39,8 @@
         "foldsBeatingPersist": 14,
         "folds": 14,
         "interval80Coverage": 0.7921067401398031,
-        "persistR2": 0.17492528022871634
+        "persistR2": 0.17492528022871634,
+        "ownVolMonotoneRate": null
       },
       "holdout": {
         "range": [
@@ -49,13 +50,16 @@
         "rows": 11656,
         "r2VsNaive": 0.2426179177399802,
         "mseVsPersist": -0.09758854925954819,
-        "interval80Coverage": 0.7964138641043239
+        "interval80Coverage": 0.7964138641043239,
+        "pristine": true
       },
       "limitations": [
         "Forecasts the size of moves (volatility), NOT their direction.",
         "Trained on 47 current Nifty-50 constituents (survivorship bias); behaviour on small caps is untested.",
         "Log-scale intervals are calibrated on average; coverage can degrade in unprecedented regimes."
-      ]
+      ],
+      "supersededBy": "1.1.0",
+      "reason": "Specification defect: raw and log volatility features were collinear, so the forecast FELL when a stock's own volatility rose in 18 of 25 sampled cases. Fixed in 1.1.0 (log-only volatility features, monotonicity gate)."
     },
     {
       "id": "direction-logistic_l2-abs",
@@ -254,6 +258,65 @@
         "netSharpe>benchmark": false
       },
       "reason": "Failed the pre-registered deployment gate: pooledAuc>=0.52, majorityFoldsAuc>0.5, brierSkill>0, rankIC>0&|t|>2, netSharpe>benchmark"
+    },
+    {
+      "id": "volatility-ridge",
+      "version": "1.1.0",
+      "task": "volatility_forecast",
+      "status": "production",
+      "artifact": "lib/ml/artifacts/volatility-ridge-1.1.0.json",
+      "artifactSha256": "a4bfd7c9e04104b2cd157ce3f0e184c40c830238f782625684414f7b56253637",
+      "trainedAt": "2026-10-14",
+      "featureVersion": "f1",
+      "datasetSha256": "5c4620a76eeb73c88207da2d2b1ab157f375646b85fd0a54cc0cbd90e1a80773",
+      "fitRange": [
+        "2011-01-03",
+        "2025-09-23"
+      ],
+      "calibRange": [
+        "2025-10-01",
+        "2026-10-01"
+      ],
+      "hyperparameters": {
+        "ridgeAlpha": 100.0,
+        "winsor": [
+          0.01,
+          0.99
+        ],
+        "calibrationDays": 365
+      },
+      "validation": {
+        "method": "purged expanding-window walk-forward, 14 six-month folds",
+        "range": [
+          "2019-01-01",
+          "2025-10-01"
+        ],
+        "rows": 78396,
+        "r2VsNaive": 0.2747080321207199,
+        "mseVsPersist": -0.120937836902413,
+        "foldsBeatingPersist": 14,
+        "folds": 14,
+        "interval80Coverage": 0.7925659472422062,
+        "persistR2": 0.17492528022871634,
+        "ownVolMonotoneRate": 1.0
+      },
+      "holdout": {
+        "range": [
+          "2025-10-01",
+          "2026-10-01"
+        ],
+        "rows": 11656,
+        "r2VsNaive": 0.24340352734837656,
+        "mseVsPersist": -0.09852459346106024,
+        "interval80Coverage": 0.7957275223061084,
+        "pristine": false
+      },
+      "limitations": [
+        "Forecasts the size of moves (volatility), NOT their direction.",
+        "Trained on 47 current Nifty-50 constituents (survivorship bias); behaviour on small caps is untested.",
+        "Log-scale intervals are calibrated on average; coverage can degrade in unprecedented regimes."
+      ],
+      "notes": "Holdout 2025-10-01.. was first scored on v1.0.0; v1.1.0's holdout is a second look and is NOT pristine."
     }
   ]
 }
