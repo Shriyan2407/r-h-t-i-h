@@ -24,8 +24,9 @@ Verdict from composite: ≥72 STRONG BUY · ≥60 BUY · ≥43 HOLD · ≥30 SEL
 described as confidence or accuracy.
 
 Unit tests (`tests/data/signal-strength.test.ts`) pin the signal-strength definition and
-the absence of any invented confidence. The weights and thresholds themselves are untested
-against outcomes.
+the absence of any invented confidence. The individual rules have since been **evaluated against outcomes** in the
+purged walk-forward study (`rule_*` rows in MODEL_EVALUATION.md): rank IC between -0.020 and 0.020, and "above EMA50 =
+bullish" is slightly negative. The rule scores are therefore labelled heuristics in the UI and are not predictive.
 
 ### Known limitations
 
@@ -34,23 +35,10 @@ against outcomes.
 - Indicators come from daily Yahoo data; there is no intraday model.
 - No transaction costs, slippage, sector adjustment or regime awareness.
 
-## 2. The research package (`backend/quant`, NOT in this repository, NOT deployed)
+## 2. The Python research package (retired)
 
-Design intentions visible in the source (not demonstrated results):
-
-- Features shifted one bar so a feature at T only uses data up to T−1.
-- Label = forward N-bar return **net of round-trip costs**, thresholded into {−1, 0, +1}.
-- Time-ordered train/validation/test split with a gap; a walk-forward validator;
-  XGBoost / LightGBM / Random Forest / LSTM / Transformer / RL and a stacking ensemble.
-- Metrics code for Sharpe, Sortino, drawdown, profit factor.
-
-Verified gaps:
-
-- **No data, trained model files or result tables exist** in the tree.
-- Its dependencies (xgboost, lightgbm, torch, …) are absent from `requirements.txt`.
-- The HTTP router (`api/routes/quant.py`) fails to import, references undefined names (`pd`,
-  `prepare_train_test_split`) in `/backtest`, and trains a model on every GET request.
-- Therefore **no performance claim can be made for it.**
+`backend/quant` (outside this repository, never deployed) is retired; see ARCHITECTURE.md. It had no data, trained
+models or results. The validated pipeline in `ml/` replaces it.
 
 ## 3. Evidence required before claiming any predictive ability
 
@@ -64,7 +52,18 @@ A model is only described as predictive after all of these exist and are reprodu
 5. Comparison against simple baselines (buy-and-hold, momentum, the rule score above).
 6. Confidence intervals / multiple-testing awareness (a strategy picked from many trials is overfit by default).
 
-Until then the product shows signal strength and "confidence unavailable".
+### Status against this bar
+
+| Requirement | Direction models | Volatility model |
+|---|---|---|
+| 1-2 Dataset, features, labels, leakage tests | done (ML_PIPELINE.md) | done |
+| 3 Walk-forward + untouched final period | done; holdout **not used** (no finalist) | done; holdout scored (second look for v1.1.0) |
+| 4 Metrics after costs | done | R², MSE, coverage (no trading metrics: it is not a trading signal) |
+| 5 Baselines | naive, buy-and-hold, rule scores | naive mean, persistence, HAR-style |
+| 6 Multiple testing | 6 models x 2 targets reported, none pass | selection rule pre-registered |
+| **Outcome** | **Rejected: not predictive** | **Deployed: volatility-ridge 1.1.0** |
+
+The product still shows signal strength for the rule score and never a direction probability.
 
 ## Backtest engine (`lib/backtest/`)
 
