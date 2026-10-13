@@ -24,6 +24,7 @@ export const POLICIES = {
   telegramWebhook: { name: "tgwh", limit: 300, windowSec: 60 },
   backtest: { name: "backtest", limit: 20, windowSec: 60 * 60 },
   mlRisk: { name: "mlrisk", limit: 60, windowSec: 60 * 60 },
+  portfolioRisk: { name: "pfrisk", limit: 20, windowSec: 60 * 60 },
 } as const satisfies Record<string, RateLimitPolicy>;
 
 /** Best-effort client IP. On Vercel `x-forwarded-for` is set by the platform edge. */
