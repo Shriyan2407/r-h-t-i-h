@@ -33,6 +33,9 @@ each theme. Hashes are for this local branch and will change if history is rewri
 - Causal backtest engine with costs, slippage, risk metrics and walk-forward validation; `POST /api/backtest` (no UI yet)
 - Ollama is opt-in via `OLLAMA_BASE_URL`; no more 3 s localhost probe on every uncached AI call
 
+## Observability / performance
+- Structured logger, in-process metrics, shared Upstash cache with hit-rate tracking; public `/api/health` (DB only) with secret-gated detail
+
 ## Database
 - Baseline migration and `1_auth_hardening` (role, sessionVersion, token hashes); verified on empty and populated databases; drift-checked in CI (`156c27f`, `76c7e36`)
 

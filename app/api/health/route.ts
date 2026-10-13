@@ -1,40 +1,62 @@
 import { NextResponse } from "next/server";
-import { cache } from "@/lib/services/cache";
+import YFClass from "yahoo-finance2";
+import { prisma } from "@/lib/auth/prisma";
+import { checkBearer } from "@/lib/security/secrets";
+import { deepHealth, publicHealth, type HealthProbes } from "@/lib/observability/health";
+import { cacheHitRate, snapshot } from "@/lib/observability/metrics";
+import { log } from "@/lib/observability/logger";
 
-export async function GET() {
-  const anthropicConfigured = !!(process.env.ANTHROPIC_API_KEY?.trim());
+export const dynamic = "force-dynamic";
 
-  let yahooStatus = "unknown";
-  try {
-    const yf = await import("yahoo-finance2");
-    const q  = await (yf.default as any).quote("^NSEI");
-    yahooStatus = q?.regularMarketPrice ? "ok" : "degraded";
-  } catch {
-    yahooStatus = "error";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const yf = new (YFClass as any)();
+
+const probes: HealthProbes = {
+  database: async () => {
+    await prisma.$queryRaw`SELECT 1`;
+  },
+  yahoo: async () => {
+    const q = await yf.quote("^NSEI");
+    return typeof q?.regularMarketPrice === "number";
+  },
+};
+
+const NO_STORE = { "Cache-Control": "no-store" };
+
+/**
+ * Public: liveness + database only (safe for uptime monitors; 503 when degraded).
+ * With `Authorization: Bearer $HEALTH_SECRET` (falls back to CRON_SECRET): dependency detail
+ * plus single-instance latency and cache hit-rate metrics.
+ */
+export async function GET(req: Request) {
+  const secret = process.env.HEALTH_SECRET?.trim() || process.env.CRON_SECRET?.trim();
+  const wantsDetail = req.headers.has("authorization");
+
+  if (wantsDetail) {
+    const auth = checkBearer(req, secret);
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status, headers: NO_STORE });
+
+    const health = await deepHealth(probes);
+    if (health.status !== "ok") log.warn("health.degraded", { checks: health.checks });
+    const m = snapshot();
+    return NextResponse.json(
+      {
+        ...health,
+        version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+        metrics: {
+          ...m,
+          cacheHitRate: {
+            intelligence: cacheHitRate("intelligence"),
+            "ai-analysis": cacheHitRate("ai-analysis"),
+            bars: cacheHitRate("bars"),
+          },
+        },
+      },
+      { status: health.status === "ok" ? 200 : 503, headers: NO_STORE },
+    );
   }
 
-  const stats = cache.stats();
-
-  return NextResponse.json({
-    status:   "ok",
-    ts:       new Date().toISOString(),
-    services: {
-      yahoo_finance: yahooStatus,
-      anthropic_api: anthropicConfigured ? "configured" : "not_configured",
-      cache:         `${stats.size} entries`,
-    },
-    routes: {
-      quote:        "/api/stocks/[ticker]/quote",
-      candles:      "/api/stocks/[ticker]/candles",
-      technicals:   "/api/technicals/[ticker]",
-      intelligence: "/api/intelligence/[ticker]",
-      news:         "/api/news/[ticker]",
-      sentiment:    "/api/sentiment/[ticker]",
-      market:       "/api/market/indices",
-    },
-    env: {
-      node: process.version,
-      next: process.env.npm_package_version ?? "unknown",
-    },
-  });
+  const health = await publicHealth(probes);
+  if (health.status !== "ok") log.error("health.database_down", {});
+  return NextResponse.json(health, { status: health.status === "ok" ? 200 : 503, headers: NO_STORE });
 }

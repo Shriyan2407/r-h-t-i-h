@@ -16,6 +16,8 @@ export const authConfig: NextAuthConfig = {
       // Always allow NextAuth's own API routes and Telegram webhook
       if (pathname.startsWith("/api/auth")) return true;
       if (pathname.startsWith("/api/telegram/webhook")) return true;
+      // Health: public liveness; detail inside the handler requires a bearer secret
+      if (pathname === "/api/health") return true;
       // Cron endpoints — authenticated via CRON_SECRET header, not session
       if (pathname.startsWith("/api/cron/")) return true;
 

@@ -17,7 +17,8 @@ secure production deployment:
 | `RESEND_API_KEY`, `EMAIL_FROM` | Verification + reset email. **Without them signup and reset fail in production** (by design) |
 | `CRON_SECRET` | Vercel Cron sends it as `Authorization: Bearer …`. Unset → cron endpoints return 503 |
 | `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` | Telegram alerts. Unset webhook secret → webhook returns 503 |
-| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared rate limits (recommended) |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared rate limits and shared cache (recommended; without them both are per-instance) |
+| `HEALTH_SECRET` (optional) | Bearer secret for detailed `/api/health`; falls back to `CRON_SECRET`. Point uptime monitors at the public `/api/health` |
 
 ## 2. Database migrations
 

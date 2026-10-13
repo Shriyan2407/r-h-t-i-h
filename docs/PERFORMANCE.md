@@ -17,7 +17,7 @@ the code and the production build, plus changes already made. Measure before opt
 
 | Issue | Evidence | Plan |
 |---|---|---|
-| In-memory cache is per serverless instance | `lib/services/cache.ts` Map | Shared Redis/Upstash cache for AI results, news and quotes |
+| ~~In-memory cache per instance~~ | Intelligence, AI analysis and backtest bars now use `lib/cache/shared.ts` (Upstash when configured) | **Still in-memory** for news, sentiment, history, technicals, fundamentals, macro, and when Upstash env vars are unset |
 | LLM call is synchronous in the request path (up to 60 s `maxDuration`) | `app/api/ai-analysis`, `intelligence` | Queue the job, stream or poll |
 | Sequential Yahoo fallbacks (`.NS` → `.BO` → bare) per request | `intelligenceEngine`, `quote` route | Resolve the symbol once, cache the mapping |
 | Very large single-file client pages (e.g. `portfolio/page.tsx` ≈ 95 KB) | file sizes | Split by feature, lazy-load heavy panels (charts, OCR, portfolio analytics) |
@@ -30,3 +30,10 @@ the code and the production build, plus changes already made. Measure before opt
 
 LCP < 2.5 s on 4G for `/` and `/stock/[ticker]`; API p95 < 500 ms for cached data; AI endpoint
 cache-hit rate > 80 %; first-load JS per route tracked in CI.
+
+## Observability (what exists)
+
+- `lib/observability/logger.ts`: JSON log lines with secret redaction and `LOG_LEVEL`. Adopted only in new code (cache, health); ~50 older `console.*` calls remain.
+- `lib/observability/metrics.ts`: latency (avg/p50/p95/max/errors) and cache hit/miss counters. **Per serverless instance, reset on cold start**; shown only on the authenticated `/api/health`. Not fleet-wide SLO data.
+- Timed: intelligence and AI-analysis generation. Not yet timed: API routes generally, Yahoo calls, LLM calls individually.
+- **Not built:** error tracking (e.g. Sentry), uptime monitor configuration, tracing, a metrics backend.

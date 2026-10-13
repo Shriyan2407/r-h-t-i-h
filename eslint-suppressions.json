@@ -30,11 +30,6 @@
       "count": 2
     }
   },
-  "app/api/health/route.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "app/api/history/[ticker]/route.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 6
