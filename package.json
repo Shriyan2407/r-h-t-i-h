@@ -16,7 +16,8 @@
     "lint:prune": "eslint . --prune-suppressions",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "ml:download": "tsx ml/download.ts",
-    "ml:dataset": "tsx ml/build-dataset.ts"
+    "ml:dataset": "tsx ml/build-dataset.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
@@ -60,6 +61,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.19.2",
     "@types/papaparse": "^5.5.2",
