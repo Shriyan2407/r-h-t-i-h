@@ -57,6 +57,7 @@ export function Navbar() {
     { label: "News",         href: "/news",        icon: Newspaper  },
     { label: "Portfolio",    href: "/portfolio",   icon: PieChart   },
     { label: "Backtest",     href: "/backtest",    icon: Activity   },
+    { label: "Models",       href: "/models",      icon: Target     },
     { label: "Watchlist",    href: "/watchlist",   icon: Star       },
     { label: "Alerts",       href: "/alerts",      icon: Bell       },
   ];
