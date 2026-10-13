@@ -1,0 +1,87 @@
+{
+  "index": "^NSEI",
+  "vix": "^INDIAVIX",
+  "trendRule": "close > SMA(200)",
+  "vixLowCutoff": 14.59000015258789,
+  "vixHighCutoff": 20.99599990844727,
+  "cutoffQuantiles": [
+    0.33,
+    0.8
+  ],
+  "cutoffsFitUntil": "2025-10-01",
+  "sampleRange": [
+    "2010-10-19",
+    "2026-10-05"
+  ],
+  "names": {
+    "UP|LOW": "Calm uptrend",
+    "UP|NORMAL": "Uptrend",
+    "UP|HIGH": "Volatile uptrend",
+    "DOWN|LOW": "Quiet downtrend",
+    "DOWN|NORMAL": "Downtrend",
+    "DOWN|HIGH": "Market stress"
+  },
+  "historical": [
+    {
+      "regime": "Calm uptrend",
+      "trend": "UP",
+      "vol": "LOW",
+      "days": 1242,
+      "share": 0.3171603677221655,
+      "meanFwd5dVol": 0.0061659360416094315,
+      "meanFwd5dReturn": 0.001164555206299812,
+      "pFwd5dDrawdownOver3pct": 0.04911433172302738
+    },
+    {
+      "regime": "Quiet downtrend",
+      "trend": "DOWN",
+      "vol": "LOW",
+      "days": 143,
+      "share": 0.03651685393258427,
+      "meanFwd5dVol": 0.0076865773048519735,
+      "meanFwd5dReturn": -0.0028272246884042227,
+      "pFwd5dDrawdownOver3pct": 0.07692307692307693
+    },
+    {
+      "regime": "Uptrend",
+      "trend": "UP",
+      "vol": "NORMAL",
+      "days": 1251,
+      "share": 0.3194586312563841,
+      "meanFwd5dVol": 0.00837141170492529,
+      "meanFwd5dReturn": 0.0002501868670362249,
+      "pFwd5dDrawdownOver3pct": 0.1135091926458833
+    },
+    {
+      "regime": "Downtrend",
+      "trend": "DOWN",
+      "vol": "NORMAL",
+      "days": 529,
+      "share": 0.13508682328907048,
+      "meanFwd5dVol": 0.009374800465512114,
+      "meanFwd5dReturn": 0.0031401491251122873,
+      "pFwd5dDrawdownOver3pct": 0.10586011342155009
+    },
+    {
+      "regime": "Volatile uptrend",
+      "trend": "UP",
+      "vol": "HIGH",
+      "days": 339,
+      "share": 0.08656792645556691,
+      "meanFwd5dVol": 0.01089629626319529,
+      "meanFwd5dReturn": 0.006801710311473339,
+      "pFwd5dDrawdownOver3pct": 0.12389380530973451
+    },
+    {
+      "regime": "Market stress",
+      "trend": "DOWN",
+      "vol": "HIGH",
+      "days": 412,
+      "share": 0.10520939734422881,
+      "meanFwd5dVol": 0.01620565648171081,
+      "meanFwd5dReturn": 0.005618968650220486,
+      "pFwd5dDrawdownOver3pct": 0.23786407766990292
+    }
+  ],
+  "note": "Descriptive statistics over 2011-2026 (index only). Volatility separation is the intended use; mean returns are not a signal."
+}
