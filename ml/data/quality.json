@@ -1,0 +1,472 @@
+{
+  "ADANIENT": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 4,
+    "adjFactorChangesOver1pct": 6,
+    "usableBars": 4140
+  },
+  "ADANIPORTS": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 6,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 1,
+    "usableBars": 4140
+  },
+  "APOLLOHOSP": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 0,
+    "usableBars": 4140
+  },
+  "ASIANPAINT": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 0,
+    "usableBars": 4140
+  },
+  "AXISBANK": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 1,
+    "adjFactorChangesOver1pct": 5,
+    "usableBars": 4140
+  },
+  "BAJAJ-AUTO": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 5,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 16,
+    "usableBars": 4140
+  },
+  "BAJAJFINSV": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 5,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 1,
+    "adjFactorChangesOver1pct": 0,
+    "usableBars": 4140
+  },
+  "BAJFINANCE": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 4,
+    "usableBars": 4140
+  },
+  "BHARTIARTL": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 1,
+    "usableBars": 4140
+  },
+  "BPCL": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 28,
+    "usableBars": 4140
+  },
+  "BRITANNIA": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 11,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 13,
+    "usableBars": 4140
+  },
+  "CIPLA": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 2,
+    "usableBars": 4140
+  },
+  "COALINDIA": {
+    "rawRows": 3929,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 32,
+    "usableBars": 3929
+  },
+  "DIVISLAB": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 8,
+    "usableBars": 4140
+  },
+  "DRREDDY": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 0,
+    "usableBars": 4140
+  },
+  "EICHERMOT": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 6,
+    "usableBars": 4140
+  },
+  "GRASIM": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 3,
+    "usableBars": 4140
+  },
+  "HCLTECH": {
+    "rawRows": 4141,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 16,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 10,
+    "usableBars": 4141
+  },
+  "HDFCBANK": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 5,
+    "usableBars": 4140
+  },
+  "HDFCLIFE": {
+    "rawRows": 2197,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 2,
+    "gapsOver5Days": 0,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 0,
+    "usableBars": 2197
+  },
+  "HEROMOTOCO": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 27,
+    "usableBars": 4140
+  },
+  "HINDALCO": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 4,
+    "usableBars": 4140
+  },
+  "HINDUNILVR": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 11,
+    "usableBars": 4140
+  },
+  "ICICIBANK": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 8,
+    "usableBars": 4140
+  },
+  "INDUSINDBK": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 2,
+    "adjFactorChangesOver1pct": 2,
+    "usableBars": 4140
+  },
+  "INFY": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 25,
+    "usableBars": 4140
+  },
+  "ITC": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 3,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 23,
+    "usableBars": 4140
+  },
+  "JSWSTEEL": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 11,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 9,
+    "usableBars": 4140
+  },
+  "KOTAKBANK": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 0,
+    "usableBars": 4140
+  },
+  "LT": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 13,
+    "usableBars": 4140
+  },
+  "M&M": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 5,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 10,
+    "usableBars": 4140
+  },
+  "MARUTI": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 5,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 4,
+    "usableBars": 4140
+  },
+  "NESTLEIND": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 8,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 1,
+    "adjFactorChangesOver1pct": 1,
+    "usableBars": 4140
+  },
+  "NTPC": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 25,
+    "usableBars": 4140
+  },
+  "ONGC": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 30,
+    "usableBars": 4140
+  },
+  "POWERGRID": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 27,
+    "usableBars": 4140
+  },
+  "RELIANCE": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 4,
+    "usableBars": 4140
+  },
+  "SBILIFE": {
+    "rawRows": 2229,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 2,
+    "gapsOver5Days": 0,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 0,
+    "usableBars": 2229
+  },
+  "SBIN": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 1,
+    "adjFactorChangesOver1pct": 10,
+    "usableBars": 4140
+  },
+  "SUNPHARMA": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 0,
+    "usableBars": 4140
+  },
+  "TATACONSUM": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 11,
+    "usableBars": 4140
+  },
+  "TATASTEEL": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 17,
+    "usableBars": 4140
+  },
+  "TCS": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 10,
+    "usableBars": 4140
+  },
+  "TECHM": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 16,
+    "usableBars": 4140
+  },
+  "TITAN": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 0,
+    "usableBars": 4140
+  },
+  "ULTRACEMCO": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 1,
+    "usableBars": 4140
+  },
+  "WIPRO": {
+    "rawRows": 4140,
+    "duplicateDates": 0,
+    "nonMonotonic": 0,
+    "zeroVolumeDays": 4,
+    "gapsOver5Days": 1,
+    "absReturnOver25pct": 0,
+    "adjFactorChangesOver1pct": 7,
+    "usableBars": 4140
+  }
+}

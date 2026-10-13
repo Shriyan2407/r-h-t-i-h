@@ -1,0 +1,304 @@
+{
+  "downloadedAt": "2026-10-13T18:30:57.316Z",
+  "start": "2010-01-01",
+  "source": "yahoo-finance2 chart (1d, adjclose)",
+  "files": {
+    "_INDEX": {
+      "rows": 4120,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "f59b0aa1be8df4ee6c5b2d3f7f34d98b86d124da01331892a1cea701f2192fac"
+    },
+    "_VIX": {
+      "rows": 4119,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "7eb3d16bbb239a7bffc4fdadd1bae520bcddb1264f1afd798aea56ae8028d668"
+    },
+    "RELIANCE": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "c5ddca3714bf90303ce345a83632342ae06d260cff41ef9a7bffbfe7b2877dbe"
+    },
+    "TCS": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "905401c7ed3c52b6dc83795b46901c4d9c9fa8988d91a68c8d36c7baca32061e"
+    },
+    "HDFCBANK": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "f56a230eedfbaacb9311127b3e58b5cfbb30f9df1da544b09f27372d60ed83c0"
+    },
+    "INFY": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "c2851cea78c34b9242d986cd49ba4935c9006bd2d2ca69e27d3a2108899be54d"
+    },
+    "ICICIBANK": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "6a34fc47f3ffc7a0b487922e843a1dd4c373838f876b382ea11addaa1dcd2f53"
+    },
+    "HINDUNILVR": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "5a80ac4ca6b5f0d1cd2099bcfa007890417fdb6264faf80acfe99be9409c12bd"
+    },
+    "ITC": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "94b2821845c6d6931c7488f9a293b9218964fac7274e855a984c9fa25857df27"
+    },
+    "SBIN": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "e379e9248bf3e76572b66e2f9c2a5b334a1f776f5281774cdb60085ad116485c"
+    },
+    "BHARTIARTL": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "13baf56492918361b5bac109fd3f43e7c9b73edf548eae58f9aa93bea559f1f4"
+    },
+    "KOTAKBANK": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "d23d2b54add50dcd1e5c7621462c3eee30c97036376f0fd1ce48bc5b9740441b"
+    },
+    "LT": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "8aeac8dc0b2f287edea43008a297a42f81b20c52ca7a03b94f656ee09ddd4aeb"
+    },
+    "AXISBANK": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "0f20efa94017e723b04ae6395a88b23d839f7b0dbff7790ef65d8374a5f8be52"
+    },
+    "ASIANPAINT": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "0bd149bdef725bdbeefcbe378b8da21313ba4046ba813366be36471bd740f0fd"
+    },
+    "MARUTI": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "46af1b7df5a234eecb57215f5e6a8bbeefe0acf2c2cac225a88b7da2811ba866"
+    },
+    "SUNPHARMA": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "7bfca4126f1aa8230701b6c4ab9a479b69f63708aab0ce051f76cdb17c2e3d65"
+    },
+    "TITAN": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "616375509775556701d9d084c15cc133b1c4cd6026d6f3bfa18ccae19394ceff"
+    },
+    "ULTRACEMCO": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "5be699ce5a8857b4f76ae14def9b9a7848ebf823475358603d5454b1cf0ad29f"
+    },
+    "BAJFINANCE": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "708204781db27fe3a2645496d74f994acfb0694b97481b2345bdb57415a070f1"
+    },
+    "NESTLEIND": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "fb7271311732e7b143fa3df2e5f5d63559bbe702da30a6134d3da85e191e0b18"
+    },
+    "WIPRO": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "891798b48e36d0ba9e2880f1cfe74193ac5d02664199817a79b13f9e710f23e8"
+    },
+    "HCLTECH": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "ec95c6329533a5d494a1205d5a505ca2a6f26f859067d28828fa5ef97cd43928"
+    },
+    "POWERGRID": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "57ac28013eb7690d69dbd6ae8d34c56e804f5996786a167528ac740b1ba4d633"
+    },
+    "NTPC": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "7f226454d3ee7d41de0bd57d24fe77e7664cfb109487a19a6e91af376ffdf717"
+    },
+    "ONGC": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "efd3ea9cf4e4692100c4b93c3688ff92d8f18ed50071f868000ed241b9f0b6db"
+    },
+    "JSWSTEEL": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "fca44f4643c1ed97dbcaf888dfc54bf4b16181e727555cf41aeef40307a15349"
+    },
+    "TATASTEEL": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "99fbf12315e55c659313bfda37570be4cc54222310e37c1955d571987f502236"
+    },
+    "M&M": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "cc8c5644f8f973a5cf7b2632cb2dd4f26e1abc03c21b73eaf184fe1a9222ee11"
+    },
+    "ADANIENT": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "295decb58052c40604e05f6454acd38b5adcb321e6024187e3fd5e54be454d6c"
+    },
+    "ADANIPORTS": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "6fd6ac86ad8840274b49f427d478c787307fe4488266586e97bcd781dfd7d85c"
+    },
+    "COALINDIA": {
+      "rows": 3929,
+      "first": "2010-11-04",
+      "last": "2026-10-09",
+      "sha256": "14517c0602be894b6a24b2d07b73fe8ff67acd1e7cb2fbecce0e4d1b21871abe"
+    },
+    "BAJAJFINSV": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "d171cb4a9f077fbdc615e01a6a70d9b78321b13a2302718dcb22878670a7442a"
+    },
+    "TECHM": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "2e0ce0c793321c8b24e1b02fd82b59fff63c0ad74e8b0636a421bd0ec62dfcef"
+    },
+    "INDUSINDBK": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "ca5166bbd8ab33b2390f7d504e5fce31437c2f9ca66567194cd11a5601ca37c2"
+    },
+    "DRREDDY": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "a09862e736e94598996c0b727501608de1e629709da5e556a825e052097849f9"
+    },
+    "CIPLA": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "0cfe86a47c7b415bd08ea189656ac16842db88aa4152962dadf8a26a537cc948"
+    },
+    "EICHERMOT": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "abdc7633e06bd55112a35442fee5b89be14f379714fe6a2d3ca3ada5aacaf5cc"
+    },
+    "GRASIM": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "9fca42efab58ec7395573559adf22f5b6f2e35016fa5c5a512188d92289bfc94"
+    },
+    "HEROMOTOCO": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "3befad69dc8c88af8aca0b6f6c38dd742cb2e70b8bcdef722b57fa4c1e1315d8"
+    },
+    "BRITANNIA": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "f4ddde23a0b28ee5f1b9b0bf418a48a13f8f3f1a1732c0ec98730eabdcc3a1bc"
+    },
+    "DIVISLAB": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "dd2764a381d14a11740c70bd9682b6f267d850b5249cca46450f11bf86ddc8a3"
+    },
+    "APOLLOHOSP": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "171efc810ccdfad994bf2a41ecac74b1ee2ef7beeab426550498f8f1aa9e8db0"
+    },
+    "BPCL": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "6ef0df4615dff798ddcebc5624ec9db3848eb766504e9a2b15e03bd1d8a357b1"
+    },
+    "HINDALCO": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "45fcf32e9586bdcc7435eafc441b1789ef3205c958d2afb047ebf334e5463443"
+    },
+    "TATACONSUM": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "c0c8ce043927ed49b7694bc3ff116f00692ef13b72bcea88fe5cb86f18669366"
+    },
+    "SBILIFE": {
+      "rows": 2229,
+      "first": "2017-10-03",
+      "last": "2026-10-09",
+      "sha256": "295d8a3d3c587cd603415ad8f2203729a045bd7cdbe12c556e8fde9c01ff9ff6"
+    },
+    "HDFCLIFE": {
+      "rows": 2197,
+      "first": "2017-11-17",
+      "last": "2026-10-09",
+      "sha256": "67815e878437bbe962f275334ce1e560189f5b652e7d3104c493c8c830a9e055"
+    },
+    "BAJAJ-AUTO": {
+      "rows": 4140,
+      "first": "2010-01-04",
+      "last": "2026-10-09",
+      "sha256": "09cfaf82b46fd875eb054b89b2bddcf46cf1de8a2302431b6f106ccee851d25a"
+    }
+  },
+  "failed": {
+    "TATAMOTORS": "No data found, symbol may be delisted"
+  }
+}
