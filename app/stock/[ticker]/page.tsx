@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   Globe,
   AlertCircle,
+  Gauge,
 } from "lucide-react";
 import Link from "next/link";
 import { Navbar }           from "@/components/Navbar";
@@ -21,6 +22,7 @@ import { FundamentalsPanel} from "@/components/analysis/FundamentalsPanel";
 import { AIResearchPanel }  from "@/components/analysis/AIResearchPanel";
 import { MacroPanel }       from "@/components/analysis/MacroPanel";
 import { NewsPanel }        from "@/components/analysis/NewsPanel";
+import { RiskIntelligencePanel } from "@/components/analysis/RiskIntelligencePanel";
 import { RelatedIntelligence } from "@/components/RelatedIntelligence";
 import { VerdictBadge }     from "@/components/ui/VerdictBadge";
 import { Badge }            from "@/components/ui/Badge";
@@ -42,6 +44,7 @@ import { cn } from "@/lib/utils";
 
 const TABS: { id: AnalysisTab; label: string; icon: React.ElementType }[] = [
   { id: "ai-report",     label: "AI Report",     icon: Brain      },
+  { id: "risk",          label: "Risk Model",    icon: Gauge      },
   { id: "overview",      label: "Overview",      icon: BarChart2  },
   { id: "technical",     label: "Technical",     icon: Activity   },
   { id: "fundamentals",  label: "Fundamentals",  icon: BookOpen   },
@@ -476,6 +479,10 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                   <MacroPanel ticker={upperTicker} />
                 )}
 
+                {activeTab === "risk" && (
+                  <div className="p-4"><RiskIntelligencePanel ticker={upperTicker} /></div>
+                )}
+
                 {activeTab === "news" && (
                   <NewsPanel
                     news={news}
@@ -569,6 +576,7 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                 {activeTab === "fundamentals" && fundamentals && <FundamentalsPanel data={fundamentals} redFlags={aiAnalysis?.fundamentals.red_flags} summary={aiAnalysis?.fundamentals.summary} strengths={aiAnalysis?.fundamentals.strengths} />}
                 {activeTab === "news" && <NewsPanel news={news} sentimentSummary={aiAnalysis?.sentiment.noise_filtered_summary} overallSentiment={aiAnalysis?.sentiment.overall} />}
                 {activeTab === "ai-report" && aiAnalysis && <AIResearchPanel analysis={aiAnalysis} />}
+                {activeTab === "risk" && <RiskIntelligencePanel ticker={upperTicker} />}
               </>
             )}
           </div>

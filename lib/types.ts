@@ -333,7 +333,7 @@ export interface MarketBreadth {
 // ─── UI State Types ───────────────────────────────────────────────────────────
 
 export type ChartInterval = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "MAX";
-export type AnalysisTab = "overview" | "technical" | "fundamentals" | "macro" | "news" | "ai-report";
+export type AnalysisTab = "overview" | "technical" | "fundamentals" | "macro" | "news" | "ai-report" | "risk";
 
 export interface TickerItem {
   ticker: string;
