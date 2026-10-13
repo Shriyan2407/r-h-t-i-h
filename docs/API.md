@@ -44,6 +44,10 @@ otherwise `400 INVALID_TICKER`.
 | `/api/ai-analysis/[ticker]` | GET | Verdict + narrative | 15/h per user on cache misses |
 | `/api/intelligence/[ticker]` · `/intelligence/stream/[ticker]` | GET | Full report / SSE stream | 20/h per user on cache misses; stream always counts |
 | `/api/backtest` | POST | `{ticker, strategy, years?, initialCapital?, feeBps?, slippageBps?}` -> `BACKTEST_RESULT` (equity curve, benchmark, trades, metrics, assumptions) | session required; 20/h per user; strategies: `buy_and_hold`, `sma_crossover`, `rsi_mean_reversion`; 1-10 years of daily bars; used by the `/backtest` page |
+| `/api/ml/risk/[ticker]` | GET | `risk-forecast/1` contract: 5-day volatility forecast + 80% range, regime, factor contributions, evidence, model card, disclaimers; `direction.available` is always false. `?explain=llm` asks Claude to reword the evidence (guarded) | session; 60/h per user; 503 `MARKET_DATA_UNAVAILABLE`, 404 `NO_DATA`, 422 `INSUFFICIENT_HISTORY`/`INCOMPLETE_FEATURES`; `x-request-id` header |
+| `/api/ml/evaluation` | GET | Registry plus recorded walk-forward results for every model, including rejected ones | session |
+| `/api/backtest/walk-forward` | POST | `{ticker, years?, trainBars?, testBars?, initialCapital?, feeBps?, slippageBps?}` -> per-fold rule choice and chained out-of-sample equity vs buy-and-hold | session; shares the backtest limit (20/h) |
+| `/api/portfolio/risk` | GET | Risk analytics, stress scenarios and model-based forward volatility for the saved holdings; `{empty:true}` when there are none | session; 20/h per user; logs counts only |
 | `/api/health` | GET | **Public**: `{status, ts, checks:{database}}`, 503 when degraded. With `Authorization: Bearer $HEALTH_SECRET` (or `CRON_SECRET`): adds market-data/AI/cache/rate-limit config status, version and single-instance latency + cache hit-rate metrics | detail fails closed (503) if no secret is configured |
 
 ## Admin
