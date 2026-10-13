@@ -31,6 +31,10 @@ import {
 } from "@/components/PortfolioIntelligence";
 import type { EnrichedSectorData } from "@/components/PortfolioIntelligence";
 import { classifyTicker, getSectorRiskLevel } from "@/lib/sectorMap";
+import dynamic from "next/dynamic";
+
+// Loaded on demand: the risk view is only needed once the user asks for an analysis.
+const PortfolioRiskPanel = dynamic(() => import("@/components/portfolio/PortfolioRiskPanel"), { ssr: false });
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TYPES
@@ -1177,6 +1181,7 @@ export default function PortfolioPage() {
 
       {/* ── Main Layout ───────────────────────────────────────────────── */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4">
+        {!isEmpty && <PortfolioRiskPanel />}
 
         {isEmpty ? (
           /* ── Empty state ── */
