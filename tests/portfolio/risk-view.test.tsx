@@ -31,7 +31,8 @@ describe("PortfolioRiskView", async () => {
   });
 
   it("states conventions, the forecast method and that it is not advice", () => {
-    for (const c of res.report.conventions) expect(html).toContain(c.replace(/'/g, "&#x27;"));
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/'/g, "&#x27;");
+    for (const c of res.report.conventions) expect(html).toContain(esc(c));
     expect(html).toContain("Not investment advice");
   });
 
