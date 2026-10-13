@@ -24,6 +24,11 @@ export interface DatasetRow {
   features: number[];
   /** Realised gross return of the 5-day hold (entry open t+1, exit close t+5). Not a feature. */
   fwdRet: number;
+  /**
+   * Realised volatility over the label window: sqrt(mean(r^2)) of the 5 daily close-to-close
+   * returns t+1..t+5. Target of the volatility model. Not a feature.
+   */
+  fwdRv5: number;
   label: 0 | 1;
 }
 
@@ -36,24 +41,28 @@ export function buildDatasetRows(ticker: string, stock: readonly Bar[], index: r
     const exit = stock[t + HORIZON].close;
     if (!(entry > 0) || !(exit > 0)) continue;
     const fwdRet = exit / entry - 1;
+    let sq = 0;
+    for (let k = 1; k <= HORIZON; k++) sq += (stock[t + k].close / stock[t + k - 1].close - 1) ** 2;
+    const fwdRv5 = Math.sqrt(sq / HORIZON);
     out.push({
       ticker,
       date: dates[t],
       exitDate: dates[t + HORIZON],
       features: Array.from(rows[t]),
       fwdRet,
+      fwdRv5,
       label: fwdRet > 0 ? 1 : 0,
     });
   }
   return out;
 }
 
-export const CSV_HEADER = ["ticker", "date", "exit_date", ...FEATURE_NAMES, "fwd_ret", "label"];
+export const CSV_HEADER = ["ticker", "date", "exit_date", ...FEATURE_NAMES, "fwd_ret", "fwd_rv5", "label"];
 
 export function rowsToCsv(rows: readonly DatasetRow[]): string {
   const lines = [CSV_HEADER.join(",")];
   for (const r of rows) {
-    lines.push([r.ticker, r.date, r.exitDate, ...r.features.map((v) => v.toPrecision(10)), r.fwdRet.toPrecision(10), r.label].join(","));
+    lines.push([r.ticker, r.date, r.exitDate, ...r.features.map((v) => v.toPrecision(10)), r.fwdRet.toPrecision(10), r.fwdRv5.toPrecision(10), r.label].join(","));
   }
   return lines.join("\n") + "\n";
 }
@@ -99,6 +108,7 @@ export function validateDataset(rows: readonly DatasetRow[]): string[] {
     if (!(r.exitDate > r.date)) problems.push(`exitDate not after date for ${key}`);
     if (r.features.length !== FEATURE_NAMES.length) problems.push(`wrong feature count for ${key}`);
     if (r.features.some((v) => !Number.isFinite(v))) problems.push(`non-finite feature for ${key}`);
+    if (!(r.fwdRv5 >= 0) || !Number.isFinite(r.fwdRv5)) problems.push(`invalid fwdRv5 for ${key}`);
     if (r.label !== (r.fwdRet > 0 ? 1 : 0)) problems.push(`label inconsistent with fwdRet for ${key}`);
   }
   return problems;

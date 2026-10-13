@@ -39,7 +39,7 @@
   "firstDate": "2011-01-03",
   "lastDate": "2026-10-01",
   "positiveRate": 0.5188308195692611,
-  "csvSha256": "ab7eefb19164a19d02d0678b5599a4218f57b69797423594e67e8c43de1e90da",
-  "columns": 35,
+  "csvSha256": "5c4620a76eeb73c88207da2d2b1ab157f375646b85fd0a54cc0cbd90e1a80773",
+  "columns": 36,
   "builtFrom": "ml/data/manifest.json"
 }

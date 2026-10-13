@@ -145,6 +145,14 @@ describe("dataset labels", () => {
     expect(r.fwdRet).toBeCloseTo(stock[t + HORIZON].close / stock[t + 1].open - 1, 12);
   });
 
+  it("fwdRv5 is the RMS of the five daily returns after t (and only those)", () => {
+    const r = rows[20];
+    const t = stock.findIndex((b) => b.date === r.date);
+    let sq = 0;
+    for (let k = 1; k <= HORIZON; k++) sq += (stock[t + k].close / stock[t + k - 1].close - 1) ** 2;
+    expect(r.fwdRv5).toBeCloseTo(Math.sqrt(sq / HORIZON), 12);
+  });
+
   it("never labels the final HORIZON bars (no future available)", () => {
     const last = rows[rows.length - 1];
     const t = stock.findIndex((b) => b.date === last.date);
