@@ -61,7 +61,7 @@ def holdout() -> dict:
         # v1.0.0 was scored on this same holdout before the v1.1 specification fix, so this is a SECOND look.
         "holdoutPristine": False,
     }
-    out.write_text(json.dumps(rep, indent=2), encoding="utf-8")
+    out.write_text(json.dumps(rep, indent=2), encoding="utf-8", newline="\n")
     return rep
 
 
@@ -85,7 +85,7 @@ def export() -> dict:
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     path = ARTIFACTS / f"{MODEL_ID}-{VERSION}.json"
     body = json.dumps(art, indent=2)
-    path.write_text(body, encoding="utf-8")
+    path.write_text(body, encoding="utf-8", newline="\n")
     art["_sha256"] = hashlib.sha256(body.encode("utf-8")).hexdigest()
     return art
 
@@ -103,7 +103,7 @@ def parity(n: int = 25) -> dict:
         {"ticker": r.ticker, "date": str(r.date.date()), "features": [float(r[f]) for f in FEATURES], "expectedLogRv5": float(p)}
         for (_, r), p in zip(pick.iterrows(), pred)]}
     (ROOT / "tests" / "ml" / "fixtures").mkdir(parents=True, exist_ok=True)
-    (ROOT / "tests" / "ml" / "fixtures" / "volatility-parity.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
+    (ROOT / "tests" / "ml" / "fixtures" / "volatility-parity.json").write_text(json.dumps(out, indent=1), encoding="utf-8", newline="\n")
     return out
 
 

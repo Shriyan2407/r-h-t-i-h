@@ -76,8 +76,9 @@ describe("volatility prediction semantics", () => {
 describe("model registry integrity", () => {
   it("production artifact hash matches the file on disk (no silent replacement)", () => {
     const entry = registry.models.find((m) => m.status === "production")!;
-    const body = readFileSync(join(process.cwd(), entry.artifact as string));
-    expect(createHash("sha256").update(body).digest("hex")).toBe(entry.artifactSha256);
+    // Canonical hash (LF line endings), matching ml/train/registry.py, so Windows and Linux checkouts agree.
+    const body = readFileSync(join(process.cwd(), entry.artifact as string), "utf8").replace(/\r\n/g, "\n");
+    expect(createHash("sha256").update(body, "utf8").digest("hex")).toBe(entry.artifactSha256);
   });
 
   it("keeps the defective v1.0.0 on record as superseded, with the reason", () => {

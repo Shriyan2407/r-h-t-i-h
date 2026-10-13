@@ -45,7 +45,7 @@ if __name__ == "__main__":
         p = REPORTS / name
         if p.exists():
             out[name] = evaluate(p)
-    (REPORTS / "eligibility.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
+    (REPORTS / "eligibility.json").write_text(json.dumps(out, indent=2), encoding="utf-8", newline="\n")
     for name, decisions in out.items():
         print(name)
         for d in decisions:

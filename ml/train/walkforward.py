@@ -107,7 +107,7 @@ def run(first_test: str = FIRST_TEST, end: str = HOLDOUT_START, months: int = 6,
     }
     OUT.mkdir(parents=True, exist_ok=True)
     path = OUT / ("walkforward.json" if target == "abs" else f"walkforward_{target}.json")
-    path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    path.write_text(json.dumps(report, indent=2), encoding="utf-8", newline="\n")
     if verbose:
         print(f"\nwrote {path}")
     return report

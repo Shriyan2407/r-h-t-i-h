@@ -21,7 +21,8 @@ def load() -> dict:
 
 
 def sha256_file(p) -> str:
-    return hashlib.sha256(p.read_bytes()).hexdigest()
+    """Canonical hash: line endings normalised to LF so Windows and Linux checkouts agree."""
+    return hashlib.sha256(p.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def register(entry: dict, reg: dict) -> None:
@@ -90,7 +91,7 @@ def sync() -> dict:
                 "gate": e["checks"], "reason": "Failed the pre-registered deployment gate: " + ", ".join(k for k, v in e["checks"].items() if not v),
             }, reg)
     REGISTRY.parent.mkdir(parents=True, exist_ok=True)
-    REGISTRY.write_text(json.dumps(reg, indent=2), encoding="utf-8")
+    REGISTRY.write_text(json.dumps(reg, indent=2), encoding="utf-8", newline="\n")
     return reg
 
 

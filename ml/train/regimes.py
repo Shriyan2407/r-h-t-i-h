@@ -59,7 +59,7 @@ def build() -> dict:
            "cutoffQuantiles": [LOW_Q, HIGH_Q], "cutoffsFitUntil": HOLDOUT_START, "sampleRange": [str(st.index.min().date()), str(st.index.max().date())],
            "names": {f"{t}|{v}": n for (t, v), n in NAMES.items()}, "historical": table,
            "note": "Descriptive statistics over 2011-2026 (index only). Volatility separation is the intended use; mean returns are not a signal."}
-    (ROOT / "lib" / "ml" / "regimes.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+    (ROOT / "lib" / "ml" / "regimes.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8", newline="\n")
 
     pick = st.iloc[np.linspace(0, len(st) - 1, 30).astype(int)].index
     cases = []
@@ -67,7 +67,7 @@ def build() -> dict:
         cases.append({"date": str(d.date()), "close": float(ok.loc[d, "close"]), "sma200": float(ok.loc[d, "sma200"]),
                       "vix": float(ok.loc[d, "vix"]), "expected": NAMES[(lab.loc[d, "trend"], lab.loc[d, "vol"])]})
     (ROOT / "tests" / "ml" / "fixtures").mkdir(parents=True, exist_ok=True)
-    (ROOT / "tests" / "ml" / "fixtures" / "regime-parity.json").write_text(json.dumps({"cases": cases}, indent=1), encoding="utf-8")
+    (ROOT / "tests" / "ml" / "fixtures" / "regime-parity.json").write_text(json.dumps({"cases": cases}, indent=1), encoding="utf-8", newline="\n")
     return cfg
 
 

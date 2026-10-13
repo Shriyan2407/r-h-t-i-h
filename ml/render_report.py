@@ -66,7 +66,7 @@ def main():
     doc = ROOT / "docs" / "MODEL_EVALUATION.md"
     text = doc.read_text(encoding="utf-8") if doc.exists() else f"# Model evaluation\n\n{BEGIN}\n{END}\n"
     a, b = text.index(BEGIN), text.index(END) + len(END)
-    doc.write_text(text[:a] + "\n".join(out) + text[b:], encoding="utf-8")
+    doc.write_text(text[:a] + "\n".join(out) + text[b:], encoding="utf-8", newline="\n")
     print("updated", doc)
 
 

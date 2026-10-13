@@ -162,7 +162,7 @@ def run(verbose: bool = True) -> dict:
     rep = {"datasetSha256": META["csvSha256"], "target": "log_rv5", "folds": len(folds), "rows": int(len(y)),
            "firstTest": FIRST_TEST, "selectionEnd": HOLDOUT_START, "chosen": chosen, "results": results}
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "volatility.json").write_text(json.dumps(rep, indent=2), encoding="utf-8")
+    (OUT / "volatility.json").write_text(json.dumps(rep, indent=2), encoding="utf-8", newline="\n")
     return rep
 
 
