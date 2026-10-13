@@ -137,11 +137,7 @@ Rule-based screen: a ${up ? "rise" : "fall"} of more than 2.5% on heavy volume, 
 export function fmtStockAnalysis(ticker: string, data: {
   price: number;
   verdict: string;
-  confidence?: number;
   summary: string;
-  t1?: number;
-  t2?: number;
-  sl?: number;
   riskLevel?: string;
   newsSentiment?: string;
 }): string {
@@ -154,18 +150,6 @@ export function fmtStockAnalysis(ticker: string, data: {
 
 ${verdictEmoji} Verdict: <b>${esc(data.verdict ?? "HOLD")}</b>
 💰 Price: ₹${data.price.toFixed(2)}`;
-  if (typeof data.confidence === "number") msg += `
-💪 Confidence: <b>${data.confidence}%</b>`;
-
-  if (data.t1 && data.sl) {
-    msg += `
-
-🎯 T1: ₹${data.t1.toFixed(2)}`;
-    if (data.t2) msg += `  T2: ₹${data.t2.toFixed(2)}`;
-    msg += `
-🛡️ Stop Loss: ₹${data.sl.toFixed(2)}`;
-  }
-
   if (data.riskLevel) msg += `\n⚠️ Risk: <b>${esc(data.riskLevel)}</b>`;
   if (data.newsSentiment) msg += `\n📰 Sentiment: ${esc(data.newsSentiment)}`;
 
@@ -174,7 +158,7 @@ ${verdictEmoji} Verdict: <b>${esc(data.verdict ?? "HOLD")}</b>
     msg += `\n\n📝 ${shortSummary}${data.summary.length > 280 ? "…" : ""}`;
   }
 
-  msg += `\n\n<i>Market Ka Baadshah AI</i>`;
+  msg += `\n\n<i>Rule-based summary. No price targets: no direction model passed validation. Not investment advice.</i>`;
   return msg;
 }
 

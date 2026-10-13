@@ -39,7 +39,6 @@ describe("telegram formatters never emit attacker-controlled markup", () => {
     const msg = fmtStockAnalysis("INFY", {
       price: 100,
       verdict: PAYLOAD,
-      confidence: 70,
       summary: PAYLOAD,
       riskLevel: PAYLOAD,
       newsSentiment: PAYLOAD,

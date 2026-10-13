@@ -153,9 +153,7 @@ export async function POST(req: NextRequest) {
           new Promise<never>((_, reject) => setTimeout(() => reject(new Error("analysis timed out")), 25_000)),
         ]);
 
-        // Map IntelligenceReport fields → fmtStockAnalysis fields
-        const parseRupee = (s?: string) => s ? parseFloat(s.replace(/[^\d.]/g, "")) || undefined : undefined;
-
+        // Map IntelligenceReport fields → fmtStockAnalysis fields (no price levels: see fmtStockAnalysis)
         const sentimentToVerdict = (s?: string) =>
           s === "BULLISH" ? "BUY" : s === "BEARISH" ? "SELL/AVOID" : s === "MIXED" ? "WATCH" : "HOLD";
 
@@ -169,9 +167,6 @@ export async function POST(req: NextRequest) {
           price: report._meta?.currentPrice ?? 0,
           verdict: sentimentToVerdict(report.currentSentiment),
           summary: report.narrativeSummary ?? report.oneLiner ?? "",
-          t1: parseRupee(report.entryZone?.target1),
-          t2: parseRupee(report.entryZone?.target2),
-          sl: parseRupee(report.entryZone?.stopLoss),
           riskLevel: scoreToRisk(report.scores),
           newsSentiment: report.currentSentiment ?? "NEUTRAL",
         }));
