@@ -625,28 +625,21 @@ Return ONLY valid JSON matching this exact structure. No markdown, no commentary
     /* 6-10 yearly data points tracking ACTUAL sentiment changes based on real events */
     { "year": <number>, "score": <0-100>, "label": "specific descriptor, not generic" }
   ],
-  "smartMoneyAnalysis": "SPECIFIC institutional behavior for THIS stock — cite delivery %, holdings trends, FII/DII changes if known. No generic text.",
+  "smartMoneyAnalysis": "Institutional holding facts ONLY if present in the data above (e.g. % held by institutions). If not provided, write: Not available in the data provided.",
   "macroConnections": "SPECIFIC macro inputs for THIS sector — e.g., for banking: RBI rate trajectory impact on NIM; for IT: USD/INR impact; for energy: Brent crude sensitivity.",
   "techAnalysis": "SPECIFIC technical structure using the ACTUAL price data provided — mention real price levels from 52W high/low.",
   "graphAnalysis": "SPECIFIC chart behavior description based on the price data — what pattern is forming?",
-  "entryZone": {
-    "entry": "₹specific range based on actual current price",
-    "stopLoss": "₹level with specific condition",
-    "target1": "₹price",
-    "target2": "₹price",
-    "riskReward": "1:X.X"
-  },
   "timeframes": {
     "intraday": {"trend":"","strength":"Strong|Moderate|Weak|Neutral","risk":"Low|Medium|High","note":"specific tactical note"},
     "swing": {"trend":"","strength":"","risk":"","note":""},
     "positional": {"trend":"","strength":"","risk":"","note":""},
     "longTerm": {"trend":"","strength":"","risk":"","note":""}
   },
-  "institutionalFlow": "Specific institutional flow analysis with evidence from delivery data, FII trends, or news signals",
+  "institutionalFlow": "Only facts present in the data or news above; otherwise: Not available in the data provided.",
   "riskAnalysis": "3-4 SPECIFIC risks unique to ${ticker} right now based on actual news",
   "macroContext": "SPECIFIC macro tailwinds and headwinds for this sector at this moment",
   "aiInsights": "A UNIQUE insight about ${ticker} that most retail investors are missing — must be specific and contrarian",
-  "bullCase": "Specific bull scenario: catalyst + price target + timeline",
+  "bullCase": "Specific bull scenario: catalyst and what would need to happen. Do NOT give a price target.",
   "bearCase": "Specific bear scenario: trigger + downside + invalidation",
   "invalidation": "Specific technical or fundamental signal that would invalidate the primary thesis",
   "latestDevelopments": [
@@ -776,11 +769,11 @@ Return this JSON exactly (no markdown, no extra fields):
   "currentSentiment": "${sentSignal}",
   "oneLiner": "one sharp sentence on the current investment thesis for ${ticker}",
   "trendState": "4-6 word market structure description",
-  "smartMoneyAnalysis": "2-3 sentences on institutional positioning and flow patterns",
+  "smartMoneyAnalysis": "Institutional holding facts only if present in the data above; otherwise: Not available in the data provided.",
   "macroConnections": "2 sentences on key macro drivers for ${sector.label}",
   "techAnalysis": "2 sentences on technical structure using the actual price levels above",
   "aiInsights": "one contrarian insight retail investors are missing about ${ticker}",
-  "bullCase": "catalyst + ₹price target + timeline in 2 sentences",
+  "bullCase": "catalyst and what would need to happen, in 2 sentences. Do NOT give a price target.",
   "bearCase": "trigger + downside risk in 2 sentences",
   "narrativeSummary": "2 sentences on the current dominant market narrative",
   "keyRisks": ["specific risk 1", "specific risk 2", "specific risk 3"]

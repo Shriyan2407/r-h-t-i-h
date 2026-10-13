@@ -151,5 +151,9 @@ export function parseIntelligenceResponse(raw: string, ticker: string): any {
      previously clamped into 60-95 (and defaulted to 75), which made every report look confident. */
   delete data.aiConfidence;
 
+  /* Entry/stop/target levels are price predictions the model has no validated basis for (no direction
+     model passed validation; see lib/ml/registry.json), so any the LLM returns are dropped. */
+  delete data.entryZone;
+
   return data;
 }
