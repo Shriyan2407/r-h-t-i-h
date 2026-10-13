@@ -1,54 +1,76 @@
 # AI system
 
-An honest account of where "AI" is used, what is deterministic, and what is unverified.
+What the "intelligence" in this product actually is, layer by layer. If something is not listed as built, it is
+not built. Measured results: [MODEL_EVALUATION.md](MODEL_EVALUATION.md). Limits: [AI_LIMITATIONS.md](AI_LIMITATIONS.md).
 
-## Classification
+## Layers
 
-| Component | Technique | Where |
-|---|---|---|
-| Indicators (RSI, MACD, EMAs, Bollinger, ATR, ADX, stochastic, VWAP, OBV) | Classical formulae | `app/api/technicals/[ticker]/route.ts` |
-| Verdict + signal strength | **Hand-written rule scoring** (weights/thresholds in QUANT_ENGINE.md) | `lib/scoring/quantEngine.ts` |
-| News sentiment | **Keyword counting** (no NLP model) | `lib/services/newsAggregator.ts`, `socialSentiment.ts` |
-| Narrative text | **LLM** (Claude or Ollama) when available, else **fixed templates** | `lib/services/intelligenceEngine.ts`, `lib/ai/narrativeEngine.ts` |
-| Machine learning | **None in production.** | — |
+| # | Layer | What it is | Is it AI/ML? | Code |
+|---|---|---|---|---|
+| 1 | Market data | Daily OHLCV + adjusted close (Yahoo Finance), NIFTY 50, India VIX, RSS headlines | No | `lib/ml/data.ts`, `lib/services/*` |
+| 2 | Derived indicators | RSI, MACD, EMA/SMA, ATR, ADX, Bollinger width, realised vol, drawdown, beta, correlation | No: fixed formulas | `lib/ml/indicators.ts`, `lib/ml/features.ts` |
+| 3 | Rule-based scores | The verdict and 0-100 scores on the analysis page; "signal strength" = agreement of rules | No: hand-written rules. **Evaluated: no predictive value** (rank IC ≈ 0) | `lib/scoring/quantEngine.ts` |
+| 4 | Statistical model | Market regime: NIFTY vs 200-day average + India VIX cut-offs fit on 2011-2025 | Statistical classification | `lib/ml/regime.ts`, `ml/train/regimes.py` |
+| 5 | Machine learning (deployed) | **volatility-ridge 1.1.0**: ridge regression forecasting the size of the next 5 days' moves | Yes: trained, walk-forward validated, registered | `lib/ml/volatility.ts`, `ml/train/vol.py` |
+| 6 | Machine learning (rejected) | Logistic regression, random forest, gradient boosting for 5-day direction | Trained and evaluated; **failed the gate; not used** | `ml/train/walkforward.py`, `lib/ml/registry.json` |
+| 7 | Evidence | Every number shown with the forecast is an `Evidence` item with kind, source and timestamp | No | `lib/ai/evidence.ts`, `lib/ml/riskForecast.ts` |
+| 8 | LLM | Claude (`claude-opus-5-5`) optionally rewrites the evidence in plain language | LLM; **explains only** | `lib/ai/riskExplainer.ts` |
+| 9 | Validation | Numeric grounding guard: any number not in the evidence, missing citation, or certainty language rejects the LLM text | No | `lib/ai/numericGuard.ts` |
 
-There is no trained model, no ML inference and no multi-agent system in the deployed app.
+The older stock-analysis narrative (`/ai/analyze`, `/api/intelligence`) still uses an LLM or templates on top of the
+rule-based scores (layer 3). Since this work it may no longer produce price targets (prompt changed, parser strips
+them, regression test), and its scores are labelled heuristics.
 
-## Pipeline as built
+## Pipeline (risk forecast)
 
 ```
-Yahoo / RSS / Reddit  →  quantEngine (rules)  →  prompt (scores in, JSON schema out)
-                                              →  Ollama → Claude → deterministic template
-                                              →  parse + default-fill  →  response
+Yahoo chart (adjclose)  ->  toAdjustedBars (split/dividend adjust, drop bad rows)
+  -> computeFeatureMatrix   30 point-in-time features (price, volume, index, VIX)      [layer 2]
+  -> predictVolatility      registered artifact volatility-ridge@1.1.0                  [layer 5]
+       + groupContributions exact linear contributions (coef x standardised value)
+  -> classifyRegime         NIFTY/SMA200 + VIX cut-offs, with historical stats          [layer 4]
+  -> buildRiskForecast      RiskContract: forecast, 80% range, regime, factors,
+                            evidence E1..E12, model card, disclaimers, direction=unavailable [layer 7]
+  -> explainRisk            template; or Claude rewrite -> checkExplanation -> accept/reject [layers 8-9]
+  -> GET /api/ml/risk/[ticker]  -> RiskIntelligencePanel ("Risk Model" tab)
 ```
 
-The offline template path always succeeds, so the endpoint never returns an error object.
-Ollama only works where it is reachable (not on Vercel); Claude only if `ANTHROPIC_API_KEY` is set.
-On a default Vercel deployment with no key, **every report is the template path**.
+## Stage audit (before -> after)
 
-## What is and is not verified
-
-| Output | Source | Verified? |
+| Stage | Before this work | After |
 |---|---|---|
-| Indicator values, quote, fundamentals | Yahoo Finance | Depends on provider; may be delayed |
-| Verdict rating | Rules (`quantEngine`); the LLM may **override** it (`rating` in the parsed JSON) | Rules deterministic; LLM override unverified |
-| Signal strength | Rules — agreement of signals | Deterministic; **not a probability** |
-| Probability / "confidence" | — | **Unavailable by design** (`probability: null`); UI says so |
-| Entry, stop, targets, risk/reward | LLM, or fixed percentages of price when absent | Unverified; the percentage defaults are not derived from volatility |
-| Bull/Base/Bear scenarios and their probabilities | LLM, or fixed numbers in the templates | **Unverified, illustrative only** |
-| Company history / lifecycle | Hand-written for 9 tickers; otherwise LLM or sector templates | **Unverified; may contain invented events** |
-| News "AI read" paragraphs | Fixed text keyed on sentiment | Template, not analysis |
+| Data validation | none for ML | `toAdjustedBars`, `cleanBars`, dataset `validateDataset`, data-quality audit (`ml/data/quality.json`) |
+| Normalisation | none | split/dividend adjustment; train-quantile winsorising + standardisation stored in the artifact |
+| Technical features | computed per request for display only | 30 causal features, one implementation for training and inference |
+| Fundamental / sentiment / macro features | n/a | **Not implemented as model inputs**: no point-in-time history (see limitations) |
+| Quant signals | rule scores, unvalidated | same rules, now **evaluated** (no edge) and labelled heuristic |
+| ML model | none (Python research code unused) | volatility model deployed; direction models rejected by a pre-registered gate |
+| Model output | n/a | `RiskContract` schema `risk-forecast/1` |
+| Evidence engine | none | `Evidence` items with layer kind, source, timestamp |
+| LLM reasoner | wrote verdicts, targets, "confidence" | explains evidence only; numbers grounded or rejected |
+| Validation | parser default-filled fields | numeric guard, citation check, banned certainty/advice language |
+| API | `/api/ai-analysis`, `/api/intelligence` | + `/api/ml/risk/[ticker]`, `/api/ml/evaluation`, `/api/backtest/walk-forward`, `/api/portfolio/risk` |
+| Frontend | "AI Confidence" random walks, "7 agents active" | Risk Model tab, `/models` evidence page, honest `/ai`, portfolio risk |
 
-## Rules the system now enforces
+## What the LLM may and may not do
 
-- The LLM's own "confidence" is discarded; no default confidence is ever substituted.
-- No component may present a number as live data when it is not (see ENGINEERING_BASELINE for the fakes removed).
-- If the LLM fails or is absent the user gets template text, not an error — but the response `_meta.model`/`engine` records which path produced it.
+| May | May not |
+|---|---|
+| Re-word the provided evidence | Introduce any number (prices, ratios, probabilities, returns, performance) |
+| Order and connect points | Predict direction or give buy/sell advice |
+| Explain uncertainty | Use certainty language ("guaranteed", "will rise", "risk-free") |
+| | Cite evidence that does not exist |
 
-## Not built (needed before stronger claims)
+Enforced in code (`checkExplanation`); violations fall back to the deterministic template and increment
+`ai.explain.rejected`. The LLM is never told the label or forward returns: it receives `{ticker, horizonDays, evidence[]}`.
+Without `ANTHROPIC_API_KEY`, explanations are always the template.
 
-- An **evidence model**: every factual sentence linked to a source record (price, filing, headline).
-- Constraining the LLM so it cannot author prices, targets, probabilities or company facts; validating its JSON against the deterministic inputs.
-- A validated, calibrated probability model (see QUANT_ENGINE.md for the evidence that would be required).
-- Retrieval of real filings / announcements for company history.
-- Background jobs for slow generation; shared cache for results.
+## Confidence semantics
+
+| Concept | Meaning | Where it appears |
+|---|---|---|
+| Signal strength | Agreement of hand-written rules, 0-100. Not a probability. | Analysis page, macro regime |
+| Prediction probability | Would require a validated, calibrated classifier. **None exists**, so it is never shown. | Shown as "Not predicted" / "unavailable" |
+| Forecast interval | 80% range from calibration-slice residuals; measured coverage 79.3% (walk-forward), 79.6% (holdout) | Risk Model tab |
+| Model validation | Out-of-sample metrics from the registry | Model card, `/models` |
+| Evidence quality | Data freshness (`stale` when the last bar is > 4 days old) and explicit unavailability reasons | Risk Model tab |
