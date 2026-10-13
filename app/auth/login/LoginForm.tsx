@@ -192,12 +192,16 @@ export function LoginForm() {
           {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label
+              htmlFor="login-email"
               className="text-[10.5px] font-mono uppercase tracking-widest"
-              style={{ color: isLight ? "#9A8060" : "#3A3A3A" }}
+              style={{ color: isLight ? "#6B5536" : "var(--th-text-muted)" }}
             >
               Email
             </label>
             <input
+              id="login-email"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "login-email-error" : undefined}
               {...register("email")}
               type="email"
               placeholder="analyst@firm.com"
@@ -213,7 +217,7 @@ export function LoginForm() {
               }}
             />
             {errors.email && (
-              <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>
+              <span id="login-email-error" role="alert" className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>
                 {errors.email.message}
               </span>
             )}
@@ -223,8 +227,9 @@ export function LoginForm() {
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label
+                htmlFor="login-password"
                 className="text-[10.5px] font-mono uppercase tracking-widest"
-                style={{ color: isLight ? "#9A8060" : "#3A3A3A" }}
+                style={{ color: isLight ? "#6B5536" : "var(--th-text-muted)" }}
               >
                 Password
               </label>
@@ -238,6 +243,8 @@ export function LoginForm() {
             </div>
             <div className="relative">
               <input
+                id="login-password"
+                aria-invalid={!!errors.password}
                 {...register("password")}
                 type={showPass ? "text" : "password"}
                 placeholder="••••••••"
@@ -255,6 +262,8 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPass(!showPass)}
+                aria-label={showPass ? "Hide password" : "Show password"}
+                aria-pressed={showPass}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
                 style={{ color: isLight ? "#9A9A9A" : "#4A4A4A" }}
                 tabIndex={-1}
