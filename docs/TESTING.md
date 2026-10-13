@@ -19,7 +19,7 @@
 | Vitest integration (real Postgres) | 1 file, 16 tests | runs in CI (`migrations` job) |
 | Python ML | 15 tests | all pass |
 | Playwright public tier | 6 tests x 2 projects (desktop, mobile) = 12 | all pass |
-| Playwright signed-in tier | 5 tests | **runs in CI only** (needs a seeded Postgres; not executed locally) |
+| Playwright signed-in tier | 5 tests | not run locally (no local DB credentials); **passes in CI** (`e2e` job, run 38460236864) |
 
 ML/AI areas added on this branch: point-in-time features (truncation and tampering tests), labels, dataset integrity,
 Python<->TypeScript prediction parity (25 real rows, 1e-6), regime parity, registry hash and single-production checks,
@@ -52,6 +52,5 @@ Tests only create/delete rows whose email starts with `it-`.
 ## Not covered yet
 
 - E2E does not cover signup/verify/reset in a browser, portfolio import, alerts UI or OAuth.
-- The signed-in E2E tier has not been run locally (no local database credentials); CI runs it.
 - Large legacy pages (dashboard, portfolio, analyze) have no component tests.
 - No load or performance tests.

@@ -45,6 +45,13 @@ each theme. Hashes are for this local branch and will change if history is rewri
 - Python ML tests and Playwright E2E jobs in CI; E2E server is pinned to a non-production database (`7ff4472`, `d776179`, `20e0619`)
 - Model versions and ML cache hit rate on detailed health; request ids, inference latency and prediction counters (`ac505cc`, `be641e5`)
 
+### Defects caught by CI after the first push
+- Registry hashes were computed over CRLF bytes written on Windows while git checks out LF: hashes are now canonical
+  (LF) and hashed/checksummed files are pinned to LF in `.gitattributes`.
+- The stock page mounted the risk panel twice (desktop and CSS-hidden mobile layouts), doubling API calls and
+  rate-limit use; it now mounts only in the visible layout.
+- Three E2E selectors were ambiguous; one fix lost its regex backslashes and needed a follow-up commit.
+
 ### Process notes
 - `bbb4d8b` was committed with one failing test assertion (the UI was correct); fixed in the next commit `4d8bfc7`.
 - The deletion of `lib/stockData.ts` landed inside `608d5df` and of `components/ui/FearGreedMeter.tsx` inside `224a974`
