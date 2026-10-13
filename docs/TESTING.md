@@ -8,17 +8,29 @@
 | Lint | `npm run lint` | — | ESLint; **existing** errors are baselined, new ones fail; warnings are capped |
 | Bundle guard | `npm run build && npm run check:bundle` | build output | Sample data must not ship |
 | Audit | `npm audit --omit=dev --audit-level=high` | network | Production dependencies |
+| ML (Python) | `python -m unittest discover -s ml/tests -t .` | `pip install -r ml/requirements.txt` | Purged splitter, leakage detector, metrics, cost-aware strategy, deployment gate |
+| E2E | `npm run build && npm run test:e2e` | Chromium (`npx playwright install chromium`); `E2E_DATABASE_URL` for the signed-in tier | Public pages, access control, health, headers (desktop + mobile); login -> stock risk model -> backtest -> model evidence -> portfolio risk |
 
 ## Current suite (this branch)
 
-- 28 unit files, 320 tests · 1 integration file, 16 tests (skipped unless `TEST_DATABASE_URL` is set).
-- Areas: secrets and webhook auth, Telegram escaping/commands/rate limits, rate limiter backends,
-  signup/verify/resend, credential sign-in, session callbacks and revocation, admin gate, profile
-  (password change, deletion), password-reset and verification tokens, email sending/templates,
-  ticker/portfolio/push validation, route access allow-list, market indices and briefing data,
-  signal strength and absence of invented confidence, no-silent-mock behaviour, alert-engine
-  detectors/messages/de-duplication, in-process AI analysis, security headers, real `sharp`
-  and SheetJS smoke tests.
+| Suite | Count | Status (local run) |
+|---|---|---|
+| Vitest unit/route/render | 49 files, 490 tests | all pass |
+| Vitest integration (real Postgres) | 1 file, 16 tests | runs in CI (`migrations` job) |
+| Python ML | 15 tests | all pass |
+| Playwright public tier | 6 tests x 2 projects (desktop, mobile) = 12 | all pass |
+| Playwright signed-in tier | 5 tests | **runs in CI only** (needs a seeded Postgres; not executed locally) |
+
+ML/AI areas added on this branch: point-in-time features (truncation and tampering tests), labels, dataset integrity,
+Python<->TypeScript prediction parity (25 real rows, 1e-6), regime parity, registry hash and single-production checks,
+monotonicity regression test for the v1.0.0 defect, evidence contract, numeric grounding guard, LLM explainer with a
+mocked SDK (grounded text accepted; invented numbers, refusals and API errors fall back), risk route
+(auth, validation, 503/404/422, rate limit), walk-forward route, evaluation API, portfolio analytics (hand-checkable
+cases), stress scenarios, server-rendered UI views (risk panel, model evidence, portfolio risk), and a guard that
+price targets cannot return through the LLM, rule report, prompts or Telegram.
+
+Earlier areas: secrets and webhook auth, Telegram, rate limiting, signup/verify, credential sign-in, session revocation,
+admin gate, tokens, email, validation, route access, alerts, backtest engine, observability.
 
 ## Running integration tests safely
 
@@ -39,7 +51,7 @@ Tests only create/delete rows whose email starts with `it-`.
 
 ## Not covered yet
 
-- **No end-to-end browser tests** (Playwright planned): login/signup/verify flows in a browser, stock page, portfolio import, alerts UI, mobile layout.
-- No React component tests; large legacy pages are untested.
-- LLM output parsing is covered only for the confidence field.
+- E2E does not cover signup/verify/reset in a browser, portfolio import, alerts UI or OAuth.
+- The signed-in E2E tier has not been run locally (no local database credentials); CI runs it.
+- Large legacy pages (dashboard, portfolio, analyze) have no component tests.
 - No load or performance tests.
