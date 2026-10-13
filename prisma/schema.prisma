@@ -161,8 +161,8 @@ model PortfolioHolding {
   name        String
   exchange    String    @default("NSE")
   sector      String?
-  quantity    Float
-  avgPrice    Float
+  quantity    Decimal   @db.Decimal(20, 6)
+  avgPrice    Decimal   @db.Decimal(18, 4)
   notes       String?
   addedAt     DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

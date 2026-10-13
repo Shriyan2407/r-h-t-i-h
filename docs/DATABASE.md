@@ -45,7 +45,7 @@ CI applies all migrations to an empty Postgres 16, fails on drift between migrat
 
 ## Known schema debt (not yet done)
 
-- `PortfolioHolding.quantity` / `avgPrice` are `Float`; money should be `Decimal`.
+- `PortfolioHolding.quantity` / `avgPrice` are `DECIMAL(20,6)` / `DECIMAL(18,4)` since migration `2_money_decimal` (were `Float`). APIs convert them to JSON numbers at the boundary.
 - `Session` and the NextAuth `VerificationToken` shape are kept for the Prisma adapter; `Session` is unused.
 - No index on `PushSubscription.userId` or `TelegramConnection.isActive`; the alert engine loads every preference with its user's whole watchlist in one query, which will not scale past a modest user count.
 - `AlertHistory` grows without a retention policy.
