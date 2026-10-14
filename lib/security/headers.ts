@@ -26,7 +26,7 @@ const CSP_DIRECTIVES: Record<string, string[]> = {
   "img-src": ["'self'", "data:", "blob:", "https:"],
   "font-src": ["'self'", "data:"],
   // tesseract.js downloads language data; same-origin API calls.
-  "connect-src": ["'self'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://tessdata.projectnaptha.com"],
+  "connect-src": ["'self'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://tessdata.projectnaptha.com", "https://*.ingest.sentry.io", "https://*.ingest.us.sentry.io"],
   "worker-src": ["'self'", "blob:"],
   "frame-ancestors": ["'none'"],
   "base-uri": ["'self'"],

@@ -6,6 +6,7 @@ import { INDEX_SYMBOL, VIX_SYMBOL, fetchAdjustedBars } from "@/lib/ml/data";
 import { buildRiskForecast } from "@/lib/ml/riskForecast";
 import { explainRisk } from "@/lib/ai/riskExplainer";
 import { log } from "@/lib/observability/logger";
+import { reportError } from "@/lib/observability/errors";
 import { incr, timed } from "@/lib/observability/metrics";
 
 export const maxDuration = 30;
@@ -56,7 +57,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ ticker: string 
     return NextResponse.json({ ...result.contract, explanation }, { headers });
   } catch (err) {
     incr("ml.prediction.error");
-    log.error("ml.prediction.failed", { requestId, ticker, error: err });
+    reportError("ml.prediction.failed", err, { requestId, ticker });
     return NextResponse.json({ error: "Forecast failed", requestId }, { status: 500, headers });
   }
 }

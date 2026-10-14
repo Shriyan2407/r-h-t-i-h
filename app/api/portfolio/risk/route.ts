@@ -5,6 +5,7 @@ import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 import { INDEX_SYMBOL, VIX_SYMBOL, fetchAdjustedBars } from "@/lib/ml/data";
 import { buildPortfolioRisk } from "@/lib/portfolio/riskService";
 import { log } from "@/lib/observability/logger";
+import { reportError } from "@/lib/observability/errors";
 import { timed } from "@/lib/observability/metrics";
 
 export const maxDuration = 60;
@@ -32,7 +33,7 @@ export async function GET(req: Request) {
     log.info("portfolio.risk", { requestId, holdings: rows.length, analysed: result.report.holdings.length, excluded: result.excluded.length });
     return NextResponse.json(result, { headers });
   } catch (err) {
-    log.error("portfolio.risk.failed", { requestId, error: err });
+    reportError("portfolio.risk.failed", err, { requestId });
     return NextResponse.json({ error: "Risk analysis failed", requestId }, { status: 500, headers });
   }
 }
