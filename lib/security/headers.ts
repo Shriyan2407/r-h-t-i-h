@@ -16,6 +16,15 @@ export interface SecurityHeader {
   value: string;
 }
 
+/** Exact Sentry ingest origin from the configured DSN (no wildcard); omitted when error tracking is off. */
+export function sentryOrigin(dsn = process.env.NEXT_PUBLIC_SENTRY_DSN): string[] {
+  try {
+    return dsn ? [new URL(dsn).origin] : [];
+  } catch {
+    return [];
+  }
+}
+
 /** Everything the app loads in the browser, by origin. Keep this list tight and explained. */
 const CSP_DIRECTIVES: Record<string, string[]> = {
   "default-src": ["'self'"],
@@ -25,8 +34,8 @@ const CSP_DIRECTIVES: Record<string, string[]> = {
   // News thumbnails and avatars come from arbitrary publisher/OAuth hosts.
   "img-src": ["'self'", "data:", "blob:", "https:"],
   "font-src": ["'self'", "data:"],
-  // tesseract.js downloads language data; same-origin API calls.
-  "connect-src": ["'self'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://tessdata.projectnaptha.com", "https://*.ingest.sentry.io", "https://*.ingest.us.sentry.io"],
+  // tesseract.js downloads language data; same-origin API calls; Sentry ingest only when configured.
+  "connect-src": ["'self'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://tessdata.projectnaptha.com", ...sentryOrigin()],
   "worker-src": ["'self'", "blob:"],
   "frame-ancestors": ["'none'"],
   "base-uri": ["'self'"],

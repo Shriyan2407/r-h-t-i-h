@@ -64,3 +64,12 @@ describe("CSP content", () => {
     expect(csp.split("; ").every((d) => /^[a-z-]+ .+/.test(d))).toBe(true);
   });
 });
+
+describe("Sentry CSP origin", async () => {
+  const { sentryOrigin } = await import("@/lib/security/headers");
+  it("allows exactly the DSN's ingest origin and nothing when unset or invalid", () => {
+    expect(sentryOrigin("https://abc@o123.ingest.us.sentry.io/456")).toEqual(["https://o123.ingest.us.sentry.io"]);
+    expect(sentryOrigin(undefined)).toEqual([]);
+    expect(sentryOrigin("not a url")).toEqual([]);
+  });
+});
