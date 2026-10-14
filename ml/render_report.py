@@ -59,6 +59,19 @@ def main():
             out.append(f"| {r['model']} | {f(r['r2VsNaive'])} | {f(r['mse'], 4)} | {p(r.get('mseVsPersist'))} | {f(r['mae'], 4)} | {p(r['interval80Coverage'])} | "
                        f"{r['foldsBeatingPersist'] if r['foldsBeatingPersist'] is not None else 'n/a'} | {p(r.get('ownVolMonotoneRate')) if 'ownVolMonotoneRate' in r else 'not measured'} | {r.get('eligible', 'n/a')} |")
         out.append(f"\nChosen by the pre-registered rule: **{v['chosen']}**.")
+    surv_path = R / "survivorship.json"
+    if surv_path.exists():
+        sv = json.loads(surv_path.read_text(encoding="utf-8"))
+        b = sv["survivorshipBias"]
+        out += ["", f"### Robustness: {sv['model']} on 25 former Nifty 50 constituents (never in training)", "",
+                "| Slice | Rows | R² vs naive | MSE vs persistence | 80% coverage |", "|---|---|---|---|---|"]
+        for k, name in (("allDates", "all dates"), ("outOfSampleDates", "dates >= 2025-10-01 (stocks and dates unseen)")):
+            x = sv[k]
+            out.append(f"| {name} | {x['rows']:,} | {f(x['r2VsNaive'])} | {p(x['mseVsPersist'])} | {p(x['interval80Coverage'])} |")
+        out += ["", f"Beats persistence on {sv['tickersBeatingPersistence']} of {len(sv['perTicker'])} stocks. "
+                f"Survivorship in raw returns: share of positive 5-day windows {p(b['trainingUniversePositiveRate'])} (current members) "
+                f"vs {p(b['formerConstituentsPositiveRate'])} (former members); mean 5-day return {p(b['trainingUniverseMeanFwd5d'], 3)} vs "
+                f"{p(b['formerConstituentsMeanFwd5d'], 3)}."]
     out += ["", "### Volatility holdout (2025-10-01 onward)", "", "| Version | Rows | R² vs naive | MSE vs persistence | 80% coverage | Pristine |", "|---|---|---|---|---|---|",
             f"| 1.0.0 | {hold10['rows']:,} | {f(hold10['r2VsNaive'])} | {p(hold10['mseVsPersist'])} | {p(hold10['interval80Coverage'])} | yes (first look) |",
             f"| 1.1.0 | {hold['rows']:,} | {f(hold['r2VsNaive'])} | {p(hold['mseVsPersist'])} | {p(hold['interval80Coverage'])} | no (second look) |", "", END]

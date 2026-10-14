@@ -87,6 +87,15 @@ Chosen by the pre-registered rule: **ridge_all**.
 
 Chosen by the pre-registered rule: **ridge_all**.
 
+### Robustness: volatility-ridge@1.1.0 on 25 former Nifty 50 constituents (never in training)
+
+| Slice | Rows | R² vs naive | MSE vs persistence | 80% coverage |
+|---|---|---|---|---|
+| all dates | 96,401 | 0.328 | -11.5% | 79.1% |
+| dates >= 2025-10-01 (stocks and dates unseen) | 6,240 | 0.236 | -9.5% | 80.6% |
+
+Beats persistence on 25 of 25 stocks. Survivorship in raw returns: share of positive 5-day windows 51.9% (current members) vs 49.6% (former members); mean 5-day return 0.242% vs 0.099%.
+
 ### Volatility holdout (2025-10-01 onward)
 
 | Version | Rows | R² vs naive | MSE vs persistence | 80% coverage | Pristine |

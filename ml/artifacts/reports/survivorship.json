@@ -1,0 +1,152 @@
+{
+  "model": "volatility-ridge@1.1.0",
+  "robustnessSet": "ml/universe_former.json (25 former Nifty 50 constituents, never used in training)",
+  "allDates": {
+    "rows": 96401,
+    "tickers": 25,
+    "r2VsNaive": 0.32797608415709123,
+    "mseVsPersist": -0.11510875620069794,
+    "interval80Coverage": 0.7910913787201378
+  },
+  "outOfSampleDates": {
+    "rows": 6240,
+    "tickers": 25,
+    "r2VsNaive": 0.23589971397036813,
+    "mseVsPersist": -0.09451616293222675,
+    "interval80Coverage": 0.8056089743589744
+  },
+  "tickersBeatingPersistence": 25,
+  "perTicker": {
+    "ACC": {
+      "rows": 3886,
+      "mseVsPersist": -0.06576448219040021,
+      "coverage": 0.8013381369016984
+    },
+    "AMBUJACEM": {
+      "rows": 3885,
+      "mseVsPersist": -0.07948922268926029,
+      "coverage": 0.8185328185328186
+    },
+    "AUROPHARMA": {
+      "rows": 3885,
+      "mseVsPersist": -0.09901201375177593,
+      "coverage": 0.774002574002574
+    },
+    "BANKBARODA": {
+      "rows": 3886,
+      "mseVsPersist": -0.16489821105644997,
+      "coverage": 0.8252702007205353
+    },
+    "BHEL": {
+      "rows": 3886,
+      "mseVsPersist": -0.14838543377669156,
+      "coverage": 0.7822954194544519
+    },
+    "BOSCHLTD": {
+      "rows": 3885,
+      "mseVsPersist": -0.050822377474699754,
+      "coverage": 0.7392535392535392
+    },
+    "DABUR": {
+      "rows": 3885,
+      "mseVsPersist": -0.0899378026434543,
+      "coverage": 0.7832689832689833
+    },
+    "DLF": {
+      "rows": 3886,
+      "mseVsPersist": -0.223577294052404,
+      "coverage": 0.8085434894493052
+    },
+    "GAIL": {
+      "rows": 3885,
+      "mseVsPersist": -0.12805712566323002,
+      "coverage": 0.8337194337194337
+    },
+    "HINDPETRO": {
+      "rows": 3886,
+      "mseVsPersist": -0.09666893725939962,
+      "coverage": 0.7866700977869274
+    },
+    "IDEA": {
+      "rows": 3886,
+      "mseVsPersist": -0.10233588850685527,
+      "coverage": 0.7177045805455481
+    },
+    "INDUSTOWER": {
+      "rows": 3146,
+      "mseVsPersist": -0.04836876244647681,
+      "coverage": 0.7374443738080102
+    },
+    "IOC": {
+      "rows": 3886,
+      "mseVsPersist": -0.06576687777033052,
+      "coverage": 0.8026248069994854
+    },
+    "JINDALSTEL": {
+      "rows": 3885,
+      "mseVsPersist": -0.24921746977640957,
+      "coverage": 0.8123552123552124
+    },
+    "LUPIN": {
+      "rows": 3885,
+      "mseVsPersist": -0.08315813822054452,
+      "coverage": 0.792020592020592
+    },
+    "NMDC": {
+      "rows": 3886,
+      "mseVsPersist": -0.07448500412792425,
+      "coverage": 0.8226968605249614
+    },
+    "PIDILITIND": {
+      "rows": 3885,
+      "mseVsPersist": -0.08173603457378442,
+      "coverage": 0.7948519948519949
+    },
+    "PNB": {
+      "rows": 3886,
+      "mseVsPersist": -0.15118732114832734,
+      "coverage": 0.7925887802367473
+    },
+    "SAIL": {
+      "rows": 3886,
+      "mseVsPersist": -0.19309585375667315,
+      "coverage": 0.8147195059186825
+    },
+    "SHREECEM": {
+      "rows": 3885,
+      "mseVsPersist": -0.036637569550091675,
+      "coverage": 0.7992277992277992
+    },
+    "TATAPOWER": {
+      "rows": 3886,
+      "mseVsPersist": -0.1159354366361619,
+      "coverage": 0.794390118373649
+    },
+    "UPL": {
+      "rows": 3886,
+      "mseVsPersist": -0.1305171182332282,
+      "coverage": 0.7985074626865671
+    },
+    "VEDL": {
+      "rows": 3886,
+      "mseVsPersist": -0.16427332200565858,
+      "coverage": 0.8226968605249614
+    },
+    "YESBANK": {
+      "rows": 3886,
+      "mseVsPersist": -0.1129580220138845,
+      "coverage": 0.7416366443643849
+    },
+    "ZEEL": {
+      "rows": 3886,
+      "mseVsPersist": -0.09801126580901798,
+      "coverage": 0.7707153885743695
+    }
+  },
+  "survivorshipBias": {
+    "trainingUniversePositiveRate": 0.5188308195692611,
+    "formerConstituentsPositiveRate": 0.49551353201730275,
+    "trainingUniverseMeanFwd5d": 0.0024222261386176243,
+    "formerConstituentsMeanFwd5d": 0.0009857319205017468
+  }
+}
