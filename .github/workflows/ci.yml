@@ -114,6 +114,25 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  docker:
+    name: Docker image builds and serves
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build runner and migrate targets
+        run: |
+          docker build --target runner -t equitylens:ci .
+          docker build --target migrate -t equitylens-migrate:ci .
+      - name: Image contains no env files
+        run: |
+          ! docker run --rm --entrypoint sh equitylens:ci -c 'ls -a /app | grep -E "^\.env"'
+      - name: Container serves the login page
+        run: |
+          docker run -d --name app -p 3000:3000             -e DATABASE_URL=postgresql://x:x@127.0.0.1:1/x             -e NEXTAUTH_SECRET=ci-only-placeholder-secret-not-used-anywhere-else             -e AUTH_TRUST_HOST=true equitylens:ci
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/auth/login >/dev/null && exit 0; sleep 2; done
+          docker logs app; exit 1
+
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
