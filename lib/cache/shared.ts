@@ -123,6 +123,14 @@ export async function sharedDel(namespace: string, key: string): Promise<void> {
   }
 }
 
+/** Default rule for upstream data: never cache null, empty arrays, or error-shaped objects. */
+export function isUsable(v: unknown): boolean {
+  if (v === null || v === undefined) return false;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === "object") return !("error" in (v as object));
+  return true;
+}
+
 /**
  * Get-or-compute. `isCacheable` lets callers refuse to store degraded results (e.g. error
  * objects) so a transient failure is never served for the whole TTL.

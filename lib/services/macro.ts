@@ -1,4 +1,5 @@
-import { cache, TTL }    from "@/lib/services/cache";
+import { TTL }           from "@/lib/services/cache";
+import { isUsable, sharedWrap } from "@/lib/cache/shared";
 
 /* ═══════════════════════════════════════════════════════════════
    R.H.T.I.H — Live Macro Intelligence Engine
@@ -280,5 +281,5 @@ export async function buildMacroIntelligence() {
 
 /** Cached macro snapshot. Shared by the HTTP route and in-process callers. */
 export function getMacroIntelligence() {
-  return cache.wrap("macro:global", TTL.MARKET * 2, buildMacroIntelligence);
+  return sharedWrap("macro", "global", TTL.MARKET * 2, buildMacroIntelligence, isUsable);
 }

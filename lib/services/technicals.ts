@@ -1,5 +1,6 @@
 import YFClass                          from "yahoo-finance2";
-import { cache, TTL }                  from "@/lib/services/cache";
+import { TTL }                         from "@/lib/services/cache";
+import { isUsable, sharedWrap } from "@/lib/cache/shared";
 import type { TechnicalIndicators }    from "@/lib/types";
 
 /* yahoo-finance2 v3: default export is the class — must instantiate */
@@ -299,5 +300,5 @@ export async function computeTechnicals(ticker: string): Promise<TechnicalIndica
 
 /** Cached (5 min) technicals for a validated ticker. Shared by the HTTP route and in-process callers. */
 export function getTechnicals(ticker: string): Promise<TechnicalIndicators> {
-  return cache.wrap(`technicals:${ticker}`, TTL.MARKET * 5, () => computeTechnicals(ticker));
+  return sharedWrap("technicals", ticker, TTL.MARKET * 5, () => computeTechnicals(ticker), isUsable);
 }

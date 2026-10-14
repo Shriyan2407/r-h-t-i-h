@@ -146,3 +146,18 @@ describe("Upstash cache backend", () => {
     await expect(new UpstashCache("https://r", "t", fake).get("k")).rejects.toThrow(/500/);
   });
 });
+
+describe("isUsable (what may be cached)", async () => {
+  const { isUsable } = await import("@/lib/cache/shared");
+  it("rejects null, empty arrays and error-shaped objects", () => {
+    expect(isUsable(null)).toBe(false);
+    expect(isUsable(undefined)).toBe(false);
+    expect(isUsable([])).toBe(false);
+    expect(isUsable({ error: "upstream down" })).toBe(false);
+  });
+  it("accepts real data, including falsy primitives that are valid values", () => {
+    expect(isUsable([{ title: "x" }])).toBe(true);
+    expect(isUsable({ rsi: 42 })).toBe(true);
+    expect(isUsable(0)).toBe(true);
+  });
+});

@@ -4,7 +4,8 @@
    No scraping — all public RSS/API endpoints
 ═══════════════════════════════════════════════════════════════ */
 
-import { cache, TTL } from "./cache";
+import { TTL } from "./cache";
+import { isUsable, sharedWrap } from "@/lib/cache/shared";
 
 export interface NewsItem {
   title:       string;
@@ -294,10 +295,9 @@ async function fetchYahooNews(ticker: string): Promise<RawRSSItem[]> {
 /* ── Main Aggregator ────────────────────────────────────── */
 
 export async function getStockNews(ticker: string, companyName?: string): Promise<NewsItem[]> {
-  const cacheKey = `news:${ticker}`;
   const NEWS_TTL = 120; // 2 minutes — much fresher than the old 600s
 
-  return cache.wrap(cacheKey, NEWS_TTL, async () => {
+  return sharedWrap("news", ticker, NEWS_TTL, async () => {
     // Fetch in parallel — RSS feeds + Yahoo + premium APIs
     const [rssResults, yahooResults, finnhubResults, newsApiResults] = await Promise.all([
       Promise.all(RSS_FEEDS.map(f => parseRSSFeed(f))),
@@ -355,14 +355,14 @@ export async function getStockNews(ticker: string, companyName?: string): Promis
       );
 
     return scored.slice(0, 40);
-  });
+  }, isUsable);
 }
 
 /** Get market-wide news (no ticker filter) */
 export async function getMarketNews(): Promise<NewsItem[]> {
   const NEWS_TTL = 120; // 2 minutes
 
-  return cache.wrap("news:market", NEWS_TTL, async () => {
+  return sharedWrap("news", "market", NEWS_TTL, async () => {
     // Use ALL feeds for market-wide news including Google News
     const rssResults = await Promise.all(RSS_FEEDS.map(f => parseRSSFeed(f)));
     const allRaw = rssResults.flat();
@@ -394,5 +394,5 @@ export async function getMarketNews(): Promise<NewsItem[]> {
       .filter(item => item.ageHours < 24 * 3) // last 3 days
       .sort((a, b) => a.ageHours - b.ageHours)
       .slice(0, 60);
-  });
+  }, isUsable);
 }

@@ -5,7 +5,8 @@
    All fetches are server-side (no CORS issues)
 ═══════════════════════════════════════════════════════════════ */
 
-import { cache, TTL } from "./cache";
+import { TTL } from "./cache";
+import { isUsable, sharedWrap } from "@/lib/cache/shared";
 
 export interface RedditPost {
   title:     string;
@@ -219,8 +220,7 @@ function extractThemes(posts: RedditPost[], twits: StockTwit[]): string[] {
 /* ── SENTIMENT AGGREGATOR ───────────────────────────────── */
 
 export async function getSocialSentiment(ticker: string): Promise<SentimentReport> {
-  const cacheKey = `sentiment:${ticker}`;
-  return cache.wrap(cacheKey, TTL.SENTIMENT, async () => {
+  return sharedWrap("sentiment", ticker, TTL.SENTIMENT, async () => {
     const [redditPosts, stockTwits] = await Promise.all([
       getRedditPosts(ticker),
       getStockTwits(ticker),
@@ -285,7 +285,7 @@ export async function getSocialSentiment(ticker: string): Promise<SentimentRepor
       topThemes,
       sentimentSummary,
     } satisfies SentimentReport;
-  });
+  }, isUsable);
 }
 
 function buildSentimentSummary(

@@ -1,5 +1,6 @@
 import YFClass from "yahoo-finance2";
-import { cache, TTL } from "@/lib/services/cache";
+import { TTL } from "@/lib/services/cache";
+import { isUsable, sharedWrap } from "@/lib/cache/shared";
 import type { FundamentalData } from "@/lib/types";
 
 /* yahoo-finance2 v3: default export is the class — must instantiate */
@@ -84,5 +85,5 @@ export async function fetchFundamentals(ticker: string): Promise<FundamentalData
 
 /** Cached (5 min) fundamentals for a validated ticker. Shared by the HTTP route and in-process callers. */
 export function getFundamentals(ticker: string): Promise<FundamentalData> {
-  return cache.wrap(`fundamentals:${ticker}`, TTL.MARKET * 5, () => fetchFundamentals(ticker));
+  return sharedWrap("fundamentals", ticker, TTL.MARKET * 5, () => fetchFundamentals(ticker), isUsable);
 }

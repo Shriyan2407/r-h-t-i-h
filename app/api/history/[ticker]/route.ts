@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cache, TTL } from "@/lib/services/cache";
+import { TTL } from "@/lib/services/cache";
+import { sharedGet, sharedSet } from "@/lib/cache/shared";
 import { getStockHistory }  from "@/lib/stockHistory";
 import type { StockHistoryProfile, EventSentiment } from "@/lib/stockHistory";
 import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
@@ -99,10 +100,9 @@ export async function GET(
   const { ticker } = await params;
   const T = parseTicker(ticker);
   if (!T) return invalidTickerResponse();
-  const cacheKey = `history:${T}`;
 
   /* ── Cache hit ───────────────────────────────────────────── */
-  const cached = cache.get<HistoryAPIResponse>(cacheKey);
+  const cached = await sharedGet<HistoryAPIResponse>("history", T);
   if (cached) {
     return NextResponse.json(cached, {
       headers: { "Cache-Control": "no-store", "X-Cache": "HIT", "X-Ticker": T },
@@ -138,7 +138,7 @@ export async function GET(
         },
       };
 
-      cache.set(cacheKey, response, TTL.STATIC); // 24h
+      await sharedSet("history", T, response, TTL.STATIC); // 24h
 
     } else {
       /* ── AI-generated company-specific history ───────────── */
@@ -178,7 +178,7 @@ export async function GET(
       };
 
       /* Cache AI results for 4h (expensive to regenerate) */
-      cache.set(cacheKey, response, source === "ai-generated" ? 14_400 : 1800);
+      await sharedSet("history", T, response, source === "ai-generated" ? 14_400 : 1800);
     }
 
     return NextResponse.json(response, {
