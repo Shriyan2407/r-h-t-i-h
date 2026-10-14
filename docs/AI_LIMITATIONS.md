@@ -17,8 +17,11 @@ Read this before relying on any output. Each limitation is either measured or a 
    Scheduled events (results, policy decisions) can move a stock far outside the forecast range.
 6. **Fundamentals, sentiment and macro are not model inputs**: there is no point-in-time history for them in the data
    source, and using current values for past dates would leak the future.
-7. **Trained on large caps.** 47 current Nifty 50 members (survivorship bias); untested on mid/small caps, IPOs
-   (fewer than 260 trading days, about a year, are refused) or other markets.
+7. **Trained on large caps.** 47 current Nifty 50 members. Tested on 25 *former* members it never saw (including
+   YES Bank, Vodafone Idea, Zee): it still beat persistence on all 25 (-11.5% error, 79.1% range coverage), so the
+   volatility model is not an artefact of survivorship. Raw-return statistics *are* biased (current members averaged
+   0.242% per 5 days vs 0.099% for former members). Untested on small caps, IPOs (fewer than 260 trading days are
+   refused) or other markets.
 8. **Data can be delayed or wrong.** Yahoo Finance is unofficial; forecasts are flagged stale when the last bar is
    more than 4 days old.
 9. **Regimes describe risk, not returns.** Historical mean returns by regime show no usable pattern.

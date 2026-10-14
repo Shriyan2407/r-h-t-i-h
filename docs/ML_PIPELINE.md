@@ -42,8 +42,11 @@ falls before the first usable feature date. Real events are kept; removing crash
 
 ### Known biases
 
-- **Survivorship**: only today's index members. Companies that were removed or delisted are absent, which overstates
-  returns and understates risk. Fixing this needs historical index membership, which the source does not provide.
+- **Survivorship**: training uses only today's index members, which overstates returns (measured: 0.242% vs 0.099%
+  mean 5-day return for 25 former members). Historical membership dates are not available, so the bias cannot be
+  removed from training; instead the deployed model is tested on the 25 former members (`ML_SET=former`,
+  `python -m ml.train.survivorship`): it beats persistence on all 25. Delisted companies with no remaining price
+  history (e.g. HDFC Ltd after its merger) cannot be tested.
 - **Large caps only**: behaviour on mid/small caps is untested.
 - **Adjusted prices**: features use split/dividend-adjusted OHLC (factor `adjClose / close`); Yahoo adjustments can be wrong.
 
