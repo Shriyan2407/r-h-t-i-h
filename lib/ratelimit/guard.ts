@@ -27,6 +27,7 @@ export const POLICIES = {
   portfolioRisk: { name: "pfrisk", limit: 20, windowSec: 60 * 60 },
   // Each SSE connection lasts ~50 s, so a viewer reconnects ~70x per hour.
   liveQuotes: { name: "live", limit: 200, windowSec: 60 * 60 },
+  research: { name: "research", limit: 30, windowSec: 60 * 60 },
 } as const satisfies Record<string, RateLimitPolicy>;
 
 /** Best-effort client IP. On Vercel `x-forwarded-for` is set by the platform edge. */
