@@ -23,6 +23,7 @@ const LAYERS = [
 
 const TOOLS = [
   { href: "/ai/analyze", title: "Stock analysis", body: "Technicals, fundamentals, news and a rule-based score for any NSE/BSE symbol, with an optional AI-written narrative." },
+  { href: "/research", title: "Why is it moving?", body: "Today's move split into market and stock-specific parts, volume, the expected range and recent headlines, each cited." },
   { href: "/models", title: "Model evidence", body: "Every model we trained, how it was tested, and the measured results, including the ones we rejected." },
   { href: "/backtest", title: "Backtest", body: "Test simple rules on historical prices after fees and slippage, with walk-forward validation in the API." },
   { href: "/portfolio", title: "Portfolio risk", body: "Concentration, beta, correlation, drawdown, liquidity, stress scenarios and a model-based volatility forecast." },
