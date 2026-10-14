@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useState, useCallback } from "react";
+import { use, useEffect, useState, useCallback, useMemo } from "react";
 import {
   Brain,
   BarChart2,
@@ -24,6 +24,7 @@ import { MacroPanel }       from "@/components/analysis/MacroPanel";
 import { NewsPanel }        from "@/components/analysis/NewsPanel";
 import { RiskIntelligencePanel } from "@/components/analysis/RiskIntelligencePanel";
 import { useMediaQuery, LG_QUERY } from "@/lib/hooks/useMediaQuery";
+import { useLiveQuotes } from "@/lib/hooks/useLiveQuotes";
 import { RelatedIntelligence } from "@/components/RelatedIntelligence";
 import { VerdictBadge }     from "@/components/ui/VerdictBadge";
 import { Badge }            from "@/components/ui/Badge";
@@ -61,7 +62,14 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
   // The desktop sidebar and the mobile panel are both in the DOM (one hidden by CSS). Data-fetching panels
   // must mount in only the visible one, or every view costs two API calls.
   const isDesktop = useMediaQuery(LG_QUERY);
-  const [quote,           setQuote]           = useState<StockQuote | null>(null);
+  const [baseQuote,       setQuote]           = useState<StockQuote | null>(null);
+  // Delayed quote updates over SSE are overlaid on the fetched snapshot, so every price on the page moves together.
+  const { quotes: liveQuotes, status: liveStatus } = useLiveQuotes([upperTicker]);
+  const liveQuote = liveQuotes[upperTicker];
+  const quote = useMemo<StockQuote | null>(
+    () => (baseQuote && liveQuote ? { ...baseQuote, current_price: liveQuote.price, change: liveQuote.change, change_pct: liveQuote.changePct } : baseQuote),
+    [baseQuote, liveQuote],
+  );
   const [technicals,      setTechnicals]      = useState<TechnicalIndicators | null>(null);
   const [fundamentals,    setFundamentals]    = useState<FundamentalData | null>(null);
   const [aiAnalysis,      setAIAnalysis]      = useState<AIAnalysis | null>(null);
@@ -275,8 +283,13 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                           border: "1px solid rgba(0,255,156,0.18)",
                         }}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#00FF9C] animate-live-dot" />
-                        NSE Live
+                        <span className={`w-1.5 h-1.5 rounded-full ${liveStatus === "live" ? "bg-[#00FF9C] animate-live-dot motion-reduce:animate-none" : "bg-[#888]"}`} />
+                        <span role="status" aria-live="polite" title="Yahoo Finance quotes for NSE/BSE may be delayed">
+                          {liveStatus === "live" ? `Updating · delayed${liveQuote?.time ? ` · ${new Date(liveQuote.time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}` : ""}`
+                            : liveStatus === "paused" ? "Paused (tab hidden)"
+                            : liveStatus === "reconnecting" || liveStatus === "connecting" ? "Connecting…"
+                            : "Snapshot (no live updates)"}
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -484,7 +497,7 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                 )}
 
                 {activeTab === "risk" && isDesktop && (
-                  <div className="p-4"><RiskIntelligencePanel ticker={upperTicker} /></div>
+                  <div className="p-4"><RiskIntelligencePanel ticker={upperTicker} liveChangePct={quote?.change_pct ?? null} /></div>
                 )}
 
                 {activeTab === "news" && (
@@ -580,7 +593,7 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                 {activeTab === "fundamentals" && fundamentals && <FundamentalsPanel data={fundamentals} redFlags={aiAnalysis?.fundamentals.red_flags} summary={aiAnalysis?.fundamentals.summary} strengths={aiAnalysis?.fundamentals.strengths} />}
                 {activeTab === "news" && <NewsPanel news={news} sentimentSummary={aiAnalysis?.sentiment.noise_filtered_summary} overallSentiment={aiAnalysis?.sentiment.overall} />}
                 {activeTab === "ai-report" && aiAnalysis && <AIResearchPanel analysis={aiAnalysis} />}
-                {activeTab === "risk" && !isDesktop && <RiskIntelligencePanel ticker={upperTicker} />}
+                {activeTab === "risk" && !isDesktop && <RiskIntelligencePanel ticker={upperTicker} liveChangePct={quote?.change_pct ?? null} />}
               </>
             )}
           </div>
