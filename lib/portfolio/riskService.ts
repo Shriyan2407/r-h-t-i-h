@@ -1,6 +1,8 @@
 import type { Bar } from "@/lib/backtest/types";
 import { buildRiskForecast } from "@/lib/ml/riskForecast";
 import regimes from "@/lib/ml/regimes.json";
+import factorReference from "./factorReference.json";
+import { FACTOR_LABELS, characteristics, factorExposures, type FactorExposure, type FactorReference, type FundamentalsSnapshot } from "./factors";
 import {
   analyzePortfolio, historicalReplay, marketShock, sectorShock, volatilityShock,
   type HoldingInput, type PortfolioRiskReport, type StressResult,
@@ -11,6 +13,7 @@ export interface PortfolioHoldingRow extends HoldingInput {
 }
 
 export type BarFetcher = (symbol: string, years: number) => Promise<Bar[] | null>;
+export type FundamentalsFetcher = (tickers: readonly string[]) => Promise<Record<string, FundamentalsSnapshot | null>>;
 
 export const MAX_RISK_HOLDINGS = 40;
 const HISTORY_YEARS = 8; // covers the 2020 and 2022 replay windows
@@ -39,6 +42,11 @@ export interface PortfolioRiskResponse {
   report: PortfolioRiskReport;
   excluded: Array<{ ticker: string; reason: string }>;
   stress: StressResult[];
+  factors: {
+    exposures: Array<FactorExposure & { name: string; high: string; low: string; definition: string }>;
+    reference: { asOf: string; universe: string; count: number };
+    method: string;
+  };
   forecast: {
     /** Model-implied daily portfolio volatility for the next 5 trading days (forecast vols + historical correlations). */
     dailyVol: number | null;
@@ -53,6 +61,7 @@ export async function buildPortfolioRisk(
   rows: readonly PortfolioHoldingRow[],
   fetchBars: BarFetcher,
   market: { index: Bar[]; vix: Bar[] },
+  fetchFundamentals: FundamentalsFetcher = async () => ({}),
 ): Promise<PortfolioRiskResponse | { error: "NO_USABLE_HOLDINGS"; excluded: Array<{ ticker: string; reason: string }> }> {
   const excluded: Array<{ ticker: string; reason: string }> = [];
   const capped = rows.slice(0, MAX_RISK_HOLDINGS);
@@ -85,6 +94,12 @@ export async function buildPortfolioRisk(
     ...HISTORICAL_SCENARIOS.map((s) => historicalReplay(s.id, s.label, s.from, s.to, holdings, weights, bars)),
   ];
 
+  // Style exposures vs the Nifty 50 cross-section (characteristics, not a returns-based model).
+  const funds = await fetchFundamentals(holdings.map((h) => h.ticker)).catch(() => ({} as Record<string, FundamentalsSnapshot | null>));
+  const ref = factorReference as FactorReference;
+  const exposures = factorExposures(weights, usable.map((u) => characteristics(u.bars, funds[u.h.ticker] ?? null)), ref)
+    .map((e) => ({ ...e, ...FACTOR_LABELS[e.factor] }));
+
   // Forward-looking: combine each holding's model forecast with the historical correlation matrix.
   const sigmas = usable.map((u) => {
     const r = buildRiskForecast({ ticker: u.h.ticker, symbol: u.h.ticker, stock: u.bars, index: market.index, vix: market.vix });
@@ -106,6 +121,11 @@ export async function buildPortfolioRisk(
     report,
     excluded,
     stress,
+    factors: {
+      exposures,
+      reference: { asOf: ref.asOf, universe: ref.universe, count: ref.count },
+      method: "Each holding's characteristic is standardised against the Nifty 50 cross-section (z-score, capped at ±3) and value-weighted. 0 = like a typical index member. Describes holdings; not a forecast or a factor-return model.",
+    },
     forecast: {
       dailyVol,
       historicalDailyVol: report.historical.annualVol / Math.sqrt(252),

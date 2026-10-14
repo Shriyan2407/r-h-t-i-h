@@ -4,6 +4,7 @@ import { prisma } from "@/lib/auth/prisma";
 import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 import { INDEX_SYMBOL, VIX_SYMBOL, fetchAdjustedBars } from "@/lib/ml/data";
 import { buildPortfolioRisk } from "@/lib/portfolio/riskService";
+import { fetchFundamentalsSnapshots } from "@/lib/portfolio/fundamentalsSnapshot";
 import { log } from "@/lib/observability/logger";
 import { reportError } from "@/lib/observability/errors";
 import { timed } from "@/lib/observability/metrics";
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
     const [index, vix] = await Promise.all([fetchAdjustedBars(INDEX_SYMBOL, 8), fetchAdjustedBars(VIX_SYMBOL, 8)]);
     if (!index || !vix) return NextResponse.json({ error: "Market data unavailable", code: "MARKET_DATA_UNAVAILABLE" }, { status: 503, headers });
 
-    const result = await timed("portfolio.risk", () => buildPortfolioRisk(rows, fetchAdjustedBars, { index, vix }));
+    const result = await timed("portfolio.risk", () => buildPortfolioRisk(rows, fetchAdjustedBars, { index, vix }, fetchFundamentalsSnapshots));
     if ("error" in result) return NextResponse.json(result, { status: 422, headers });
     // Holdings are private financial data: log only counts, never tickers or values.
     log.info("portfolio.risk", { requestId, holdings: rows.length, analysed: result.report.holdings.length, excluded: result.excluded.length });
