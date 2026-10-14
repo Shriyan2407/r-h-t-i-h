@@ -60,3 +60,5 @@ __pycache__/
 
 # docker compose secrets
 .env.docker
+/ml/data/raw_*/
+/ml/data/dataset_*.csv

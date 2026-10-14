@@ -13,12 +13,14 @@ import YF from "yahoo-finance2";
 
 const START = "2010-01-01";
 const root = join(process.cwd(), "ml");
-const rawDir = join(root, "data", "raw");
+// ML_SET=former downloads the robustness universe into separate files so the training data is never touched.
+const SET = process.env.ML_SET ? `_${process.env.ML_SET}` : "";
+const rawDir = join(root, "data", `raw${SET}`);
 mkdirSync(rawDir, { recursive: true });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const yf: any = new (YF as any)();
-const universe = JSON.parse(readFileSync(join(root, "universe.json"), "utf8")) as { index: string; vix: string; symbols: string[] };
+const universe = JSON.parse(readFileSync(join(root, `universe${SET}.json`), "utf8")) as { index: string; vix: string; symbols: string[] };
 
 interface Row { date: string; open: number; high: number; low: number; close: number; adjClose: number; volume: number }
 
@@ -66,7 +68,7 @@ for (const { name, symbol } of jobs) {
   }
 }
 
-writeFileSync(join(root, "data", "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+writeFileSync(join(root, "data", `manifest${SET}.json`), JSON.stringify(manifest, null, 2) + "\n");
 console.log(`\n${Object.keys(manifest.files).length} downloaded, ${Object.keys(manifest.failed).length} failed`);
 }
 

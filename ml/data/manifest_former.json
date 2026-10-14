@@ -1,0 +1,170 @@
+{
+  "downloadedAt": "2026-10-14T04:56:29.007Z",
+  "start": "2010-01-01",
+  "source": "yahoo-finance2 chart (1d, adjclose)",
+  "files": {
+    "_INDEX": {
+      "rows": 4121,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "8c2dd3f37b58cb079ed3caa66bd4255f3040d36ed7e80a8e012ba3e9a524c799"
+    },
+    "_VIX": {
+      "rows": 4120,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "0b05f92a436ff3dbbe1a09677fcb456650f71bdfb7fcd39b554a4d53ddd52315"
+    },
+    "YESBANK": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "433cc4b9873b52e93292dc9e63f6553efa8a98fcceefa909cc8734dd0c28d52b"
+    },
+    "ZEEL": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "cc0491f6f16c57194b56e3cc49995e250c4d8f77652e58088ad01f0f30145f64"
+    },
+    "VEDL": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "ac98a2069e13be9609548799df7e204b70b4602320ef52590842bfb7f7ff57f1"
+    },
+    "IOC": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "e4ed667b5494fee0400558935115f666a24dde7e86b23c52fc74145bdc1775f4"
+    },
+    "GAIL": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "3dc6deba2eb02ce17bf8210cc1029b5321d59145161a267d7f231bb48f6c40fa"
+    },
+    "UPL": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "e08c7ea383f61d7b325c6d4282d96515b19a69cbd98c5e2f8f80d879b187aec4"
+    },
+    "BHEL": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "e2542428f8ddbe81ab97bd1f80af1c81bbfc22b2658dd7a152288cb042355574"
+    },
+    "DLF": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "264ea64a67a86350efda91564f0f8176dcb12e2391c82d3af94ff3ba4161a512"
+    },
+    "PNB": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "3a986b232cfcd21a5b5aee0271bfbf54bcc0b961e64d093442b682766f30f3d8"
+    },
+    "BANKBARODA": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "1ac82bff0b78d4ccff1cf9322c3bfa90a3e3f3854c231baf2a024cd8d7523c7e"
+    },
+    "AMBUJACEM": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "fc1895323eca0b046eb19524d3b484f3162b6675847d54ee84f184852086e9cd"
+    },
+    "ACC": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "0756e19bde20f07960d8f54ae4b8843a65f712cd7b48038708f87dba8d0579fb"
+    },
+    "HINDPETRO": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "323d01722109bc873ffe824f4cd3a7c4026307af950356b88cdee53fe3b931a0"
+    },
+    "LUPIN": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "d1bf7299cde9e6b986ce438509d115864ed01b21ae0515cca3bd41420096eaf1"
+    },
+    "AUROPHARMA": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "04290a1bc9e1b278556b636958c4be12101e106ab19aaddd2940ae2637490a0b"
+    },
+    "BOSCHLTD": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "450ae70a46802808b669ff22cb1ca8a452a6397008705f18567d4b08f2a5983a"
+    },
+    "TATAPOWER": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "f9683f0f3fd9878f31f322511fb35dea0c75e09d79a1da976b00f371948ea04c"
+    },
+    "SHREECEM": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "9c6edf97b4ed9a763e24aaa449c1eea827030175886a1194fa3e106e2b457742"
+    },
+    "INDUSTOWER": {
+      "rows": 3402,
+      "first": "2012-12-28",
+      "last": "2026-10-12",
+      "sha256": "77c3bc9f8f464a6e5f62ba6f4071634e85bf1b491371ddfe14bdf7c6c24f72da"
+    },
+    "IDEA": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "684b3f07a3ae89246dad23499fd12700ff19af5ba4ba56244400ee04fcfbea50"
+    },
+    "SAIL": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "5bdd7233e87cb09d32ad1681a5973c0543a7c3c8f3f28d26c253297e3f0de8aa"
+    },
+    "NMDC": {
+      "rows": 4142,
+      "first": "2010-01-04",
+      "last": "2026-10-13",
+      "sha256": "d426811b9adcde1d20408fd1dbfe948a306da8f6c0260f50b3fe0c11fcf28485"
+    },
+    "JINDALSTEL": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "91f53f165389bfc3306dcf66ddff1c2e1b44674a45e2ba515af99f7998d1160e"
+    },
+    "DABUR": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "05f0e9979220495b22127ab2e0bbea37e4662f82bc616de4b9c8c1535f217e03"
+    },
+    "PIDILITIND": {
+      "rows": 4141,
+      "first": "2010-01-04",
+      "last": "2026-10-12",
+      "sha256": "6ad5283a5d3b8fbb382c8ef6f57bed527118c73ca00e619e16758d65fbb5eb41"
+    }
+  },
+  "failed": {}
+}

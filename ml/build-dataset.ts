@@ -10,7 +10,8 @@ import { CSV_HEADER, buildDatasetRows, describeDataset, rowsToCsv, validateDatas
 import { toAdjustedBars } from "../lib/ml/features";
 
 const root = join(process.cwd(), "ml");
-const rawDir = join(root, "data", "raw");
+const SET = process.env.ML_SET ? `_${process.env.ML_SET}` : "";
+const rawDir = join(root, "data", `raw${SET}`);
 
 type Raw = Array<{ date: string; open: number; high: number; low: number; close: number; adjClose: number; volume: number }>;
 const load = (name: string): Raw => JSON.parse(readFileSync(join(rawDir, `${name}.json`), "utf8"));
@@ -61,10 +62,10 @@ function main() {
   }
 
   const csv = rowsToCsv(all);
-  writeFileSync(join(root, "data", "dataset.csv"), csv);
-  const meta = { ...describeDataset(all), csvSha256: createHash("sha256").update(csv).digest("hex"), columns: CSV_HEADER.length, builtFrom: "ml/data/manifest.json" };
-  writeFileSync(join(root, "data", "dataset.meta.json"), JSON.stringify(meta, null, 2) + "\n");
-  writeFileSync(join(root, "data", "quality.json"), JSON.stringify(quality, null, 2) + "\n");
+  writeFileSync(join(root, "data", `dataset${SET}.csv`), csv);
+  const meta = { ...describeDataset(all), csvSha256: createHash("sha256").update(csv).digest("hex"), columns: CSV_HEADER.length, builtFrom: `ml/data/manifest${SET}.json` };
+  writeFileSync(join(root, "data", `dataset${SET}.meta.json`), JSON.stringify(meta, null, 2) + "\n");
+  writeFileSync(join(root, "data", `quality${SET}.json`), JSON.stringify(quality, null, 2) + "\n");
 
   const totals = Object.values(quality).reduce(
     (a, q) => ({ dup: a.dup + q.duplicateDates, nonMono: a.nonMono + q.nonMonotonic, zero: a.zero + q.zeroVolumeDays, gaps: a.gaps + q.gapsOver5Days, jumps: a.jumps + q.absReturnOver25pct, adj: a.adj + q.adjFactorChangesOver1pct }),
