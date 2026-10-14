@@ -59,3 +59,12 @@ test("portfolio risk analysis runs on the saved holdings", async ({ page }) => {
   await expect(page.getByText("Stress scenarios (estimates, not forecasts)")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByText("COVID crash (Feb-Mar 2020)", { exact: true })).toBeVisible();
 });
+
+test("research explains why a stock is moving with cited evidence", async ({ page }) => {
+  await login(page);
+  await page.goto("/research?t=RELIANCE");
+  await expect(page.getByRole("heading", { name: "Why is RELIANCE moving?" })).toBeVisible({ timeout: 45_000 });
+  await expect(page.locator("#ev-M1")).toBeVisible();
+  await expect(page.getByText(/do not prove that any of them caused|No headlines mentioning the company/)).toBeVisible();
+});
+
