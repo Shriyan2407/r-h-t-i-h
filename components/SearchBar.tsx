@@ -72,14 +72,9 @@ export function SearchBar({
     if (autoFocus) setTimeout(() => inputRef.current?.focus(), 80);
   }, [autoFocus]);
 
-  /* ── ⌘K shortcut ────────────────────────────────────────────────────── */
+  /* ── Escape closes the dropdown (Ctrl/⌘+K belongs to the global command palette) ── */
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        inputRef.current?.focus();
-        setFocused(true);
-      }
       if (e.key === "Escape") {
         setFocused(false);
         inputRef.current?.blur();

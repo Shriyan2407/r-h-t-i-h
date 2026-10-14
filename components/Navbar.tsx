@@ -192,7 +192,9 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           {/* Search button */}
           <button
-            onClick={() => router.push("/")}
+            onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
+            aria-label="Open command palette: search stocks and pages (Ctrl+K)"
+            aria-keyshortcuts="Control+K Meta+K"
             className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all duration-200"
             style={{
               background: "var(--th-gold-bg)",
@@ -219,7 +221,7 @@ export function Navbar() {
                 background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.04)",
                 border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.07)",
               }}>
-              ⌘K
+              Ctrl K
             </kbd>
           </button>
 
