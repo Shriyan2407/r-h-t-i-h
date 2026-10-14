@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Evidence, EvidenceKind, RiskContract } from "@/lib/ai/evidence";
 import type { Explanation } from "@/lib/ai/riskExplainer";
+import { moveVsForecast } from "@/lib/live/signal";
 
 export type Payload = RiskContract & { explanation: Explanation };
 type State =
@@ -65,7 +66,7 @@ function EvidenceRow({ e }: { e: Evidence }) {
   );
 }
 
-export function RiskIntelligencePanel({ ticker }: { ticker: string }) {
+export function RiskIntelligencePanel({ ticker, liveChangePct = null }: { ticker: string; liveChangePct?: number | null }) {
   const [state, setState] = useState<State>({ phase: "loading" });
   const load = useCallback(async () => {
     setState({ phase: "loading" });
@@ -105,11 +106,11 @@ export function RiskIntelligencePanel({ ticker }: { ticker: string }) {
     return <div style={card}><p style={{ margin: 0 }}>{msg}</p>{state.detail && <p style={{ margin: "6px 0 0", fontSize: 12, ...muted }}>{state.detail}</p>}</div>;
   }
 
-  return <RiskView data={state.data} />;
+  return <RiskView data={state.data} liveChangePct={liveChangePct} />;
 }
 
 /** Presentational view of a loaded forecast (exported for tests). */
-export function RiskView({ data: d }: { data: Payload }) {
+export function RiskView({ data: d, liveChangePct = null }: { data: Payload; liveChangePct?: number | null }) {
   const [showWhy, setShowWhy] = useState(false);
   const v = d.volatility;
   const level = v.percentileVsOwnYear === null ? null : v.percentileVsOwnYear >= 80 ? "Elevated" : v.percentileVsOwnYear <= 20 ? "Subdued" : "Typical";
@@ -121,6 +122,17 @@ export function RiskView({ data: d }: { data: Payload }) {
           Data is {d.dataAgeDays} days old (last bar {d.asOf}). The forecast may not reflect recent trading.
         </div>
       )}
+
+      {(() => {
+        const mv = moveVsForecast(liveChangePct, d.volatility.dailyVol);
+        if (!mv) return null;
+        return (
+          <div role="status" style={{ ...card, padding: "10px 14px", fontSize: 13, borderColor: mv.unusual ? "var(--warning)" : "var(--th-border-card)" }}>
+            Today&apos;s move {liveChangePct! >= 0 ? "+" : ""}{liveChangePct!.toFixed(2)}% is {Math.abs(mv.ratio).toFixed(1)}× the expected daily move
+            {mv.unusual ? " — unusually large; check the news before acting on any other signal." : "."}
+          </div>
+        );
+      })()}
 
       <section style={card} aria-labelledby="risk-head">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>

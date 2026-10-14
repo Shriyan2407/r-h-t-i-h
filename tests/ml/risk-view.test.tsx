@@ -47,3 +47,18 @@ describe("RiskView", () => {
     expect(matches).toEqual(["Past model performance does not guarantee future performance"]);
   });
 });
+
+describe("RiskView live move signal", () => {
+  it("relates today's move to the expected daily move and flags unusual moves", () => {
+    const big = (data.volatility.dailyVol * 100 * 3);
+    const html = renderToStaticMarkup(createElement(RiskView, { data, liveChangePct: big }));
+    expect(html).toMatch(/3\.0× the expected daily move/);
+    expect(html).toContain("unusually large");
+    const small = renderToStaticMarkup(createElement(RiskView, { data, liveChangePct: data.volatility.dailyVol * 50 }));
+    expect(small).toMatch(/0\.5× the expected daily move\./);
+    expect(small).not.toContain("unusually large");
+  });
+  it("shows nothing without a live change", () => {
+    expect(renderToStaticMarkup(createElement(RiskView, { data }))).not.toContain("expected daily move.");
+  });
+});
