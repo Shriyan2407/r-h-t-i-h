@@ -24,6 +24,8 @@ test("login lands on the dashboard", async ({ page }) => {
 test("stock risk model shows a forecast with evidence and no direction call", async ({ page }) => {
   await login(page);
   await page.goto("/stock/RELIANCE");
+  // Live (delayed) quote stream connects and updates the header status.
+  await expect(page.getByText(/Updating · delayed/)).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Risk Model" }).first().click();
   await expect(page.getByText(/Expected daily move/)).toBeVisible({ timeout: 45_000 });
   await expect(page.getByText("Not predicted")).toBeVisible();
