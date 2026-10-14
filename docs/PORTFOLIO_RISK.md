@@ -51,5 +51,19 @@ arithmetic, replay coverage, exclusions, holding cap, model-implied volatility c
 
 ## Not built
 
-Factor exposures beyond market beta (size, value, momentum), regime-conditional correlations, intraday liquidity,
+A returns-based factor model (factor premia or attribution), regime-conditional correlations, intraday liquidity,
 transaction-cost-aware rebalancing, and any optimisation or recommendation.
+
+## Style exposures (characteristics)
+
+Size (log market cap), value (book/price), momentum (12-1 month return) and low volatility (minus 1-year volatility)
+per holding, standardised against the current Nifty 50 members (`lib/portfolio/factorReference.json`, rebuilt with
+`npx tsx ml/build-factor-reference.ts`), capped at ±3 and value-weighted. 0 means "like a typical member". Missing
+inputs are reported as missing with coverage, never as 0. Describes holdings; no claim that styles earn returns.
+
+## Portfolio page
+
+Built from `features/portfolio/compute.ts` (tested): value, P&L, day P&L, weights, sector allocation, largest position,
+effective holdings. A holding without a quote is shown as "unavailable" and excluded from totals (it was previously
+priced at its purchase cost). The performance chart (`GET /api/portfolio/performance`) values today's quantities at
+each day's real close over ~3 months vs NIFTY 50; it is not the user's trading history.

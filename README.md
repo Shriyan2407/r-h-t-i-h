@@ -22,13 +22,16 @@ This README describes only what exists in this repository. Anything planned is i
 | Risk model | `volatility-ridge` 1.1.0 forecasts the size of the next 5 days' moves with an 80% range, factor contributions, market regime and sourced evidence ("Risk Model" tab). Walk-forward: 12% lower error than repeating recent volatility in 14/14 test periods. Direction is never predicted. |
 | Model evidence | `/models` publishes every model trained, including the rejected direction models and the superseded v1.0.0 |
 | Explanations | Optional Claude rewording of the evidence; any number not in the evidence rejects the text (deterministic template otherwise) |
+| Research | `/research`: "why is X moving?" from cited evidence (market vs stock-specific move, volume, expected range, headlines); never claims a headline caused a move |
+| Live updates | Delayed quotes stream to the stock page and watchlist (SSE, ~10 s), with a move-vs-forecast signal |
+| Navigation | Command palette (Ctrl/Cmd+K) for pages and stock search |
 | Backtesting | `/backtest`: three rules on daily history with next-open fills, fees and slippage; walk-forward validation via the API |
-| Portfolio | Holdings CRUD with validation; import from CSV, XLSX, PDF or a broker screenshot (OCR); risk analysis: concentration, sectors, beta, correlation, drawdown, VaR, risk contribution, liquidity, stress scenarios and model-based forward volatility |
+| Portfolio | Holdings CRUD with validation; import from CSV, XLSX, PDF or a broker screenshot (OCR); risk analysis: concentration, sectors, beta, correlation, drawdown, VaR, risk contribution, liquidity, stress scenarios, style exposures (size/value/momentum/low-vol) and model-based forward volatility; performance of current holdings vs NIFTY 50 from real closes |
 | Alerts | Vercel cron jobs detect 52-week high/low proximity, volume spikes, rule-based momentum moves and news, and send a market briefing to Telegram and Web Push, with per-user de-duplication |
 | Admin | Role-based (`ADMIN` in the database + verified email) alert dashboard |
 
-Not built: multi-agent AI, price-direction prediction or price targets (tested and rejected), real-time
-streaming prices, fundamentals/news as model inputs, billing. See [docs/PRODUCT.md](docs/PRODUCT.md) and
+Not built: multi-agent AI, price-direction prediction or price targets (tested and rejected), exchange real-time
+data (quotes may be delayed), fundamentals/news as model inputs, billing. See [docs/PRODUCT.md](docs/PRODUCT.md) and
 [docs/AI_LIMITATIONS.md](docs/AI_LIMITATIONS.md).
 
 ## Quick start

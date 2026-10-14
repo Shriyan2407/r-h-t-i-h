@@ -15,6 +15,7 @@ not built. Measured results: [MODEL_EVALUATION.md](MODEL_EVALUATION.md). Limits:
 | 6 | Machine learning (rejected) | Logistic regression, random forest, gradient boosting for 5-day direction | Trained and evaluated; **failed the gate; not used** | `ml/train/walkforward.py`, `lib/ml/registry.json` |
 | 7 | Evidence | Every number shown with the forecast is an `Evidence` item with kind, source and timestamp | No | `lib/ai/evidence.ts`, `lib/ml/riskForecast.ts` |
 | 8 | LLM | Claude (`claude-opus-5-5`) optionally rewrites the evidence in plain language | LLM; **explains only** | `lib/ai/riskExplainer.ts` |
+| 8b | Research | "Why is X moving?": deterministic decomposition (beta x index), volume, move vs forecast, regime, dated headlines; optional Claude wording behind the same guard | Evidence + LLM explains only | `lib/research/*`, `/research` |
 | 9 | Validation | Numeric grounding guard: any number not in the evidence, missing citation, or certainty language rejects the LLM text | No | `lib/ai/numericGuard.ts` |
 
 The older stock-analysis narrative (`/ai/analyze`, `/api/intelligence`) still uses an LLM or templates on top of the

@@ -3,6 +3,28 @@
 Branch `modernization/production-hardening` (from `master` @ `80ea5e6`). Newest first within
 each theme. Hashes are for this local branch and will change if history is rewritten.
 
+## Remaining-problems pass (2026-10-14)
+
+- **Fabrications removed (portfolio page)**: a performance chart drawn from seeded random noise; volatility, beta, Sharpe
+  and drawdown from invented formulas; a "health score"; stress tests and "macro exposure" from a hand-written table;
+  per-stock REDUCE/HOLD advice; a canned "AI advisor"; quotes that fell back to the purchase price. Page rebuilt on real
+  data from tested modules (1,856 -> ~150 lines; 1,800+ legacy lines deleted).
+- **Live layer**: SSE quote stream from one shared poll; stock page and watchlist update without reloads; the
+  always-on "NSE Live" badge now reflects the real stream; move-vs-forecast signal.
+- **Research**: "Why is X moving?" with cited evidence and optional guarded Claude wording.
+- **Portfolio**: style exposures (size/value/momentum/low-vol); real performance vs NIFTY 50.
+- **Survivorship**: the volatility model beats persistence on 25/25 former Nifty 50 members it never saw.
+- **Shared cache** for technicals, fundamentals, macro, news, sentiment and history; empty/error results never cached.
+- **Error tracking** (Sentry, off without DSN, PII scrubbed) and route/global error boundaries.
+- **Command palette** (Ctrl/Cmd+K); the navbar's "Ctrl K" button previously went to the home page.
+- **Docker**: `.dockerignore` (the image previously would have contained `.env.local`), runnable standalone image,
+  compose stack, CI image build.
+- **Brand**: EquityLens everywhere, with a tested migration of browser storage keys.
+- **Python backend**: archived and deleted at the owner's request.
+- Process notes: `c66eeaa`/`b9bf1ae` exceeded the lint warning cap by one (fixed in `03ca53d`), and `c2f2290`
+  failed the no-wildcard CSP test (fixed in `00e7cbc`); the legacy portfolio-module deletion landed in `2e2678b`, so that
+  single intermediate commit does not build on its own.
+
 ## Branch `feat/equitylens-ai-v2` (AI/ML upgrade; branched from `2ced51c`)
 
 ### Findings

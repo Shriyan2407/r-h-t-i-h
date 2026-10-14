@@ -25,7 +25,7 @@ Accounts with verification, market bar, quotes/charts/technicals/fundamentals, n
 sentiment, rule-based verdict with signal strength, optional LLM narrative, portfolio CRUD and
 import (CSV/XLSX/PDF/screenshot), Telegram and Web Push alerts with de-duplication, role-based
 admin dashboard, a validated 5-day volatility model with regime and evidence, a model evidence page,
-backtesting with walk-forward validation, and portfolio risk analytics with stress scenarios.
+backtesting with walk-forward validation, portfolio risk analytics with stress scenarios and style exposures, delayed live quote streaming with a move-vs-forecast signal, a "why is it moving?" research page, and a command palette.
 
 ## Not built (do not claim)
 
@@ -34,11 +34,11 @@ backtesting with walk-forward validation, and portfolio risk analytics with stre
 | Price-direction prediction, up/down probabilities, price targets | **Tested and rejected** (MODEL_EVALUATION.md); deliberately not shown |
 | Multi-agent AI | Not built; the Python prototype is retired (ARCHITECTURE.md) |
 | Fundamentals / news / macro as model inputs | Not built: no point-in-time history in the data source |
-| Free-form AI research chat ("why is X moving?") | Not built; the Risk Model tab shows evidence-backed explanations for one forecast |
-| Factor exposures beyond beta (size, value, momentum) | Not built |
-| Real-time streaming prices / signal changes | Not built (polling every 60 s only) |
+| Free-form research chat on any question | Not built. Built instead: "Why is X moving?" (`/research`), an evidence-only answer for that one question |
+| Returns-based factor model (factor premia, attribution) | Not built. Built: characteristic exposures (size, value, momentum, low volatility) vs Nifty 50 members |
+| Exchange real-time data | Not available: quotes stream over SSE every ~10 s but are Yahoo data and may be delayed |
 | Direct NSE/BSE feed | Not built; Yahoo only |
-| Command palette, full accessibility audit, redesigned mobile layout | Not built |
+| Full accessibility audit (screen-reader pass), redesigned mobile layout | Not done. Built: command palette (Ctrl/Cmd+K), labelled controls on new pages, reduced-motion support |
 | Email/SMS alert channels, subscriptions/billing | Not built (`subscriptionTier` is a stored label only; nothing is gated on it) |
 
 ## Disclaimer shown to users

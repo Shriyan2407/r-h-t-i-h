@@ -18,7 +18,17 @@ secure production deployment:
 | `CRON_SECRET` | Vercel Cron sends it as `Authorization: Bearer …`. Unset → cron endpoints return 503 |
 | `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` | Telegram alerts. Unset webhook secret → webhook returns 503 |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared rate limits and shared cache (recommended; without them both are per-instance) |
+| `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN` (optional) | Error tracking; off when empty. CSP allows only the DSN's ingest origin |
+| `NEXT_PUBLIC_APP_URL` (optional) | Public base URL for links in Telegram/SEO; defaults to the current Vercel domain |
 | `HEALTH_SECRET` (optional) | Bearer secret for detailed `/api/health`; falls back to `CRON_SECRET`. Point uptime monitors at the public `/api/health` |
+
+### Docker (self-hosting)
+
+```bash
+cp .env.example .env.docker      # set NEXTAUTH_SECRET; DATABASE_URL is provided by compose
+docker compose up --build        # postgres -> migrate -> app on http://localhost:3000
+```
+The image never contains `.env*` files (`.dockerignore`; checked in CI).
 
 ## 2. Database migrations
 

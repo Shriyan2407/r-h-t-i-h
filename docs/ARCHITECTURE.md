@@ -28,6 +28,16 @@ Services  lib/services/**, lib/scoring/**, lib/auth/**, lib/ratelimit/**, lib/em
 PostgreSQL via Prisma  (users, portfolios, watchlists, alert preferences/history, push, telegram)
 ```
 
+Live layer: `GET /api/stream/quotes` (Server-Sent Events) polls one batched Yahoo quote every 10 s through the shared
+cache, so N viewers cost one upstream call; clients (`useLiveQuotes`) pause while the tab is hidden. Price change ->
+signal: the risk panel compares today's move with the model's expected daily move. Data is delayed provider data.
+
+Errors: `instrumentation.ts` / `instrumentation-client.ts` initialise Sentry only when a DSN is set, with PII scrubbing;
+handled failures go through `reportError`; `app/error.tsx` and `app/global-error.tsx` catch render crashes.
+
+Containers: `Dockerfile` builds a standalone, non-root image (plus a `migrate` target); `docker-compose.yml` runs
+Postgres, migrations and the app. CI builds the image and probes it.
+
 Scheduled work: `vercel.json` defines cron entries that call `/api/cron/market-alerts`,
 `/api/cron/news-alerts` and `/api/cron/daily-briefing` with `Authorization: Bearer $CRON_SECRET`.
 
@@ -65,8 +75,9 @@ transformer and RL model code, `ai-service`, `ocr-service`, a Socket.IO `ws-hub`
 - If Python is ever needed at serving time, the boundary is defined: Next.js -> an ML service that loads registry
   artifacts by `id@version`; not before a model requires it.
 
-**Not yet deleted**: the directory is unversioned, so deleting it cannot be undone from git. It is left for the owner
-to delete or archive.
+**Deleted on 2026-10-14** at the owner's request, after archiving every file (70 files, verified byte-for-byte) to
+`backend-archive-2026-10-14.zip` next to the repository. The root `docker-compose.yml` that built it is superseded by
+`frontend/docker-compose.yml`.
 
 ## Request lifecycle: stock analysis
 
