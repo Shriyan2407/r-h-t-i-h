@@ -99,6 +99,34 @@ export function PortfolioRiskView({ data }: { data: PortfolioRiskResponse }) {
         ))}
       </section>
 
+      <section style={card} aria-labelledby="factor-h">
+        <h3 id="factor-h" style={{ ...label, margin: "0 0 8px" }}>Style exposures vs Nifty 50 members</h3>
+        {data.factors.exposures.map((f) => {
+          const z = f.exposure;
+          const pctW = z === null ? 0 : (Math.min(Math.abs(z), 3) / 3) * 50;
+          return (
+            <div key={f.factor} style={{ display: "grid", gridTemplateColumns: "120px 1fr 120px", gap: 8, alignItems: "center", fontSize: 12, marginTop: 6 }}>
+              <span title={f.definition}>{f.name}</span>
+              <div role="img" aria-label={z === null ? `${f.name}: no data` : `${f.name}: ${z.toFixed(2)} standard deviations, ${z >= 0 ? f.high : f.low}`}
+                style={{ position: "relative", height: 8, borderRadius: 4, background: "var(--th-border-card)" }}>
+                <div style={{ position: "absolute", left: "50%", top: -2, width: 1, height: 12, background: "var(--th-text-muted)" }} />
+                {z !== null && (
+                  <div style={{ position: "absolute", top: 0, height: 8, borderRadius: 4, background: "var(--primary)",
+                    left: z >= 0 ? "50%" : `${50 - pctW}%`, width: `${pctW}%` }} />
+                )}
+              </div>
+              <span style={{ fontFamily: "monospace", textAlign: "right" }}>
+                {z === null ? "no data" : `${z >= 0 ? "+" : ""}${z.toFixed(2)}`}
+                <span style={{ color: "var(--th-text-muted)" }}> · {pct(f.coverage, 0)}</span>
+              </span>
+            </div>
+          );
+        })}
+        <p style={{ margin: "8px 0 0", fontSize: 11, color: "var(--th-text-muted)" }}>
+          {data.factors.method} Reference: {data.factors.reference.count} stocks as of {data.factors.reference.asOf}. Right-hand % is the share of value with data.
+        </p>
+      </section>
+
       {showMatrix && r.correlation.tickers.length > 1 && (
         <section style={card} aria-labelledby="corr-h">
           <h3 id="corr-h" style={{ ...label, margin: "0 0 8px" }}>Correlation (1y daily returns)</h3>
