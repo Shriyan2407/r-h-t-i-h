@@ -17,7 +17,7 @@ the code and the production build, plus changes already made. Measure before opt
 
 | Issue | Evidence | Plan |
 |---|---|---|
-| ~~In-memory cache per instance~~ | Intelligence, AI analysis and backtest bars now use `lib/cache/shared.ts` (Upstash when configured) | **Still in-memory** for news, sentiment, history, technicals, fundamentals, macro, and when Upstash env vars are unset |
+| ~~In-memory cache per instance~~ | Intelligence, AI analysis and backtest bars now use `lib/cache/shared.ts` (Upstash when configured) | News, sentiment, history, technicals, fundamentals and macro moved to the shared cache too; empty/error results are never cached. Only per-user auth state (30 s) and the in-memory fallback remain per-process |
 | LLM call is synchronous in the request path (up to 60 s `maxDuration`) | `app/api/ai-analysis`, `intelligence` | Queue the job, stream or poll |
 | Sequential Yahoo fallbacks (`.NS` → `.BO` → bare) per request | `intelligenceEngine`, `quote` route | Resolve the symbol once, cache the mapping |
 | Very large single-file client pages (e.g. `portfolio/page.tsx` ≈ 95 KB) | file sizes | Split by feature, lazy-load heavy panels (charts, OCR, portfolio analytics) |
