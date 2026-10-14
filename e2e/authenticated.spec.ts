@@ -55,6 +55,9 @@ test("model evidence publishes rejected models", async ({ page }) => {
 test("portfolio risk analysis runs on the saved holdings", async ({ page }) => {
   await login(page);
   await page.goto("/portfolio");
+  await expect(page.getByRole("heading", { name: "Current holdings vs NIFTY 50" })).toBeVisible();
+  await expect(page.getByText(/not your actual trading history|Not enough price history/)).toBeVisible({ timeout: 45_000 });
+  await expect(page.getByRole("button", { name: "Edit RELIANCE" })).toBeVisible();
   await page.getByRole("button", { name: "Run risk analysis" }).click();
   await expect(page.getByText("Stress scenarios (estimates, not forecasts)")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByText("COVID crash (Feb-Mar 2020)", { exact: true })).toBeVisible();
