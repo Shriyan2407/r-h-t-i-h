@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Deterministic Intelligence Report Generator
+   EquityLens — Deterministic Intelligence Report Generator
    Builds a complete IntelligenceReport from Yahoo Finance data
    with zero LLM dependency. Used as final fallback tier.
 ═══════════════════════════════════════════════════════════════ */

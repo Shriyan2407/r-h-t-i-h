@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Claude AI Service
+   EquityLens — Claude AI Service
    Handles: client initialization, retry logic, rate limiting,
    response validation, and JSON extraction.
 ═══════════════════════════════════════════════════════════════ */
@@ -55,7 +55,7 @@ export async function callClaude(
         model,
         max_tokens: MAX_TOKENS,
         system: systemMsg ?? [
-          "You are R.H.T.I.H Intelligence Core — an institutional AI equity analyst for Indian markets.",
+          "You are the EquityLens research assistant — an equity analyst for Indian markets.",
           "You ALWAYS return valid JSON only.",
           "No markdown fences, no explanations outside the JSON.",
           "Your analysis is specific, non-generic, and evidence-based.",

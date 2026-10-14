@@ -14,7 +14,7 @@ import { auth } from "@/lib/auth/auth";
 import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Compressed Intelligence AI Analysis
+   EquityLens — Compressed Intelligence AI Analysis
    Priority: 1) Ollama local LLM  2) Claude (if key set)  3) Deterministic quant
    NEVER returns 503. Works fully offline.
 ═══════════════════════════════════════════════════════════════ */
@@ -81,7 +81,7 @@ function buildOllamaPrompt(ticker: string, quote: any, quantSummary: string, hea
     ? headlines.slice(0, 12).map((h, i) => `${i + 1}. ${h}`).join("\n")
     : "No recent news. Use sector knowledge.";
 
-  return `R.H.T.I.H INTELLIGENCE — ${new Date().toLocaleDateString("en-IN")}
+  return `EQUITYLENS — ${new Date().toLocaleDateString("en-IN")}
 ${ticker} | ₹${price.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}%) | ${mktCapCat} ${mktCap}
 52W: ₹${lo52.toFixed(0)}–₹${hi52.toFixed(0)} | P/E: ${pe?.toFixed(1) ?? "N/A"}
 Company: ${quote?.longName ?? quote?.shortName ?? ticker}
@@ -278,7 +278,7 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
         try {
           const msg = await client.messages.create({
             model, max_tokens: 4000,
-            system: "You are R.H.T.I.H Intelligence Core — institutional AI equity analyst for Indian markets. Return ONLY valid JSON. No markdown.",
+            system: "You are the EquityLens research assistant — an equity analyst for Indian markets. Return ONLY valid JSON. No markdown.",
             messages: [{ role: "user", content: prompt }],
           });
           const text = msg.content.find(c => c.type === "text")?.text ?? "";

@@ -2,7 +2,7 @@ import { TTL }           from "@/lib/services/cache";
 import { isUsable, sharedWrap } from "@/lib/cache/shared";
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Live Macro Intelligence Engine
+   EquityLens — Live Macro Intelligence Engine
    Fetches real market data: NIFTY, VIX, USD/INR, Crude, Gold,
    NIFTY Bank, S&P 500, sector indices — all from Yahoo Finance.
    Computes: risk regime, macro pressure score, sector rotation.

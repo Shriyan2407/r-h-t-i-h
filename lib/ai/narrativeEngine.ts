@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Deterministic Narrative Engine
+   EquityLens — Deterministic Narrative Engine
    Generates institutional-quality AIAnalysis from quant data.
    No LLM required — all text is computed from real indicators.
 ═══════════════════════════════════════════════════════════════ */

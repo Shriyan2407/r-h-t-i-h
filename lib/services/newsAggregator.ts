@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Real News Aggregation Service
+   EquityLens — Real News Aggregation Service
    Sources: Google News RSS + Indian Finance RSS feeds + Finnhub + NewsAPI
    No scraping — all public RSS/API endpoints
 ═══════════════════════════════════════════════════════════════ */
@@ -119,7 +119,7 @@ async function parseRSSFeed(feed: { name: string; url: string }): Promise<RawRSS
   try {
     const res = await fetch(feed.url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; R.H.T.I.H-News-Bot/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; EquityLens-News/1.0)",
         "Accept":     "application/rss+xml, application/xml, text/xml, */*",
         "Accept-Language": "en-IN,en;q=0.9",
       },

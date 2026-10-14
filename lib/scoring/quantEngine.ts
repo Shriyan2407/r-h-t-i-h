@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Deterministic Quant Scoring Engine
+   EquityLens — Deterministic Quant Scoring Engine
    All analytics are computed here. AI only interprets the output.
 ═══════════════════════════════════════════════════════════════ */
 

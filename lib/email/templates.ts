@@ -1,7 +1,7 @@
 import { escapeHtml as esc } from "@/lib/security/html";
 import type { EmailMessage } from "./send";
 
-const BRAND = "Market Ka Baadshah";
+const BRAND = "EquityLens";
 
 function layout(heading: string, intro: string, ctaLabel: string, url: string, footer: string): string {
   return `<!doctype html>

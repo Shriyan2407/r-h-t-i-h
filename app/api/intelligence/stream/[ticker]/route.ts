@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth/auth";
 import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Intelligence SSE Streaming Route
+   EquityLens — Intelligence SSE Streaming Route
    Timeline:
      t=0ms   → send {type:"status"} + start data fetch
      t≈2s    → send {type:"quant"}  quant report (deterministic, instant)
@@ -155,7 +155,7 @@ export async function GET(
         });
 
         const SYSTEM = [
-          "You are R.H.T.I.H Intelligence Core — an institutional AI equity analyst for Indian markets.",
+          "You are the EquityLens research assistant — an equity analyst for Indian markets.",
           "You ALWAYS return valid JSON only. No markdown fences, no explanations outside JSON.",
           "Your analysis is specific, non-generic, and evidence-based.",
         ].join(" ");

@@ -1814,7 +1814,7 @@ export default function PortfolioPage() {
       <footer className="px-4 sm:px-6 py-4 mt-4" style={{ borderTop: "1px solid var(--th-border-subtle)" }}>
         <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-ultra-faint)" }}>
-            MARKET KA BAADSHAH · Portfolio · Not investment advice
+            EQUITYLENS · Portfolio · Not investment advice
           </span>
           <span className="text-[8.5px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>
             Quotes from Yahoo Finance; may be delayed

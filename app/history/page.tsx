@@ -658,7 +658,7 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
 
       <div className="py-4 text-center">
         <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
-          MARKET KA BAADSHAH Company Intelligence Archive Â· {report._meta?.newsCount ?? 0} Articles Analyzed
+          EQUITYLENS Company Intelligence Archive Â· {report._meta?.newsCount ?? 0} Articles Analyzed
           Â· {isKnown ? "Institutional Deep Archive" : "Sector Playbook Engine"} Â· Not Investment Advice
         </p>
       </div>
@@ -793,7 +793,7 @@ export default function HistoryPage() {
       <footer className="px-4 py-6 mt-8" style={{ borderTop: "1px solid var(--th-border-subtle)" }}>
         <div className="max-w-[1440px] mx-auto flex justify-between items-center">
           <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
-            MARKET KA BAADSHAH Company Intelligence Archive
+            EQUITYLENS Company Intelligence Archive
           </span>
           <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
             Not investment advice

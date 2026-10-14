@@ -514,7 +514,7 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
 
       <div className="py-4 text-center">
         <p className="text-[9px] font-mono uppercase tracking-wider" style={{color:"var(--th-text-ultra-faint)"}}>
-          MARKET KA BAADSHAH Real Intelligence · {report._meta?.newsCount ?? 0} News Articles · {report._meta?.model ? `Engine: ${report._meta.model}` : "AI Analysis"} · Not Investment Advice
+          EQUITYLENS Real Intelligence · {report._meta?.newsCount ?? 0} News Articles · {report._meta?.model ? `Engine: ${report._meta.model}` : "AI Analysis"} · Not Investment Advice
         </p>
 
       </div>

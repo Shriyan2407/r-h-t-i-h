@@ -517,7 +517,7 @@ function DropFooter() {
         ↑↓ navigate · ↵ open · esc dismiss
       </span>
       <span className="text-[8px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-ultra-faint)" }}>
-        Market Ka Baadshah · Intelligence Engine
+        EquityLens · Intelligence Engine
       </span>
     </div>
   );

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Ollama Local LLM Client
+   EquityLens — Ollama Local LLM Client
    Server-side only. Opt-in: only active when OLLAMA_BASE_URL is set
    (e.g. http://localhost:11434). When unset, no network probe is made.
    Supports Qwen 2.5, LLaMA 3.x, Mistral, Phi-3, DeepSeek-R1.

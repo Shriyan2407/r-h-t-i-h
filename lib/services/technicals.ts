@@ -7,7 +7,7 @@ import type { TechnicalIndicators }    from "@/lib/types";
 const yf = new (YFClass as any)();
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Technical Analysis Engine (Next.js-native)
+   EquityLens — Technical Analysis Engine (Next.js-native)
    Pure TypeScript. No Python. No external service.
    All indicators computed from yahoo-finance2 OHLCV data.
 ═══════════════════════════════════════════════════════════════ */

@@ -489,7 +489,7 @@ export async function generateAndSendDailyBriefing(): Promise<{ sent: number; sk
     }
     if (pref.pushEnabled) {
       await sendPushToUser(pref.userId, {
-        title: "📊 Market Ka Baadshah — Market Briefing",
+        title: "📊 EquityLens — Market Briefing",
         body:  `NIFTY ${nifty.change >= 0 ? "▲" : "▼"} ${Math.abs(nifty.change).toFixed(2)}% · ${dateStr}`,
         tag:   "daily-briefing",
         url:   "/alerts",

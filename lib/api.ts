@@ -10,7 +10,7 @@ import type {
 } from "./types";
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Unified API Client
+   EquityLens — Unified API Client
    ALL data is fetched from internal Next.js routes.
    Failures PROPAGATE to the caller so the UI can show a real error state.
    Generated sample data is used only in explicit demo mode (see config/demo.ts),

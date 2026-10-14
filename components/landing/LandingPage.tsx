@@ -316,7 +316,7 @@ function HeroSection({ market }: { market: LandingMarket | null }) {
               filter: "drop-shadow(0 0 40px rgba(255,215,0,0.25))",
             }}
           >
-            MARKET KA BAADSHAH
+            EQUITYLENS
           </h1>
           <div
             className="text-[10px] font-mono uppercase tracking-[0.5em] mt-2"
@@ -886,7 +886,7 @@ function CTASection() {
           viewport={{ once: true }}
         >
           <div className="text-[9px] font-mono uppercase tracking-[0.3em] mb-5" style={{ color: "var(--gold)" }}>
-            ⬡ Join Market Ka Baadshah
+            ⬡ Join EquityLens
           </div>
 
           <h2
@@ -962,7 +962,7 @@ function Footer() {
               backgroundClip: "text",
             }}
           >
-            MARKET KA BAADSHAH
+            EQUITYLENS
           </span>
           <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-ultra-faint)" }}>
             Indian Equity Research and Risk Analytics
@@ -1081,7 +1081,7 @@ function LandingHeader() {
             backgroundClip: "text",
           }}
         >
-          MARKET KA BAADSHAH
+          EQUITYLENS
         </span>
       </div>
 

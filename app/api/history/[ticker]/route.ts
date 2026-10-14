@@ -6,7 +6,7 @@ import type { StockHistoryProfile, EventSentiment } from "@/lib/stockHistory";
 import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Company History API Route
+   EquityLens — Company History API Route
 
    Priority chain:
    1. Cache (HIT → serve immediately)

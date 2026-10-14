@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Intelligence Engine (Orchestrator)
+   EquityLens — Intelligence Engine (Orchestrator)
    3-tier fallback: Ollama → Claude → Deterministic Quant
    NEVER returns an error object. Always returns valid report.
 ═══════════════════════════════════════════════════════════════ */
@@ -51,7 +51,7 @@ async function fetchYahooData(ticker: string) {
 /* ── Ollama Intelligence wrapper ─────────────────────────── */
 
 const SYSTEM_MSG = [
-  "You are R.H.T.I.H Intelligence Core — an institutional AI equity analyst for Indian markets.",
+  "You are the EquityLens research assistant — an equity analyst for Indian markets.",
   "You ALWAYS return valid JSON only.",
   "No markdown fences, no explanations outside the JSON.",
   "Your analysis is specific, non-generic, and evidence-based.",

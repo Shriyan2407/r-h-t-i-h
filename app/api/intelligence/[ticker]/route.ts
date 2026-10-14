@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth/auth";
 import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Intelligence API Route
+   EquityLens — Intelligence API Route
    ALWAYS returns a valid report. No error objects, no blockers.
    Falls through: Ollama → Claude → Deterministic Quant.
 ═══════════════════════════════════════════════════════════════ */

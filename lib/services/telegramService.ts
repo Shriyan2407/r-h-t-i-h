@@ -69,7 +69,7 @@ export function fmtBreakout(ticker: string, price: number, high52: number): stri
 
 Price level only. This is not a recommendation.
 
-<i>Market Ka Baadshah</i>`;
+<i>EquityLens</i>`;
 }
 
 export function fmtBreakdown(ticker: string, price: number, low52: number): string {
@@ -85,7 +85,7 @@ export function fmtBreakdown(ticker: string, price: number, low52: number): stri
 
 Price level only. This is not a recommendation.
 
-<i>Market Ka Baadshah</i>`;
+<i>EquityLens</i>`;
 }
 
 export function fmtVolumeSpike(ticker: string, price: number, volumeMultiple: number): string {
@@ -99,7 +99,7 @@ export function fmtVolumeSpike(ticker: string, price: number, volumeMultiple: nu
 
 Heavy volume can accompany news or large orders. It does not indicate direction.
 
-<i>Market Ka Baadshah</i>`;
+<i>EquityLens</i>`;
 }
 
 export interface MomentumAlertData {
@@ -131,7 +131,7 @@ export function fmtMomentumAlert(d: MomentumAlertData): string {
 
 Rule-based screen: a ${up ? "rise" : "fall"} of more than 2.5% on heavy volume, ${up ? "in the upper" : "in the lower"} part of the 52-week range. It is not a forecast or a recommendation.
 
-<i>Market Ka Baadshah</i>`;
+<i>EquityLens</i>`;
 }
 
 export function fmtStockAnalysis(ticker: string, data: {
@@ -186,7 +186,7 @@ export function fmtDailyBriefing(data: {
   const time = new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" });
 
   return [
-    `📊 <b>MARKET KA BAADSHAH</b>`,
+    `📊 <b>EQUITYLENS</b>`,
     `Market Briefing — ${esc(data.date)}`,
     `━━━━━━━━━━━━━━━━━━━━━━━━`,
     indices ? `\n🇮🇳 <b>INDICES</b>\n${indices}` : "",
@@ -199,7 +199,7 @@ export function fmtDailyBriefing(data: {
 }
 
 export function fmtHelp(): string {
-  return `🤖 <b>MARKET KA BAADSHAH BOT</b>
+  return `🤖 <b>EQUITYLENS BOT</b>
 ━━━━━━━━━━━━━━━━━━━━━━
 
 Your AI-powered Indian equity assistant.
@@ -217,7 +217,7 @@ Your AI-powered Indian equity assistant.
 
 Or just type: <i>Analyze INFY</i>
 
-<i>Market Ka Baadshah AI</i>`;
+<i>EquityLens</i>`;
 }
 
 export function fmtNewsAlert(ticker: string, item: {
@@ -236,7 +236,7 @@ export function fmtNewsAlert(ticker: string, item: {
 
 ${short ? `📝 ${short}${item.summary.length > 200 ? "…" : ""}\n\n` : ""}🔗 Source: ${esc(item.source)}
 
-<i>Market Ka Baadshah AI</i>`;
+<i>EquityLens</i>`;
 }
 
 export function fmtEarningsAlert(
@@ -271,13 +271,13 @@ ${isReleased
     ? "📈 Check results for targets and guidance revision."
     : "📌 Keep an eye out — earnings can cause large moves."}
 
-<i>Market Ka Baadshah AI</i>`;
+<i>EquityLens</i>`;
 }
 
 export function fmtConnected(firstName?: string): string {
   return `✅ <b>Connected!</b>
 
-Welcome${firstName ? `, ${esc(firstName)}` : ""} to <b>Market Ka Baadshah AI</b>!
+Welcome${firstName ? `, ${esc(firstName)}` : ""} to <b>EquityLens</b>!
 
 You'll now receive:
 • 🚀 Breakout & breakdown alerts
@@ -287,5 +287,5 @@ You'll now receive:
 
 Type /help to see all commands.
 
-<i>Market Ka Baadshah AI</i>`;
+<i>EquityLens</i>`;
 }

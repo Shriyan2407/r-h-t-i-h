@@ -171,7 +171,7 @@ export default function AdminAlertsPage() {
           ⚡ Alert Engine Admin
         </div>
         <div style={{ fontSize: 12, color: "#64748B" }}>
-          Market Ka Baadshah · Proactive Alert System
+          EquityLens · Proactive Alert System
         </div>
       </div>
 

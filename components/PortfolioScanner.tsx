@@ -359,7 +359,7 @@ function ScanningPhase({
               style={{
                 background: "linear-gradient(90deg, transparent 0%, #FFD700 40%, #FFF8DC 50%, #FFD700 60%, transparent 100%)",
                 boxShadow:  "0 0 8px #FFD700, 0 0 16px rgba(255,215,0,0.5), 0 0 2px #fff",
-                animation:  "rhtih-scan 2.2s cubic-bezier(0.4,0,0.2,1) infinite",
+                animation:  "el-scan 2.2s cubic-bezier(0.4,0,0.2,1) infinite",
               }}
             />
           )}
@@ -371,7 +371,7 @@ function ScanningPhase({
           <div
             key={i}
             className={`absolute w-5 h-5 border-[#FFD700] ${cls}`}
-            style={{ animation: `rhtih-glow ${0.6 + i * 0.15}s ease-in-out infinite alternate` }}
+            style={{ animation: `el-glow ${0.6 + i * 0.15}s ease-in-out infinite alternate` }}
           />
         ))}
       </div>
@@ -922,13 +922,13 @@ export function PortfolioScanner({ onClose, onImport }: PortfolioScannerProps) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <style>{`
-        @keyframes rhtih-scan {
+        @keyframes el-scan {
           0%   { top: 0%; }
           48%  { top: calc(100% - 2px); }
           52%  { top: calc(100% - 2px); }
           100% { top: 0%; }
         }
-        @keyframes rhtih-glow {
+        @keyframes el-glow {
           from { opacity: 0.5; }
           to   { opacity: 1;   }
         }

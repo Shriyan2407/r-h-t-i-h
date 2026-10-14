@@ -84,12 +84,12 @@ export async function POST(req: NextRequest) {
     if (text === "/alerts") {
       const conn = await prisma.telegramConnection.findUnique({ where: { chatId: String(chatId) } });
       if (!conn) {
-        await tgSend(chatId, "❌ Account not linked. Visit Market Ka Baadshah → Alerts to connect.");
+        await tgSend(chatId, "❌ Account not linked. Visit EquityLens → Alerts to connect.");
         return Response.json({ ok: true });
       }
       const prefs = await prisma.alertPreference.findUnique({ where: { userId: conn.userId } });
       const msg = prefs
-        ? `🔔 <b>Your Alert Settings</b>\n\nBreakouts: ${prefs.breakoutAlerts ? "✅" : "❌"}\nBreakdowns: ${prefs.breakdownAlerts ? "✅" : "❌"}\nAI Buy Signals: ${prefs.aiBuySignals ? "✅" : "❌"}\nAI Sell Signals: ${prefs.aiSellSignals ? "✅" : "❌"}\nVolume Spikes: ${prefs.volumeAlerts ? "✅" : "❌"}\nMarket Summary: ${prefs.marketSummary ? "✅" : "❌"}\nTier: <b>${prefs.tier.toUpperCase()}</b>\n\nManage at: market-ka-baadshah.vercel.app/alerts`
+        ? `🔔 <b>Your Alert Settings</b>\n\nBreakouts: ${prefs.breakoutAlerts ? "✅" : "❌"}\nBreakdowns: ${prefs.breakdownAlerts ? "✅" : "❌"}\nMomentum up (rule-based): ${prefs.aiBuySignals ? "✅" : "❌"}\nMomentum down (rule-based): ${prefs.aiSellSignals ? "✅" : "❌"}\nVolume Spikes: ${prefs.volumeAlerts ? "✅" : "❌"}\nMarket Summary: ${prefs.marketSummary ? "✅" : "❌"}\nTier: <b>${prefs.tier.toUpperCase()}</b>\n\nManage at: ${(process.env.NEXT_PUBLIC_APP_URL ?? "https://market-ka-baadshah.vercel.app").replace(/^https?:\/\//, "")}/alerts`
         : "No preferences found. Visit the alerts page to configure.";
       await tgSend(chatId, msg);
       return Response.json({ ok: true });
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     if (text === "/briefing") {
       const conn = await prisma.telegramConnection.findUnique({ where: { chatId: String(chatId) } });
       if (!conn) {
-        await tgSend(chatId, "❌ Account not linked. Visit Market Ka Baadshah → Alerts to connect.");
+        await tgSend(chatId, "❌ Account not linked. Visit EquityLens → Alerts to connect.");
         return Response.json({ ok: true });
       }
 
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       // with a 200 so Telegram does not retry them.
       const linked = await prisma.telegramConnection.findUnique({ where: { chatId: String(chatId) } });
       if (!linked?.isActive) {
-        await tgSend(chatId, "❌ Link your account first: Market Ka Baadshah → Alerts → Connect Telegram.");
+        await tgSend(chatId, "❌ Link your account first: EquityLens → Alerts → Connect Telegram.");
         return Response.json({ ok: true });
       }
       const limit = await rateLimit({ key: `rl:tg-analyze:${chatId}`, limit: 10, windowSec: 60 * 60 });

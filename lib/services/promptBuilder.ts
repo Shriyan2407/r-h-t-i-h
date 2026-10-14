@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Sector-Aware Institutional Prompt Builder
+   EquityLens — Sector-Aware Institutional Prompt Builder
    This is the intelligence core. Sector-specific frameworks
    ensure every stock receives fundamentally different analysis.
 ═══════════════════════════════════════════════════════════════ */
@@ -651,7 +651,7 @@ Return ONLY valid JSON matching this exact structure. No markdown, no commentary
 }`.trim();
 
   /* ── Final assembled prompt ── */
-  return `You are R.H.T.I.H Intelligence Core — an institutional equity analyst for Indian markets (NSE/BSE).
+  return `You are the EquityLens research assistant — an equity analyst for Indian markets (NSE/BSE).
 
 TODAY: ${new Date().toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}
 

@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   MARKET KA BAADSHAH — Intelligent Search Engine
+   EQUITYLENS — Intelligent Search Engine
    Multi-layer scoring: exact > prefix > word > alias > fuzzy
 ══════════════════════════════════════════════════════════════════════════ */
 
