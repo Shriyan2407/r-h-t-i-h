@@ -1,0 +1,16 @@
+# Never bake secrets or local state into an image.
+.env
+.env.*
+!.env.example
+.git
+node_modules
+.next
+.vercel
+coverage
+test-results
+playwright-report
+ml/data/raw
+ml/data/dataset.csv
+**/__pycache__
+*.log
+tsconfig.tsbuildinfo
