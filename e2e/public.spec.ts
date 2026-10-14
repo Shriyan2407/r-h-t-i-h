@@ -7,6 +7,8 @@ test("landing page renders without fabricated claims", async ({ page }) => {
   await expect(page).toHaveTitle(/Indian Equity Research and Risk Analytics/);
   const body = await page.locator("body").innerText();
   expect(body).not.toMatch(/7 agents|multi-agent|AI-Powered|real-time intelligence/i);
+  expect(body).not.toMatch(/Market Ka Baadshah|R\.H\.T\.I\.H/i);
+  expect(body).toMatch(/EquityLens/i);
 });
 
 test("login form fields are reachable by their labels", async ({ page }) => {

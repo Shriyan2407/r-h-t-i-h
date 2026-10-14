@@ -1,4 +1,4 @@
-# Market Ka Baadshah
+# EquityLens
 
 A research and risk-analytics tool for Indian equities (NSE / BSE). It combines market data,
 rule-based technical and fundamental scoring, news, backtesting, portfolio risk analysis and one

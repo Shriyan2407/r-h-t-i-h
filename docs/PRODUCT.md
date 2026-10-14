@@ -2,10 +2,11 @@
 
 ## Name
 
-The deployed product is **Market Ka Baadshah**. Earlier code and documents also say
-"EquityLens" and "R.H.T.I.H". One canonical name is still to be chosen and applied everywhere
-(README, metadata, emails, env vars, favicon, SEO); until then the user-facing name is
-Market Ka Baadshah.
+**EquityLens** is the canonical product name (decided 2026-10-14) and is used in the UI, metadata, emails, Telegram,
+push notifications, prompts and documentation. Earlier names ("Market Ka Baadshah", "R.H.T.I.H") were removed;
+browser storage keys from those names are migrated on first load so saved portfolios and settings are kept.
+The Vercel project and its domain are still `market-ka-baadshah`; renaming them changes the live URL and is an
+owner action in the Vercel dashboard (then set `NEXT_PUBLIC_APP_URL`).
 
 ## Who it is for
 
