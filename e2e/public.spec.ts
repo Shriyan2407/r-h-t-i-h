@@ -47,3 +47,19 @@ test("security headers are set", async ({ request }) => {
   expect(h["x-frame-options"]).toBe("DENY");
   expect(h["referrer-policy"]).toBeTruthy();
 });
+
+test("command palette opens with Ctrl+K and navigates by keyboard", async ({ page }) => {
+  await page.goto("/");
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("Model evidence")).toBeVisible();
+  await page.keyboard.type("backtest");
+  await page.keyboard.press("Enter");
+  // Signed out, so the protected page redirects to login with the callback preserved.
+  await expect(page).toHaveURL(/\/auth\/login\?callbackUrl=(%2F|\/)backtest/);
+  await page.keyboard.press("Control+k");
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+});

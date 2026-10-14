@@ -1,3 +1,4 @@
+import { CommandPalette } from "@/components/CommandPalette";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
@@ -112,6 +113,7 @@ export default function RootLayout({
         <AuthSessionProvider>
           <ThemeProvider>
             {children}
+            <CommandPalette />
             <DemoBanner />
           </ThemeProvider>
         </AuthSessionProvider>
