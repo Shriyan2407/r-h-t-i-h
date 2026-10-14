@@ -18,7 +18,7 @@ const POPULAR: SearchResult[] = [
   { ticker: "ICICIBANK",  company_name: "ICICI Bank Ltd",                   exchange: "NSE", sector: "Banking",           market_cap_category: "Large Cap" },
 ];
 
-const RECENT_KEY = "rhtih_recent_tickers";
+const RECENT_KEY = "equitylens_recent_tickers";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 

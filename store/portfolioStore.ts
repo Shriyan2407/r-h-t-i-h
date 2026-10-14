@@ -108,7 +108,7 @@ export const usePortfolioStore = create<PortfolioState>()(
       clear: () => set({ holdings: [] }),
     }),
     {
-      name:    "rhtih_portfolio",
+      name:    "equitylens_portfolio",
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         console.log(`[Portfolio] Rehydrated — ${state?.holdings.length ?? 0} holdings`);

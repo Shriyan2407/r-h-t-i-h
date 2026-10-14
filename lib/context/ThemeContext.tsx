@@ -25,7 +25,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     // Prefer data-theme set by no-FOUC inline script, then localStorage, then dark default
     const htmlAttr = document.documentElement.getAttribute("data-theme") as Theme | null;
     let stored: Theme | null = null;
-    try { stored = localStorage.getItem("mkb-theme") as Theme | null; } catch { /**/ }
+    try { stored = localStorage.getItem("equitylens-theme") as Theme | null; } catch { /**/ }
     const initial = stored ?? htmlAttr ?? "dark";
     setThemeState(initial);
     document.documentElement.setAttribute("data-theme", initial);
@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.classList.add("theme-transitioning");
     document.documentElement.setAttribute("data-theme", t);
     setThemeState(t);
-    try { localStorage.setItem("mkb-theme", t); } catch { /**/ }
+    try { localStorage.setItem("equitylens-theme", t); } catch { /**/ }
     // Update mobile browser chrome color
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", t === "dark" ? "#050505" : "#F0EBE0");
