@@ -10,6 +10,8 @@ import { Navbar }        from "@/components/Navbar";
 import { MarketTicker }  from "@/components/MarketTicker";
 import { SearchBar }     from "@/components/SearchBar";
 import { useWatchlistStore, type WatchlistItem } from "@/store/watchlistStore";
+import { useLiveQuotes } from "@/lib/hooks/useLiveQuotes";
+import type { LiveQuote as StreamQuote } from "@/lib/live/quotes";
 import { cn }            from "@/lib/utils";
 
 /* ── Live quote hook ─────────────────────────── */
@@ -46,8 +48,10 @@ function useLiveQuote(ticker: string) {
 
 /* ── Single watchlist card ───────────────────── */
 
-function WatchCard({ item, onRemove }: { item: WatchlistItem; onRemove: () => void }) {
-  const { quote, refresh } = useLiveQuote(item.ticker);
+function WatchCard({ item, onRemove, live }: { item: WatchlistItem; onRemove: () => void; live?: StreamQuote }) {
+  const { quote: snapshot, refresh } = useLiveQuote(item.ticker);
+  // Streamed (delayed) price/change overlays the snapshot; high/low/volume stay from the snapshot.
+  const quote = live ? { ...snapshot, price: live.price, change: live.change, changePct: live.changePct, loading: false, error: false } : snapshot;
   const isUp  = quote.changePct >= 0;
   const added = new Date(item.addedAt);
 
@@ -277,6 +281,8 @@ function EmptyWatchlist() {
 
 export default function WatchlistPage() {
   const { items, remove, clear } = useWatchlistStore();
+  // One SSE connection for the whole list (max 20 tickers per stream).
+  const { quotes: liveQuotes } = useLiveQuotes(items.slice(0, 20).map((i) => i.ticker));
   const [mounted,      setMounted]      = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
 
@@ -375,7 +381,7 @@ export default function WatchlistPage() {
             >
               <AnimatePresence mode="popLayout">
                 {items.map(item => (
-                  <WatchCard key={item.ticker} item={item} onRemove={() => remove(item.ticker)} />
+                  <WatchCard key={item.ticker} item={item} live={liveQuotes[item.ticker]} onRemove={() => remove(item.ticker)} />
                 ))}
               </AnimatePresence>
             </motion.div>
