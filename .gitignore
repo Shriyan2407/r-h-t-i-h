@@ -57,3 +57,6 @@ __pycache__/
 # Playwright
 /test-results/
 /playwright-report/
+
+# docker compose secrets
+.env.docker

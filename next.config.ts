@@ -4,6 +4,9 @@ import { securityHeaders } from "./lib/security/headers";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["yahoo-finance2", "@anthropic-ai/sdk"],
 
+  // Self-contained server for the Docker image (Dockerfile sets NEXT_OUTPUT=standalone). Vercel builds are unaffected.
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
+
   // Don't advertise the framework/version on every response.
   poweredByHeader: false,
 
