@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Search, TrendingUp, Star, Menu, X, Activity, Brain, Target, Newspaper, LayoutDashboard, User, LogOut, ChevronDown, PieChart, Bell } from "lucide-react";
 import { useWatchlistStore } from "@/store/watchlistStore";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,6 @@ export function Navbar() {
   const [scrolled,     setScrolled]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const router      = useRouter();
   const pathname    = usePathname();
   const { theme }   = useTheme();
   const isLight     = theme === "light";

@@ -187,7 +187,7 @@ export function buildDeterministicReport(
   const newsRatio = news.length > 0 ? (posNews - negNews) / news.length : 0;
 
   const s = computeScores(quote, summary, newsRatio);
-  const { tech, fund, mom, vol, rr, smart, lt, swing, inst, rangePos, change1d, price, hi52, lo52, de } = s;
+  const { tech, fund, mom, vol, rr, smart, lt, swing, inst, rangePos, change1d, price, de } = s;
 
   const sectorProfile = detectSector(quote?.sector, ticker);
   const companyName   = quote?.longName ?? quote?.shortName ?? ticker;
