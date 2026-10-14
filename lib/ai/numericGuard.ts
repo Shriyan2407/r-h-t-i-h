@@ -10,7 +10,9 @@
 import type { Evidence } from "./evidence";
 
 const NUMBER = /(?<![A-Za-z#])[-+]?\d[\d,]*(?:\.\d+)?/g;
-const CITATION = /\[(E\d+)\]/g;
+const CITATION = /\[([A-Z]\d+)\]/g;
+/** Proper names that contain digits (index names), removed before scanning for numbers. */
+const NAMED = /\b(?:NIFTY|Nifty)\s?(?:50|100|500|Next 50|Bank)\b|\bS&P\s?500\b/g;
 /** Structural numbers allowed without evidence: horizons and interval width used by the product itself. */
 const STRUCTURAL = new Set(["5", "80", "20", "200", "1"]);
 
@@ -40,7 +42,7 @@ export function checkExplanation(text: string, evidence: readonly Evidence[]): G
   const problems: string[] = [];
   const ids = new Set(evidence.map((e) => e.id));
   // Strip citations before scanning numbers so "E3" is not read as the number 3.
-  const body = text.replace(CITATION, " ");
+  const body = text.replace(CITATION, " ").replace(NAMED, " ");
   const allowed = allowedNumbers(evidence);
   for (const m of body.matchAll(NUMBER)) {
     if (!allowed.has(normalize(m[0]))) problems.push(`ungrounded number "${m[0]}"`);

@@ -49,3 +49,19 @@ describe("numeric guard", () => {
     expect(a.has("7")).toBe(false);
   });
 });
+
+describe("numeric guard: names and id formats", () => {
+  it("treats index names as names, not figures", () => {
+    expect(checkExplanation("NIFTY 50 is calm [E3].", ev).ok).toBe(true);
+    expect(checkExplanation("The S&P 500 fell [E3].", ev).ok).toBe(true);
+  });
+  it("still rejects a standalone invented 50", () => {
+    expect(checkExplanation("There is a 50% chance [E1].", ev).ok).toBe(false);
+  });
+  it("accepts any letter-prefixed evidence id that exists", () => {
+    const mv: Evidence[] = [{ id: "M1", kind: "market_data", label: "x", value: 1, display: "+1.20%", source: "s", asOf: null }];
+    expect(checkExplanation("Up 1.20% [M1].", mv).ok).toBe(true);
+    expect(checkExplanation("Up 1.20% [N9].", mv).problems.join()).toMatch(/unknown citation \[N9\]/);
+  });
+});
+
