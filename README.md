@@ -1,75 +1,226 @@
+<div align="center">
+
 # EquityLens
 
-A research and risk-analytics tool for Indian equities (NSE / BSE). It combines market data,
-rule-based technical and fundamental scoring, news, backtesting, portfolio risk analysis and one
-validated machine-learning model, a 5-day **volatility** forecast, and can push alerts to Telegram and the browser.
+**An investment committee for Indian equities, built from evidence rather than adjectives.**
 
-> **Not investment advice.** Output is informational. The rule-based scores were evaluated against
-> outcomes and are **not predictive**; no model could predict price direction better than chance, so none is
-> shown (see [docs/MODEL_EVALUATION.md](docs/MODEL_EVALUATION.md)). Market data comes from Yahoo Finance and
-> may be delayed or wrong.
+Ask a question. One orchestrator convenes the specialists it needs (strategist, quant, fundamental analyst,
+intelligence desk, risk manager and contrarian) and a CIO weighs their cited evidence into a decision.
+Every number links to its source, every gap is stated, and nothing is guessed.
 
-This README describes only what exists in this repository. Anything planned is in
-[docs/PRODUCT.md](docs/PRODUCT.md) and clearly marked as not built.
+[Architecture](docs/ARCHITECTURE.md) · [The seven agents](docs/AGENTS.md) · [Orchestrator](docs/ORCHESTRATOR.md) ·
+[Evidence engine](docs/EVIDENCE_ENGINE.md) · [Model evaluation](docs/MODEL_EVALUATION.md) · [Limitations](docs/AI_LIMITATIONS.md)
 
-## What it does today
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prisma-336791) ![CI](https://github.com/Shriyan2407/r-h-t-i-h/actions/workflows/ci.yml/badge.svg)
+
+</div>
+
+> **Not investment advice.** EquityLens is a research and educational tool. Its decisions summarise evidence under
+> published rules; those rules have **not** been validated against future returns, and no model in this project has
+> shown skill at predicting price direction. Market data comes from Yahoo Finance and may be delayed or wrong.
+
+---
+
+## The idea
+
+Most "AI stock analysis" is a language model writing confident paragraphs around numbers it made up. EquityLens
+inverts that:
+
+- **Data first.** Prices, fundamentals, headlines and macro quotes come from providers, with their timestamps.
+- **Analysis is code.** Each specialist is a deterministic rule set you can read, test and argue with.
+- **Disagreement is a feature.** A risk manager that is never bullish and a contrarian whose only job is to break
+  the thesis sit on the same committee as the analysts.
+- **The LLM is optional and last.** Claude may reword the final thesis, but only if every number it writes appears
+  in the evidence and it states the committee's decision exactly. Otherwise its text is discarded.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    U[Question] --> O[Orchestrator<br/>intent · plan · shared data context]
+    O --> W1
+    subgraph W1 [Wave 1 · in parallel]
+      S[Strategist]
+      Q[Quant]
+      F[Fundamental]
+      I[Intelligence]
+      R[Risk]
+    end
+    W1 --> C[Contrarian<br/>attacks the emerging thesis]
+    C --> CIO[CIO<br/>weights · disagreements · overrides]
+    CIO --> M[Investment memo<br/>cited claims · scenarios · gaps]
+    M -.optional.-> L[Claude rewording<br/>numeric + decision guards]
+    D[(Yahoo bars · fundamentals<br/>news · macro · your holdings)] --> O
+```
+
+One orchestrator. Seven specialists, each with a published contract. The CIO is a specialist that decides, not a
+second orchestrator. Questions route to the **minimum** set of agents ("Why did TCS fall?" needs three analysts, not
+seven), and questions the data cannot answer are refused with `INSUFFICIENT DATA` instead of being analysed from
+guesses.
+
+## The committee
+
+| | Agent | Looks at | Never does |
+|---|---|---|---|
+| 01 | **Strategist** | Market regime (NIFTY vs 200-day average, India VIX) and what historically followed it; India VIX, USD/INR, US 10Y, Brent, S&P 500; the sector's week | Invent policy rates, CPI or GDP (no feed: reported unavailable); go beyond a "lean" view, because regimes describe risk, not returns |
+| 02 | **Quant** | Six published rules (trend, 6- and 12-1-month momentum, MACD, 52-week position, RSI), beta and correlation, the validated volatility model | Report a direction probability: none passed validation. Signal, probability, confidence and historical reliability are separate fields |
+| 03 | **Fundamental** | Growth, profitability, balance sheet, valuation, PEG, scored against fixed thresholds | Estimate ROCE, FCF yield, moat or management quality (no data: `DATA_UNAVAILABLE`); score debt/equity for banks |
+| 04 | **Intelligence** | Dated, sourced headlines with publisher reliability and catalyst type | Call a headline the cause of a move, call anything "breaking", or follow instructions planted in a headline |
+| 05 | **Risk** | Volatility, drawdown, 95% VaR and CVaR, Sharpe/Sortino, liquidity, real replays of the 2020 crash and 2022 sell-off, position ceilings | Be bullish. It is the committee's brake, and it caps the decision |
+| 06 | **Contrarian** | The other agents' evidence, looking for stretched valuation, over-extension, ignored risk, disagreement, missing data, survivorship | Add conviction. It returns THESIS SURVIVES, WEAKENED or INVALIDATED |
+| 07 | **CIO** | All of the above, weighted by role, horizon and evidence quality | Average blindly, force a decision on thin evidence, or call conviction a probability |
+
+Every threshold, weight and override is in [docs/AGENTS.md](docs/AGENTS.md).
+
+## How a decision is made
+
+```mermaid
+sequenceDiagram
+    participant U as You
+    participant O as Orchestrator
+    participant A as Analysts
+    participant X as Contrarian
+    participant C as CIO
+    U->>O: "Should I buy Reliance for the long term?"
+    O->>O: intent = investment_decision, horizon = long
+    O->>A: strategist, quant, fundamental, intelligence, risk (parallel)
+    A-->>O: views + cited evidence + data gaps
+    O->>X: attack the emerging thesis
+    X-->>O: THESIS SURVIVES / WEAKENED / INVALIDATED
+    O->>C: everything
+    C-->>U: decision, conviction, disagreements, memo (streamed live)
+```
+
+The CIO weights each analyst by **role × horizon × evidence quality** (confidence × source reliability × freshness),
+maps the score to one of `STRONG BUY · BUY · ACCUMULATE · HOLD · WATCH · REDUCE · SELL · AVOID · INSUFFICIENT DATA`,
+then applies overrides: HIGH risk caps at ACCUMULATE, EXTREME at WATCH, a weakened or invalidated thesis downgrades,
+and STRONG BUY needs unanimity, two outright bulls, a surviving thesis and moderate risk.
+
+## What else is in the box
 
 | Area | What is implemented |
 |---|---|
-| Accounts | Email + password (bcrypt) with mandatory email verification, Google sign-in, password reset by email, session revocation on password change, account deletion with re-authentication |
-| Market data | Index and rate bar, quotes, candles, technical indicators (RSI, MACD, EMA, Bollinger, ATR, ADX, stochastic, VWAP, OBV), fundamentals, news from public RSS feeds, keyword-based social sentiment |
-| Analysis | `quantEngine` turns indicators and ratios into a verdict plus a **signal strength** (indicator agreement, *not* a probability). An LLM narrative is added when one is reachable; otherwise a rule-based template is used. Confidence is shown as "unavailable" — no calibrated model exists. |
-| Risk model | `volatility-ridge` 1.1.0 forecasts the size of the next 5 days' moves with an 80% range, factor contributions, market regime and sourced evidence ("Risk Model" tab). Walk-forward: 12% lower error than repeating recent volatility in 14/14 test periods. Direction is never predicted. |
-| Model evidence | `/models` publishes every model trained, including the rejected direction models and the superseded v1.0.0 |
-| Explanations | Optional Claude rewording of the evidence; any number not in the evidence rejects the text (deterministic template otherwise) |
-| Research | `/research`: "why is X moving?" from cited evidence (market vs stock-specific move, volume, expected range, headlines); never claims a headline caused a move |
-| Live updates | Delayed quotes stream to the stock page and watchlist (SSE, ~10 s), with a move-vs-forecast signal |
-| Navigation | Command palette (Ctrl/Cmd+K) for pages and stock search |
-| Backtesting | `/backtest`: three rules on daily history with next-open fills, fees and slippage; walk-forward validation via the API |
-| Portfolio | Holdings CRUD with validation; import from CSV, XLSX, PDF or a broker screenshot (OCR); risk analysis: concentration, sectors, beta, correlation, drawdown, VaR, risk contribution, liquidity, stress scenarios, style exposures (size/value/momentum/low-vol) and model-based forward volatility; performance of current holdings vs NIFTY 50 from real closes |
-| Alerts | Vercel cron jobs detect 52-week high/low proximity, volume spikes, rule-based momentum moves and news, and send a market briefing to Telegram and Web Push, with per-user de-duplication |
-| Admin | Role-based (`ADMIN` in the database + verified email) alert dashboard |
+| Risk model | `volatility-ridge` forecasts the size of the next 5 days' moves with an 80% range; walk-forward validated (lower error than repeating recent volatility in 14/14 test periods) and tested on 25 former index members it never saw |
+| Model evidence | `/models` publishes every model trained, including the rejected direction models |
+| Research | "Why is X moving?": today's move split into market and stock-specific parts, with cited headlines |
+| Backtesting | Rules on daily history with next-open fills, fees and slippage; walk-forward validation |
+| Portfolio | Holdings with import (CSV, XLSX, PDF, screenshot OCR); concentration, beta, correlation, drawdown, VaR, risk contribution, liquidity, stress replays, style exposures, model-based forward volatility, performance vs NIFTY 50 |
+| Live | Delayed quotes streamed over SSE from one shared poll, with a move-vs-forecast signal |
+| Alerts | Telegram and Web Push alerts and a daily briefing, with per-user de-duplication |
+| Accounts | Email + password with verification, Google sign-in, session revocation, role-based admin |
+| Accessibility | WCAG 2.1 AA (axe) on public pages in both themes; command palette (Ctrl/Cmd+K); reduced-motion support |
 
-Not built: multi-agent AI, price-direction prediction or price targets (tested and rejected), exchange real-time
-data (quotes may be delayed), fundamentals/news as model inputs, billing. See [docs/PRODUCT.md](docs/PRODUCT.md) and
-[docs/AI_LIMITATIONS.md](docs/AI_LIMITATIONS.md).
+## Tech stack
 
-## Quick start
+| Layer | Choice |
+|---|---|
+| App | Next.js 16 (App Router), React 19, TypeScript (strict) |
+| Data | PostgreSQL via Prisma 5; Upstash Redis REST for shared cache and rate limits (in-memory fallback) |
+| Market data | Yahoo Finance (`yahoo-finance2`), RSS and optional Finnhub/NewsAPI |
+| ML | Python + scikit-learn offline (purged walk-forward, calibration, pre-registered gate); JSON artifacts served by TypeScript inference with 1e-6 parity |
+| LLM | Claude via the Anthropic SDK, optional, behind numeric and decision guards |
+| Auth | NextAuth v5 (JWT sessions revalidated against the database) |
+| Observability | Structured JSON logs, in-process metrics, Sentry when a DSN is set |
+| Testing | Vitest, Playwright (+ axe), Python unittest; GitHub Actions |
 
-Requirements: Node 24, PostgreSQL 14+.
+## Project structure
+
+```
+app/                  pages and API routes (app/api/agents/committee is the committee endpoint)
+components/research/  committee workspace, agent activity, memo, evidence views
+lib/agents/           orchestrator, intent parser, router, data context, the seven agents, memo, evidence engine
+lib/ai/               evidence contract, numeric guard, LLM explainers
+lib/ml/               features, volatility model inference, regime, registry
+lib/portfolio/        portfolio risk engine (VaR, CVaR, stress, factors)
+lib/backtest/         backtest engine and walk-forward validation
+lib/services/         market data, fundamentals, news, macro (shared-cached)
+ml/                   offline dataset, training and evaluation (Python)
+tests/                unit, route and render tests (tests/agents covers the committee)
+e2e/                  Playwright: public, signed-in and accessibility tiers
+docs/                 architecture, agents, orchestrator, evidence, ML, security, testing
+```
+
+## Honesty, enforced in code
+
+| Rule | Enforcement |
+|---|---|
+| No invented values | Missing inputs are `null` or `DATA_UNAVAILABLE`, never defaults; regression tests guard known past fabrications |
+| Every claim is traceable | Claims cite evidence ids; results with dangling citations fail validation; the memo is integrity-checked |
+| The LLM cannot add numbers or change decisions | `checkExplanation` and `checkDecisionConsistency` reject the rewrite |
+| Retrieved text is data | Headlines are sanitized; instruction-like text is quarantined; prompts wrap data as untrusted |
+| No fake progress | The agent activity view renders real orchestrator events streamed as they happen |
+| No unvalidated probabilities | Direction probability is always unavailable; conviction and confidence are labelled as what they are |
+
+## Security
+
+Sessions are required for every non-public API and enforced twice (middleware and route). Cron and webhook secrets
+fail closed and compare in constant time. Inputs are validated with Zod; expensive endpoints are rate-limited per
+user (the committee: 12 runs/hour). Logs carry request ids, never queries, holdings or secrets. Details:
+[docs/SECURITY.md](docs/SECURITY.md).
+
+## Testing
+
+```bash
+npm run lint && npm run typecheck && npm test   # 84 files, 780 tests at the time of writing
+npm run build && npm run test:e2e               # Playwright; signed-in tier needs E2E_DATABASE_URL
+python -m unittest discover -s ml/tests -t .     # ML pipeline: leakage, splits, metrics, deployment gate
+```
+
+CI runs lint, typecheck, unit tests, build, a bundle guard, the Python ML tests, Playwright (public, signed-in and
+accessibility), a Docker image probe, a dependency audit and database migration checks. See
+[docs/TESTING.md](docs/TESTING.md).
+
+## Local development
+
+Requirements: Node 24 and PostgreSQL 14+.
 
 ```bash
 npm ci
-cp .env.example .env.local         # then fill in DATABASE_URL and NEXTAUTH_SECRET at minimum
-npx prisma migrate deploy          # fresh database; see docs/DATABASE.md for an existing one
-npm run dev                        # http://localhost:3000
+cp .env.example .env.local         # fill in DATABASE_URL and NEXTAUTH_SECRET at minimum
+npx prisma migrate deploy
+npm run dev                        # http://localhost:3000, then open /research
 ```
 
-Without `RESEND_API_KEY` / `EMAIL_FROM`, emails (verification, password reset) are printed to
-the server console in development and **refused in production**.
+Without `RESEND_API_KEY` / `EMAIL_FROM`, verification and reset emails are printed to the server console in
+development and refused in production. Docker: `docker compose up` runs Postgres, migrations and the app.
 
-Optional demo data when you have no network: set `NEXT_PUBLIC_DEMO_MODE=true`. This works
-only outside production builds and shows a persistent "DEMO DATA" banner.
+### Environment variables
 
-## Scripts
-
-| Script | Purpose |
+| Variable | Needed for |
 |---|---|
-| `npm run dev` / `build` / `start` | Next.js |
-| `npm run lint` | ESLint (existing errors are baselined; new ones fail) |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm test` | Unit tests (no database needed) |
-| `npm run test:integration` | Real-PostgreSQL tests; needs `TEST_DATABASE_URL` (a scratch database) |
-| `npm run check:bundle` | Fails if sample data leaked into the production bundle |
-| `npm run test:e2e` | Playwright (after `npm run build`); signed-in tier needs `E2E_DATABASE_URL` |
-| `npm run ml:download` / `ml:dataset` | Rebuild the ML dataset (see docs/ML_PIPELINE.md for training) |
-| `npm run admin:promote -- <email>` | Grant ADMIN (operator-only, needs `DATABASE_URL`) |
+| `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` | Required |
+| `RESEND_API_KEY`, `EMAIL_FROM` | Verification and password-reset email (required in production) |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared cache and rate limits across instances (recommended) |
+| `ANTHROPIC_API_KEY`, `CLAUDE_MODEL` | Optional guarded Claude wording |
+| `CRON_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, VAPID keys | Alerts |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in |
+| `FINNHUB_API_KEY`, `NEWSAPI_KEY` | Extra news sources |
+| `SENTRY_DSN`, `HEALTH_SECRET` | Error tracking, detailed health checks |
 
-## Documentation
+The full list with comments is in `.env.example`.
 
-[Architecture](docs/ARCHITECTURE.md) · [Security](docs/SECURITY.md) · [Deployment](docs/DEPLOYMENT.md) ·
-[Database](docs/DATABASE.md) · [API](docs/API.md) · [AI system](docs/AI_SYSTEM.md) ·
-[Quant engine](docs/QUANT_ENGINE.md) · [ML pipeline](docs/ML_PIPELINE.md) · [Model evaluation](docs/MODEL_EVALUATION.md) ·
-[Model registry](docs/MODEL_REGISTRY.md) · [Backtesting](docs/BACKTESTING.md) · [Portfolio risk](docs/PORTFOLIO_RISK.md) ·
-[AI limitations](docs/AI_LIMITATIONS.md) · [Testing](docs/TESTING.md) · [Performance](docs/PERFORMANCE.md) ·
-[Product](docs/PRODUCT.md) · [Changelog](docs/CHANGELOG.md) · [Engineering baseline](docs/ENGINEERING_BASELINE.md)
+## Roadmap
+
+Not built yet, and not claimed anywhere in the product:
+
+- **Validate the committee**: backtest its decisions point-in-time, with costs, before any decision label is trusted.
+- Point-in-time fundamentals and an events calendar, so fundamental and catalyst signals can be tested historically.
+- Policy-rate, CPI and flow data feeds for the strategist.
+- An enforced (nonce-based) Content Security Policy and an audit log.
+- Splitting the remaining large legacy pages (landing, scanner, alerts, history, analyze).
+
+## Contributing
+
+Open an issue describing the problem first. Pull requests need passing lint, typecheck, unit tests and build; new
+behaviour needs tests, and anything user-facing must not state a number the code did not compute. The engineering
+conventions are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/TESTING.md](docs/TESTING.md).
+
+## License
+
+No license has been declared yet, so default copyright applies. Contact the repository owner before reusing the code.
+
+## Disclaimer
+
+EquityLens is a research and educational platform. It does not provide personalised financial advice, is not a
+broker and places no orders. Decisions and conviction scores summarise evidence under published rules and are not
+predictions. Past performance does not guarantee future results. Data may be delayed or inaccurate.
