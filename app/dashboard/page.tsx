@@ -4,14 +4,13 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
-  Star, Brain, Search, TrendingUp, Clock,
+  Star, Brain, Search, TrendingUp,
   BarChart2, ArrowRight, RefreshCw, Zap,
-  Activity, ChevronRight, Cpu, Shield, AlertTriangle,
+  Activity, ChevronRight, Cpu, Shield,
 } from "lucide-react";
 import { Navbar }       from "@/components/Navbar";
 import { useMarketIndices } from "@/lib/hooks/useMarketIndices";
 import { MarketTicker } from "@/components/MarketTicker";
-import { useTheme }     from "@/lib/context/ThemeContext";
 import { useWatchlistStore } from "@/store/watchlistStore";
 
 interface UserProfile {
@@ -37,8 +36,6 @@ const TIER_STYLES: Record<string, { bg: string; text: string; border: string; gl
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const { theme }         = useTheme();
-  const isLight           = theme === "light";
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -564,55 +561,18 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Portfolio Stress Test */}
-            <div
-              className="rounded-xl overflow-hidden"
-              style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-subtle)" }}
-            >
-              <div
-                className="flex items-center gap-2.5 px-5 py-3.5"
-                style={{ borderBottom: "1px solid var(--th-border-subtle)" }}
-              >
+            {/* Portfolio risk: computed from the user's own holdings on the portfolio page. */}
+            <div className="rounded-xl p-5" style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-subtle)" }}>
+              <div className="flex items-center gap-2.5 mb-2">
                 <Shield size={11} style={{ color: "var(--th-text-muted)" }} />
-                <span className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
-                  Portfolio Stress Test
-                </span>
+                <h2 className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", margin: 0 }}>Portfolio stress tests</h2>
               </div>
-              <div className="p-5 flex flex-col gap-5">
-                <div>
-                  <div className="text-[10px] font-mono uppercase tracking-widest mb-1.5" style={{ color: "var(--th-text-muted)" }}>If NIFTY falls 20%</div>
-                  <div className="flex items-baseline gap-2">
-                    <div className="font-mono font-bold" style={{ fontSize: "36px", color: "var(--negative)", letterSpacing: "-0.04em", lineHeight: 1 }}>-19.5%</div>
-                    <div className="text-[11px] font-mono" style={{ color: "var(--th-text-faint)" }}>Est. Loss</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}>
-                    <div className="text-[9px] font-mono uppercase tracking-widest mb-1" style={{ color: "var(--th-text-faint)" }}>Risk Level</div>
-                    <div className="text-[12px] font-bold" style={{ color: "var(--gold)" }}>MEDIUM</div>
-                  </div>
-                  <div className="p-3 rounded-lg" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}>
-                    <div className="text-[9px] font-mono uppercase tracking-widest mb-1" style={{ color: "var(--th-text-faint)" }}>Protection Score</div>
-                    <div className="text-[12px] font-bold" style={{ color: "var(--th-text-primary)" }}>63<span className="text-[9px]" style={{ color: "var(--th-text-muted)" }}>/100</span></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] font-mono uppercase tracking-widest mb-2.5" style={{ color: "var(--th-text-muted)" }}>Most Vulnerable</div>
-                  <div className="flex flex-col gap-2">
-                    {["TEJASNET", "NTPCGREEN", "GATECH"].map((t, i) => (
-                      <div key={t} className="flex items-center justify-between p-2 rounded-md" style={{ background: "rgba(255,77,77,0.04)", border: "1px solid rgba(255,77,77,0.1)" }}>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{i + 1}.</span>
-                          <span className="text-[12px] font-semibold" style={{ color: "var(--th-text-primary)" }}>{t}</span>
-                        </div>
-                        <AlertTriangle size={11} style={{ color: "var(--negative)" }} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <p className="text-[12px]" style={{ color: "var(--th-text-muted)", margin: "0 0 12px" }}>
+                Market, sector, volatility and historical-crash scenarios computed from your saved holdings and real prices.
+              </p>
+              <Link href="/portfolio" className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: "var(--gold)" }}>
+                Open portfolio risk analysis <ArrowRight size={11} />
+              </Link>
             </div>
 
             {/* Intelligence CTA */}
