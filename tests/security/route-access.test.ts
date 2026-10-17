@@ -28,6 +28,7 @@ describe("middleware route access", () => {
     "/api/admin/alerts",
     "/api/user/portfolio",
     "/api/telegram/connect",
+    "/api/agents/committee",
   ];
   it.each(protectedApis)("%s returns 401 JSON without a session", async (path) => {
     const res = (await run(path, false)) as Response;

@@ -29,6 +29,8 @@ export const POLICIES = {
   liveQuotes: { name: "live", limit: 200, windowSec: 60 * 60 },
   research: { name: "research", limit: 30, windowSec: 60 * 60 },
   portfolioPerformance: { name: "pfperf", limit: 60, windowSec: 60 * 60 },
+  // One committee run fans out to up to ~10 provider calls (cached) and optionally one LLM call.
+  committee: { name: "committee", limit: 12, windowSec: 60 * 60 },
 } as const satisfies Record<string, RateLimitPolicy>;
 
 /** Best-effort client IP. On Vercel `x-forwarded-for` is set by the platform edge. */
