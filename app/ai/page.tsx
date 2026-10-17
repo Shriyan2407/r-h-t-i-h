@@ -18,12 +18,14 @@ const LAYERS = [
   { name: "Market regime", what: "NIFTY vs its 200-day average plus India VIX cut-offs learned from 2011-2025 history. Describes risk, not direction.", kind: "STATISTICAL", color: "var(--secondary)" },
   { name: "Volatility model", what: "A ridge regression trained on 47 NSE stocks (2011-2025) that forecasts the size of the next 5 days' moves. Validated out of sample.", kind: "ML · DEPLOYED", color: "var(--success)" },
   { name: "Direction models", what: "Logistic regression, random forest and gradient boosting were trained to predict up/down moves. None beat chance, so none are used.", kind: "ML · REJECTED", color: "var(--danger)" },
+  { name: "Investment committee", what: "One orchestrator and seven rule-based agents (strategist, quant, fundamental, intelligence, risk, contrarian, CIO) weigh cited evidence into a decision. The rules are published but not yet validated against returns.", kind: "RULES · MULTI-AGENT", color: "var(--gold)" },
   { name: "LLM explanations", what: "Optionally rewrites the computed evidence in plain language. It cannot add numbers: any figure not in the evidence is rejected.", kind: "LLM · EXPLAINS ONLY", color: "var(--warning)" },
 ];
 
 const TOOLS = [
   { href: "/ai/analyze", title: "Stock analysis", body: "Technicals, fundamentals, news and a rule-based score for any NSE/BSE symbol, with an optional AI-written narrative." },
-  { href: "/research", title: "Why is it moving?", body: "Today's move split into market and stock-specific parts, volume, the expected range and recent headlines, each cited." },
+  { href: "/research#committee", title: "Investment committee", body: "Ask a question and seven specialist agents analyse it from real data; the CIO decides, with every claim cited and every gap stated." },
+  { href: "/research#move", title: "Why is it moving?", body: "Today's move split into market and stock-specific parts, volume, the expected range and recent headlines, each cited." },
   { href: "/models", title: "Model evidence", body: "Every model we trained, how it was tested, and the measured results, including the ones we rejected." },
   { href: "/backtest", title: "Backtest", body: "Test simple rules on historical prices after fees and slippage, with walk-forward validation in the API." },
   { href: "/portfolio", title: "Portfolio risk", body: "Concentration, beta, correlation, drawdown, liquidity, stress scenarios and a model-based volatility forecast." },

@@ -10,7 +10,11 @@ describe("command palette page filter", () => {
     expect(filterPages("rejected").map((p) => p.href)).toEqual(["/models"]);
     expect(filterPages("stress").map((p) => p.href)).toEqual(["/portfolio"]);
   });
-  it("every page target is an internal path", () => {
-    for (const p of PAGES) expect(p.href).toMatch(/^\/[a-z/]*$/);
+  it("every page target is an internal path (optionally with an in-page anchor)", () => {
+    for (const p of PAGES) expect(p.href).toMatch(/^\/[a-z/]*(#[a-z-]+)?$/);
+  });
+
+  it("page targets are unique, so React keys and command values never collide", () => {
+    expect(new Set(PAGES.map((p) => p.href)).size).toBe(PAGES.length);
   });
 });
