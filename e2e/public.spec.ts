@@ -9,6 +9,8 @@ test("landing page renders without fabricated claims", async ({ page }) => {
   expect(body).not.toMatch(/7 agents|multi-agent|AI-Powered|real-time intelligence/i);
   expect(body).not.toMatch(/Market Ka Baadshah|R\.H\.T\.I\.H/i);
   expect(body).toMatch(/EquityLens/i);
+  await expect(page.getByRole("heading", { name: "Your own investment committee" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Ask the committee/ })).toHaveAttribute("href", "/research#committee");
 });
 
 test("login form fields are reachable by their labels", async ({ page }) => {

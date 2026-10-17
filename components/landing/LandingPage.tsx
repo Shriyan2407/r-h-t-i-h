@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { LandingMarket } from "@/lib/services/landingMarket";
+import { InvestorCommitteeSection } from "./InvestorCommitteeSection";
 import {
   TrendingUp, BarChart2, Brain, Zap, Shield,
   Activity, Globe, Cpu, ArrowRight, Lock,
@@ -1139,6 +1140,7 @@ export function LandingPage({ market }: { market: LandingMarket | null }) {
         <HeroSection market={market} />
         <StatsSection />
         <MarketMoversTeaser market={market} />
+        <InvestorCommitteeSection />
         <AISignalsTeaser />
         <FeaturesSection />
         <CTASection />
