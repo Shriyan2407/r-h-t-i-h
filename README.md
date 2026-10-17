@@ -70,7 +70,8 @@ guesses.
 | 06 | **Contrarian** | The other agents' evidence, looking for stretched valuation, over-extension, ignored risk, disagreement, missing data, survivorship | Add conviction. It returns THESIS SURVIVES, WEAKENED or INVALIDATED |
 | 07 | **CIO** | All of the above, weighted by role, horizon and evidence quality | Average blindly, force a decision on thin evidence, or call conviction a probability |
 
-Every threshold, weight and override is in [docs/AGENTS.md](docs/AGENTS.md).
+Every threshold, weight and override is in [docs/AGENTS.md](docs/AGENTS.md). On the site, the public **/team** page
+introduces each member, how it works step by step, what it never does and the team's measured track record.
 
 ## How a decision is made
 

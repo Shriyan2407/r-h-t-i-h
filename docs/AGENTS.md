@@ -5,7 +5,8 @@ question needs. Each agent is a deterministic analysis function over real data. 
 invents a value it was not given: a missing input is listed in `missingData` and lowers the agent's confidence.
 The only LLM step is optional and comes after the decision: Claude may reword the memo's thesis ([EVIDENCE_ENGINE.md](EVIDENCE_ENGINE.md)).
 
-Code: `lib/agents/` (one file per agent). Tests: `tests/agents/`.
+Code: `lib/agents/` (one file per agent). Tests: `tests/agents/`. The plain-language profiles shown on the public `/team`
+page are in `lib/agents/profiles.ts`; a test ties their thresholds to the constants in the code.
 
 ## Shared contract
 

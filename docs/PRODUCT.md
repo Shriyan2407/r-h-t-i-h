@@ -25,7 +25,7 @@ Accounts with verification, market bar, quotes/charts/technicals/fundamentals, n
 sentiment, rule-based verdict with signal strength, optional LLM narrative, portfolio CRUD and
 import (CSV/XLSX/PDF/screenshot), Telegram and Web Push alerts with de-duplication, role-based
 admin dashboard, a validated 5-day volatility model with regime and evidence, a model evidence page,
-backtesting with walk-forward validation, portfolio risk analytics with stress scenarios and style exposures, delayed live quote streaming with a move-vs-forecast signal, a "why is it moving?" research page, a command palette, and a seven-agent investment committee on `/research` (one orchestrator; strategist, quant, fundamental, intelligence, risk, contrarian and CIO agents; cited memo; streamed progress).
+backtesting with walk-forward validation, portfolio risk analytics with stress scenarios and style exposures, delayed live quote streaming with a move-vs-forecast signal, a "why is it moving?" research page, a command palette, and a seven-agent investment committee on `/research` (one orchestrator; strategist, quant, fundamental, intelligence, risk, contrarian and CIO agents; cited memo; streamed progress), introduced to visitors by a "For investors" landing section and a public `/team` page that explains each member.
 
 ## Not built (do not claim)
 

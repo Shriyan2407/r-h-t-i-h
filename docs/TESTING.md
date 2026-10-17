@@ -15,11 +15,11 @@
 
 | Suite | Count | Status (local run) |
 |---|---|---|
-| Vitest unit/route/render | 86 files, 787 tests | all pass |
+| Vitest unit/route/render | 88 files, 797 tests | all pass |
 | Vitest integration (real Postgres) | 1 file, 16 tests | runs in CI (`migrations` job) |
 | Python ML | 15 tests | all pass |
-| Playwright public tier | 9 tests x 2 projects (desktop, mobile) = 18 | all pass (incl. command palette by keyboard, committee API 401, no horizontal overflow) |
-| Playwright accessibility | 4 public pages x 2 themes = 8 (axe, WCAG 2.1 A/AA) | all pass |
+| Playwright public tier | 11 tests x 2 projects (desktop, mobile) = 22 | all pass (incl. command palette by keyboard, committee API 401, no horizontal overflow) |
+| Playwright accessibility | 5 public pages (incl. /team) x 2 themes = 10 (axe, WCAG 2.1 A/AA) | all pass |
 | Playwright signed-in tier | 8 tests (login, stock + live stream + risk, backtest, models, committee, committee refusal, research, portfolio) | not run locally (no local DB credentials); passes in CI |
 
 ML/AI areas added on this branch: point-in-time features (truncation and tampering tests), labels, dataset integrity,
