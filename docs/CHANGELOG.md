@@ -3,6 +3,33 @@
 Branch `modernization/production-hardening` (from `master` @ `80ea5e6`). Newest first within
 each theme. Hashes are for this local branch and will change if history is rewritten.
 
+## Investment committee (2026-10-17)
+
+- **Seven-agent committee** (`lib/agents`): one orchestrator (deterministic intent parser, minimum-agent routing,
+  waves), a shared traced data context (memoized fetches, timeouts, one retry), and strategist, quant, fundamental,
+  intelligence, risk, contrarian and CIO agents with Zod-validated contracts and cited evidence. The CIO decides by
+  published weights and overrides; the memo is assembled from cited claims. No agent and no decision uses an LLM.
+- **API and UI**: `POST /api/agents/committee` (session, Zod, 12/h, JSON or NDJSON progress stream) and a workspace on
+  `/research` that shows real agent progress, the verdict, disagreements, scenarios, data gaps and all evidence.
+- **Measured, not assumed**: the quant agent's rule score was tested point-in-time (pre-registered; 47 stocks since
+  2019): **no edge** (20-day rank IC -0.018, t -0.87). Every quant result cites this, the contrarian uses it, and the
+  CIO counts the quant agent at half weight until a re-run passes. An end-to-end run also showed STRONG BUY was too easy
+  to reach; the decision bands were widened.
+- **Safety**: retrieved text is sanitized and instruction-like headlines are quarantined; optional Claude wording of the
+  thesis is kept only if every number, citation and the decision match; an injected headline is tested not to change
+  the decision.
+- **Fabrications removed**: LLM-written 0-100 scores shown as "rule-based scores" on the analysis page (now always the
+  deterministic scores); placeholder 50s for missing scores; an invented 52-week range (price x1.3/x0.7); India VIX,
+  USD/INR and US 10Y defaults in macro, and narrative text presenting that proxy as the RBI's stance; forward P/E
+  reported as trailing P/E; a "LIVE" badge on cached reports.
+- **Accessibility**: WCAG 2.1 AA contrast in both themes (theme tokens replace hard-coded accent colours), labelled
+  signup fields and reachable password toggles, axe tests on public pages, a mobile horizontal-overflow test.
+- **Brand**: the navbar and auth screens still showed the old wordmark; now EquityLens.
+- Docs: AGENTS, ORCHESTRATOR and EVIDENCE_ENGINE added; README rewritten; AI_SYSTEM, AI_LIMITATIONS, MODEL_EVALUATION,
+  PRODUCT, API, SECURITY, TESTING and ARCHITECTURE updated.
+- Process notes: two local, unpushed commits were amended (a failing test and a lint warning were folded into the
+  commits that introduced them) before the branch was pushed; nothing already pushed was rewritten.
+
 ## Remaining-problems pass (2026-10-14)
 
 - **Fabrications removed (portfolio page)**: a performance chart drawn from seeded random noise; volatility, beta, Sharpe
