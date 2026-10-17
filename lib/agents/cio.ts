@@ -8,7 +8,8 @@
  *   3. Disagreements: every pair of analysts with opposite views is listed with how the weighting resolved it.
  *   4. Mapping: the weighted score maps to a decision at published thresholds.
  *   5. Overrides: risk caps the decision (HIGH -> at most ACCUMULATE, EXTREME -> at most WATCH); a weakened or
- *      invalidated thesis downgrades it; STRONG BUY needs unanimity, a surviving thesis and medium-or-lower risk.
+ *      invalidated thesis downgrades it; STRONG BUY needs no disagreement, at least two outright bullish analysts,
+ *      a surviving thesis and medium-or-lower risk.
  * Conviction (0-100) measures how strong and how agreed the evidence is. It is not a probability of profit.
  */
 import type { InvestmentAgent } from "./agent";
@@ -77,12 +78,13 @@ export function horizonMultiplier(agent: AgentId, horizon: string): number {
   return 1;
 }
 
+/** Published thresholds on the weighted score (-2..+2). Wide bands on purpose: no direction model is validated. */
 export function scoreToDecision(score: number, held: boolean): Decision {
-  if (score >= 1.2) return "STRONG BUY";
-  if (score >= 0.7) return "BUY";
-  if (score >= 0.3) return "ACCUMULATE";
-  if (score > -0.3) return "HOLD";
-  if (score > -0.7) return held ? "REDUCE" : "WATCH";
+  if (score >= 1.5) return "STRONG BUY";
+  if (score >= 1.0) return "BUY";
+  if (score >= 0.5) return "ACCUMULATE";
+  if (score > -0.5) return "HOLD";
+  if (score > -1.0) return held ? "REDUCE" : "WATCH";
   return held ? "SELL" : "AVOID";
 }
 
@@ -152,9 +154,10 @@ export function decide(input: CommitteeInput): Omit<CioDetails, "memo"> {
   if (riskLevel === "high" && rank(decision) > rank("ACCUMULATE")) { decision = capAt(decision, "ACCUMULATE"); overrides.push("Risk is HIGH: the decision is capped at ACCUMULATE (build gradually)."); }
   if (thesisVerdict === "THESIS INVALIDATED" && rank(decision) > rank("HOLD")) { decision = down(decision, 2); overrides.push("The contrarian invalidated the thesis: downgraded two steps."); }
   if (thesisVerdict === "THESIS WEAKENED" && rank(decision) > rank("HOLD")) { decision = down(decision, 1); overrides.push("The contrarian weakened the thesis: downgraded one step."); }
-  if (decision === "STRONG BUY" && (disagreements.length > 0 || thesisVerdict !== "THESIS SURVIVES" || !(riskLevel === "low" || riskLevel === "medium") || coverage < 0.8)) {
+  const outrightBulls = usable.filter((w) => w.view === "bullish").length;
+  if (decision === "STRONG BUY" && (disagreements.length > 0 || outrightBulls < 2 || thesisVerdict !== "THESIS SURVIVES" || !(riskLevel === "low" || riskLevel === "medium") || coverage < 0.8)) {
     decision = "BUY";
-    overrides.push("STRONG BUY requires no disagreement, a surviving thesis, low or medium risk and at least 80% of analysts reporting: lowered to BUY.");
+    overrides.push("STRONG BUY requires no disagreement, at least two outright bullish analysts, a surviving thesis, low or medium risk and at least 80% of analysts reporting: lowered to BUY.");
   }
 
   const agreement = usable.length > 1 ? 1 - disagreements.length / ((usable.length * (usable.length - 1)) / 2) : 1;
@@ -185,7 +188,7 @@ export const cioAgent: InvestmentAgent<CioDetails> = {
     return {
       status: d.decision === "INSUFFICIENT DATA" ? "partial" : "success",
       conclusion: d.decision ? `${d.decision} (conviction ${d.conviction}/100). ${d.decisionNote}` : d.decisionNote,
-      view: d.score === null ? "no_view" : d.score >= 0.7 ? "bullish" : d.score >= 0.3 ? "lean_bullish" : d.score <= -0.7 ? "bearish" : d.score <= -0.3 ? "lean_bearish" : "neutral",
+      view: d.score === null ? "no_view" : d.score >= 1.0 ? "bullish" : d.score >= 0.5 ? "lean_bullish" : d.score <= -1.0 ? "bearish" : d.score <= -0.5 ? "lean_bearish" : "neutral",
       confidence: d.conviction / 100,
       claims: [],
       metrics: { decision: d.decision, conviction: d.conviction, score: d.score, disagreements: d.disagreements.length },

@@ -117,6 +117,12 @@ function stressSuite(report: PortfolioRiskReport, holdings: HoldingInput[], bars
   ];
 }
 
+/** Replays describe what happened; beta-scaled and volatility shocks are hypothetical. */
+function stressSentence(s: StressResult): string {
+  const replay = HISTORICAL_SCENARIOS.some((h) => h.id === s.id);
+  return `${s.label} ${replay ? "would have cost" : "would cost about"} ${fmtPct(s.portfolioReturn!, 0, true)}.`;
+}
+
 function worst20d(bars: readonly Bar[]): { ret: number; from: string; to: string } | null {
   if (bars.length < 21) return null;
   let best = { ret: Infinity, from: "", to: "" };
@@ -199,7 +205,7 @@ async function analyzeAsset(ctx: ResearchContext, ticker: string, ev: EvidenceLo
     metrics: { riskLevel: level, annualVol: h.annualVol, maxDrawdown1y: h.maxDrawdown, var95: h.var95, cvar95: m.cvar95, beta: Number.isFinite(h.beta) ? h.beta : null, sharpe: h.sharpe, sortino: h.sortino, avgDailyValue: adv, maxWeight: sizing.maxWeight },
     risks: [
       ...(level === "high" || level === "extreme" ? [`${level[0].toUpperCase()}${level.slice(1)} risk: ${reasons.join(", ")}.`] : []),
-      ...stress.filter((s) => (s.portfolioReturn ?? 0) < -0.25).map((s) => `${s.label} would have cost ${fmtPct(s.portfolioReturn!, 0, true)}.`),
+      ...stress.filter((s) => (s.portfolioReturn ?? 0) < -0.25).map(stressSentence),
     ],
     catalysts: [],
     disagreements: [],
@@ -284,7 +290,7 @@ async function analyzeBasket(ctx: ResearchContext, kind: "saved" | "query", tick
     risks: [
       ...(lvl === "high" || lvl === "extreme" ? [`${lvl[0].toUpperCase()}${lvl.slice(1)} risk: ${reasons.join(", ")}.`] : []),
       ...(m.report.sectors[0] && m.report.sectors[0].weight > 0.4 ? [`${fmtPct(m.report.sectors[0].weight)} in one sector (${m.report.sectors[0].sector}).`] : []),
-      ...stress.filter((s) => (s.portfolioReturn ?? 0) < -0.25).map((s) => `${s.label} would have cost ${fmtPct(s.portfolioReturn!, 0, true)}.`),
+      ...stress.filter((s) => (s.portfolioReturn ?? 0) < -0.25).map(stressSentence),
     ],
     catalysts: [],
     disagreements: [],

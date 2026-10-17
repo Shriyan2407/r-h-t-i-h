@@ -65,12 +65,15 @@ describe("CIO decision rules", () => {
   });
 
   it("requires unanimity, a surviving thesis and moderate risk for STRONG BUY", () => {
-    const all = [res("quant", "bullish"), res("fundamental", "bullish"), res("strategist", "bullish"), res("intelligence", "bullish"), res("risk", "neutral", { metrics: { riskLevel: "low" } })];
+    const lowRisk = res("risk", "neutral", { metrics: { riskLevel: "low" }, confidence: 0.3 });
+    const all = [res("quant", "bullish"), res("fundamental", "bullish"), res("strategist", "bullish"), res("intelligence", "bullish"), lowRisk];
     expect(decide(input([...all, contra("THESIS SURVIVES")])).decision).toBe("STRONG BUY");
     expect(decide(input([...all, contra("THESIS WEAKENED")])).decision).not.toBe("STRONG BUY");
-    const disagree = decide(input([...all.slice(0, 3), res("intelligence", "lean_bearish", { confidence: 0.05 }), all[4], contra("THESIS SURVIVES")]));
+    const disagree = decide(input([...all.slice(0, 3), res("intelligence", "lean_bearish", { confidence: 0.05 }), res("risk", "neutral", { metrics: { riskLevel: "low" }, confidence: 0.01 }), contra("THESIS SURVIVES")]));
     expect(disagree.decision).toBe("BUY");
     expect(disagree.overrides.join(" ")).toMatch(/STRONG BUY requires/);
+    const leanOnly = decide(input([res("quant", "lean_bullish"), res("fundamental", "bullish"), res("strategist", "lean_bullish"), lowRisk, contra("THESIS SURVIVES")], { horizon: "long" }));
+    expect(leanOnly.decision).not.toBe("STRONG BUY");
     const mediumRisk = decide(input([...all.slice(0, 4), res("risk", "neutral", { metrics: { riskLevel: "high" } }), contra("THESIS SURVIVES")]));
     expect(mediumRisk.decision).not.toBe("STRONG BUY");
   });

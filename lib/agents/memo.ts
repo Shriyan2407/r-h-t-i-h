@@ -61,7 +61,7 @@ function subjectName(s: Subject, intent: Intent): string {
 
 /** The strongest cited claims in the direction of the decision (or both directions when it is neutral). */
 function pickWhy(results: readonly AgentResult[], d: Omit<CioDetails, "memo">): string[] {
-  const dir = d.score === null ? 0 : d.score >= 0.3 ? 1 : d.score <= -0.3 ? -1 : 0;
+  const dir = d.score === null ? 0 : d.score >= 0.5 ? 1 : d.score <= -0.5 ? -1 : 0;
   const weight = new Map(d.weights.map((w) => [w.agent, w.effectiveWeight]));
   const pool: Array<{ c: Claim; w: number }> = [];
   for (const r of results) {
@@ -139,7 +139,7 @@ export function buildMemo(intent: Intent, subject: Subject, results: readonly Ag
     decision: d.decision,
     conviction: d.conviction,
     timeHorizon: HORIZON_TEXT[intent.horizon],
-    executiveThesis: thesis,
+    executiveThesis: thesis.trim(),
     why: pickWhy(results, d),
     views,
     disagreements: d.disagreements.map((x) => `${AGENT_NAMES[x.between[0]]} vs ${AGENT_NAMES[x.between[1]]}. ${x.resolution}`),
