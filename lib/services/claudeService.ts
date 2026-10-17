@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Claude AI Service
+   EquityLens — Claude AI Service
    Handles: client initialization, retry logic, rate limiting,
    response validation, and JSON extraction.
 ═══════════════════════════════════════════════════════════════ */
@@ -30,7 +30,8 @@ export function extractJSON(raw: string): string {
 /* ── Response validator ─────────────────────────────────── */
 export function validateReport(data: any): boolean {
   if (!data || typeof data !== "object") return false;
-  const required = ["ticker", "companyName", "sector", "scores", "events"];
+  // Scores are not requested from the model: they are computed by rules (deterministicIntelligence) and attached later.
+  const required = ["ticker", "companyName", "sector", "events"];
   return required.every(key => key in data);
 }
 
@@ -55,7 +56,7 @@ export async function callClaude(
         model,
         max_tokens: MAX_TOKENS,
         system: systemMsg ?? [
-          "You are R.H.T.I.H Intelligence Core — an institutional AI equity analyst for Indian markets.",
+          "You are the EquityLens research assistant — an equity analyst for Indian markets.",
           "You ALWAYS return valid JSON only.",
           "No markdown fences, no explanations outside the JSON.",
           "Your analysis is specific, non-generic, and evidence-based.",
@@ -123,18 +124,14 @@ export function parseIntelligenceResponse(raw: string, ticker: string): any {
   }
 
   if (!validateReport(data)) {
-    throw new Error("Claude response missing required fields (ticker, companyName, scores, events)");
+    throw new Error("Claude response missing required fields (ticker, companyName, sector, events)");
   }
 
   /* Ensure ticker is correct */
   data.ticker = ticker.toUpperCase();
 
-  /* Clamp all score values to 0-100 */
-  if (data.scores) {
-    for (const key of Object.keys(data.scores)) {
-      data.scores[key] = Math.max(0, Math.min(100, Math.round(data.scores[key] ?? 50)));
-    }
-  }
+  /* Model-written scores are never used: drop them so they cannot leak into the response. */
+  delete data.scores;
 
   /* Clamp event scores */
   if (Array.isArray(data.events)) {
@@ -147,8 +144,13 @@ export function parseIntelligenceResponse(raw: string, ticker: string): any {
     }));
   }
 
-  /* Clamp aiConfidence */
-  data.aiConfidence = Math.max(60, Math.min(95, Math.round(data.aiConfidence ?? 75)));
+  /* A model-written "confidence" is not a calibrated probability, so it is discarded: it was
+     previously clamped into 60-95 (and defaulted to 75), which made every report look confident. */
+  delete data.aiConfidence;
+
+  /* Entry/stop/target levels are price predictions the model has no validated basis for (no direction
+     model passed validation; see lib/ml/registry.json), so any the LLM returns are dropped. */
+  delete data.entryZone;
 
   return data;
 }

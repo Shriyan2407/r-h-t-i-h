@@ -1,0 +1,16 @@
+{
+  "model": "volatility-ridge",
+  "version": "1.0.0",
+  "datasetSha256": "5c4620a76eeb73c88207da2d2b1ab157f375646b85fd0a54cc0cbd90e1a80773",
+  "holdoutStart": "2025-10-01",
+  "holdoutEnd": "2026-10-01",
+  "rows": 11656,
+  "trainRows": 154608,
+  "calibRows": 11750,
+  "r2VsNaive": 0.2426179177399802,
+  "mse": 0.21702365851495384,
+  "msePersist": 0.24049302381622079,
+  "mseVsPersist": -0.09758854925954819,
+  "interval80Coverage": 0.7964138641043239,
+  "mae": 0.36849540599731373
+}

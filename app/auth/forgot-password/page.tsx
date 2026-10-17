@@ -45,8 +45,8 @@ export default function ForgotPasswordPage() {
   const card  = isLight ? "rgba(255,252,245,0.98)" : "rgba(255,255,255,0.03)";
   const cardB = isLight ? "rgba(184,150,46,0.18)" : "rgba(255,215,0,0.10)";
   const textP = isLight ? "#1A1A1A" : "#EEEEEE";
-  const textM = isLight ? "#7A6A50" : "#5A5A5A";
-  const label = isLight ? "#9A8060" : "#3A3A3A";
+  const textM = "var(--th-text-muted)";
+  const label = "var(--th-text-muted)";
 
   return (
     <div
@@ -57,11 +57,11 @@ export default function ForgotPasswordPage() {
 
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <Activity size={18} style={{ color: "#FFD700" }} />
+          <Activity size={18} style={{ color: "var(--gold)" }} />
           <span className="font-bold text-[15px] tracking-wider"
             style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
-            <span style={{ color: textP }}>MARKET KA </span>
-            <span style={{ color: "#FFD700" }}>BAADSHAH</span>
+            <span style={{ color: textP }}>EQUITY</span>
+            <span style={{ color: "var(--gold)" }}>LENS</span>
           </span>
         </div>
 
@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.18)" }}
                 >
-                  <Mail size={16} style={{ color: "#FFD700" }} />
+                  <Mail size={16} style={{ color: "var(--gold)" }} />
                 </div>
                 <div>
                   <h2 className="font-bold" style={{ fontFamily: "var(--font-space-grotesk, sans-serif)", fontSize: "20px", color: textP }}>
@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
 
               {error && (
                 <div className="mb-4 px-4 py-3 rounded-xl text-[12px] font-mono"
-                  style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.22)", color: "#FF4D4D" }}>
+                  style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.22)", color: "var(--negative)" }}>
                   ⚠ {error}
                 </div>
               )}
@@ -126,7 +126,7 @@ export default function ForgotPasswordPage() {
                         ? "rgba(255,77,77,0.45)" : isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.09)";
                     }}
                   />
-                  {errors.email && <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{errors.email.message}</span>}
+                  {errors.email && <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{errors.email.message}</span>}
                 </div>
 
                 <button
@@ -160,7 +160,7 @@ export default function ForgotPasswordPage() {
               <p className="text-[13px] mb-1" style={{ color: textM }}>
                 If an account exists for
               </p>
-              <p className="text-[13px] font-mono font-semibold mb-4" style={{ color: "#FFD700" }}>
+              <p className="text-[13px] font-mono font-semibold mb-4" style={{ color: "var(--gold)" }}>
                 {getValues("email")}
               </p>
               <p className="text-[12px]" style={{ color: textM }}>
@@ -173,7 +173,7 @@ export default function ForgotPasswordPage() {
             <Link
               href="/auth/login"
               className="flex items-center justify-center gap-1.5 text-[12px] font-mono transition-opacity hover:opacity-70"
-              style={{ color: isLight ? "#9A8060" : "#4A4A4A" }}
+              style={{ color: "var(--th-text-muted)" }}
             >
               <ArrowLeft size={11} /> Back to sign in
             </Link>

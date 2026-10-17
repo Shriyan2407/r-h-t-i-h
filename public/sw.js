@@ -1,4 +1,4 @@
-// Service Worker for Market Ka Baadshah push notifications
+// Service Worker for EquityLens push notifications
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
@@ -10,7 +10,7 @@ self.addEventListener("push", event => {
   try {
     data = event.data.json();
   } catch {
-    data = { title: "Market Ka Baadshah", body: event.data.text() };
+    data = { title: "EquityLens", body: event.data.text() };
   }
 
   const options = {
@@ -23,7 +23,7 @@ self.addEventListener("push", event => {
     silent: false,
   };
 
-  event.waitUntil(self.registration.showNotification(data.title ?? "Market Ka Baadshah", options));
+  event.waitUntil(self.registration.showNotification(data.title ?? "EquityLens", options));
 });
 
 self.addEventListener("notificationclick", event => {

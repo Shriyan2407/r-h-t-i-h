@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Deterministic Quant Scoring Engine
+   EquityLens — Deterministic Quant Scoring Engine
    All analytics are computed here. AI only interprets the output.
 ═══════════════════════════════════════════════════════════════ */
 
@@ -15,12 +15,29 @@ export interface QuantScore {
   risk:        number; // 0-100 (higher = lower risk = better)
   composite:   number; // 0-100
   verdict:     ScoredVerdict;
-  confidence:  number; // 50-95
+  /** 0-100 agreement of the rule signals. NOT a probability - see computeSignalStrength. */
+  signalStrength: number;
   signals: {
     bullish: string[];
     bearish: string[];
     neutral: string[];
   };
+}
+
+/**
+ * SignalStrength: how one-sided the rule-based signals are, 0-100.
+ *   0   = no signals fired, or bullish and bearish signals are perfectly balanced
+ *   100 = every signal that fired points the same way
+ *
+ * It measures agreement between hand-written indicator rules. It is deliberately NOT called
+ * "confidence": it has never been calibrated against outcomes and says nothing about the
+ * probability that a trade makes money. A real probability needs a validated model
+ * (see docs/QUANT_ENGINE.md); until one exists the UI reports probability as unavailable.
+ */
+export function computeSignalStrength(bullishCount: number, bearishCount: number): number {
+  const total = bullishCount + bearishCount;
+  if (total <= 0) return 0;
+  return Math.round((Math.abs(bullishCount - bearishCount) / total) * 100);
 }
 
 /* ── clamp helper ──────────────────────────────────────────── */
@@ -275,10 +292,7 @@ export function computeQuantScore(
     risk        * 0.10
   );
 
-  // Confidence = signal count and alignment
-  const totalSignals = bullish.length + bearish.length;
-  const alignment = totalSignals > 0 ? Math.abs(bullish.length - bearish.length) / totalSignals : 0;
-  const confidence = clamp(Math.round(55 + alignment * 35 + (totalSignals > 6 ? 5 : 0)), 50, 93);
+  const signalStrength = computeSignalStrength(bullish.length, bearish.length);
 
   return {
     technical:   Math.round(tech.score),
@@ -288,7 +302,7 @@ export function computeQuantScore(
     risk:        Math.round(risk),
     composite:   Math.round(composite),
     verdict:     verdictFromScore(composite),
-    confidence,
+    signalStrength,
     signals:     { bullish, bearish, neutral },
   };
 }
@@ -299,7 +313,7 @@ export function buildQuantSummary(score: QuantScore, price: number, ticker: stri
     `QUANT SCORES for ${ticker} @ ₹${price.toFixed(2)}:`,
     `Technical=${score.technical}/100 | Momentum=${score.momentum}/100 | Fundamental=${score.fundamental}/100`,
     `Volatility=${score.volatility}/100 | Risk=${score.risk}/100 | COMPOSITE=${score.composite}/100`,
-    `QUANT VERDICT: ${score.verdict} (confidence ${score.confidence}%)`,
+    `QUANT VERDICT: ${score.verdict} (signal strength ${score.signalStrength}/100 = agreement between rule signals; not a probability)`,
     `BULLISH SIGNALS (${score.signals.bullish.length}): ${score.signals.bullish.slice(0, 5).join("; ") || "none"}`,
     `BEARISH SIGNALS (${score.signals.bearish.length}): ${score.signals.bearish.slice(0, 5).join("; ") || "none"}`,
     score.signals.neutral.length > 0 ? `NEUTRAL: ${score.signals.neutral.join("; ")}` : "",

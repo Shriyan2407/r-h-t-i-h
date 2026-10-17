@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — AI Company History Engine
+   EquityLens — AI Company History Engine
    Uses Claude to generate REAL, company-specific institutional
    history for any NSE/BSE ticker not in the hardcoded archive.
 
@@ -98,7 +98,7 @@ function normalizeProfile(
 }
 
 /* ── System prompt ──────────────────────────────────────────── */
-const HISTORY_SYSTEM = `You are an institutional-grade Indian equity historian for R.H.T.I.H (Real History Through Institutional Horizons).
+const HISTORY_SYSTEM = `You are an institutional-grade Indian equity historian for EquityLens.
 
 You have encyclopedic knowledge of every NSE/BSE listed company:
 - Real IPO dates, prices, over-subscription data

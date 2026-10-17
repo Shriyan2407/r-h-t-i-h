@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Intelligence Engine (Orchestrator)
+   EquityLens — Intelligence Engine (Orchestrator)
    3-tier fallback: Ollama → Claude → Deterministic Quant
    NEVER returns an error object. Always returns valid report.
 ═══════════════════════════════════════════════════════════════ */
@@ -15,22 +15,9 @@ import { buildInstitutionalPrompt } from "./promptBuilder";
 import { callOllama }             from "@/lib/ai/ollamaClient";
 import { callClaude, parseIntelligenceResponse } from "./claudeService";
 import { buildDeterministicReport } from "./deterministicIntelligence";
-import { cache, TTL }             from "./cache";
-
-/* ── Startup: flush any stale NO_API_KEY error objects ───── */
-(function purgeStaleCacheErrors() {
-  try {
-    const stats = cache.stats();
-    for (const key of stats.keys) {
-      if (!key.startsWith("intelligence:")) continue;
-      const val = cache.get<any>(key);
-      if (val && (val.error || val.code)) {
-        cache.del(key);
-        console.log(`[Intelligence] Purged stale cache error for key: ${key}`);
-      }
-    }
-  } catch { /* non-critical */ }
-})();
+import { TTL }                    from "./cache";
+import { sharedDel, sharedWrap }   from "@/lib/cache/shared";
+import { timed }                   from "@/lib/observability/metrics";
 
 /* ── Yahoo Finance data fetcher ─────────────────────────── */
 
@@ -64,7 +51,7 @@ async function fetchYahooData(ticker: string) {
 /* ── Ollama Intelligence wrapper ─────────────────────────── */
 
 const SYSTEM_MSG = [
-  "You are R.H.T.I.H Intelligence Core — an institutional AI equity analyst for Indian markets.",
+  "You are the EquityLens research assistant — an equity analyst for Indian markets.",
   "You ALWAYS return valid JSON only.",
   "No markdown fences, no explanations outside the JSON.",
   "Your analysis is specific, non-generic, and evidence-based.",
@@ -76,7 +63,7 @@ async function tryOllama(prompt: string, ticker: string): Promise<any | null> {
     if (!raw) return null;
     const report = parseIntelligenceResponse(raw, ticker);
     // Minimal validation
-    if (report?.scores && report?.ticker) return report;
+    if (report?.ticker) return report;
     return null;
   } catch { return null; }
 }
@@ -89,7 +76,7 @@ async function tryClaude(prompt: string, ticker: string): Promise<any | null> {
   try {
     const raw    = await callClaude(prompt, SYSTEM_MSG);
     const report = parseIntelligenceResponse(raw, ticker);
-    if (report?.scores && report?.ticker) return report;
+    if (report?.ticker) return report;
     return null;
   } catch (err) {
     console.warn(`[Intelligence] Claude failed for ${ticker}:`, (err as Error).message);
@@ -116,10 +103,14 @@ export async function generateIntelligence(ticker: string) {
   console.log(`[Intelligence] ${T}: quote=${!!quote}, news=${news.length}, sentiment=${!!sentiment}`);
 
   const prompt = buildInstitutionalPrompt({ ticker: T, quote, summary, news, sentiment });
+  // Scores are always the deterministic rule scores for these inputs. An LLM writes narrative only; any score it
+  // returns is discarded, so the page's "rule-based score" label is true whichever tier answered.
+  const ruleScores = buildDeterministicReport(T, quote, summary, news, sentiment).scores;
 
   /* Tier 1 — Ollama */
   let report = await tryOllama(prompt, T);
   if (report) {
+    report.scores = ruleScores;
     console.log(`[Intelligence] ${T}: Ollama success`);
     report._meta = {
       ticker: T, generatedAt: new Date().toISOString(),
@@ -136,6 +127,7 @@ export async function generateIntelligence(ticker: string) {
   /* Tier 2 — Claude */
   report = await tryClaude(prompt, T);
   if (report) {
+    report.scores = ruleScores;
     console.log(`[Intelligence] ${T}: Claude success`);
     report._meta = {
       ticker: T, generatedAt: new Date().toISOString(),
@@ -158,14 +150,18 @@ export async function generateIntelligence(ticker: string) {
 /* ── Cached wrapper (public API) ─────────────────────────── */
 
 export async function getIntelligenceReport(ticker: string, bustCache = false) {
-  const T   = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
-  const key = `intelligence:${T}`;
+  const T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
 
-  // Always evict stale error objects — they must never be served to the frontend
-  const cached = cache.get<any>(key);
-  if (bustCache || (cached !== null && (cached.error || cached.code))) {
-    cache.del(key);
-  }
+  // Error-shaped results must never be cached or served to the frontend.
+  const isHealthy = (r: any) => !!r && !r.error && !r.code;
 
-  return cache.wrap(key, TTL.INTELLIGENCE, () => generateIntelligence(T));
+  if (bustCache) await sharedDel("intelligence", T);
+
+  return sharedWrap(
+    "intelligence",
+    T,
+    TTL.INTELLIGENCE,
+    () => timed("ai.intelligence.generate", () => generateIntelligence(T)),
+    isHealthy,
+  );
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth }         from "@/lib/auth/auth";
 import { prisma }       from "@/lib/auth/prisma";
+import { holdingCreateSchema, MAX_HOLDINGS_PER_PORTFOLIO } from "@/lib/validation/portfolio";
 
 export async function GET() {
   const session = await auth();
@@ -22,8 +23,9 @@ export async function GET() {
         name:     h.name,
         exchange: h.exchange,
         sector:   h.sector ?? "Other",
-        quantity: h.quantity,
-        avgPrice: h.avgPrice,
+        // Decimal columns: return JSON numbers (a Decimal would serialise as a string and break the client).
+        quantity: Number(h.quantity),
+        avgPrice: Number(h.avgPrice),
         notes:    h.notes ?? undefined,
         addedAt:  h.addedAt.toISOString(),
       })),
@@ -39,33 +41,51 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  let raw: unknown;
   try {
-    const body = await req.json();
-    const { ticker, name, exchange, sector, quantity, avgPrice, notes } = body;
+    raw = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
 
-    if (!ticker || !name || quantity == null || avgPrice == null) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
+  const parsed = holdingCreateSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid holding" },
+      { status: 400 },
+    );
+  }
+  const { ticker, name, exchange, sector, quantity, avgPrice, notes } = parsed.data;
 
+  try {
     // Get or create portfolio
-    let portfolio = await prisma.portfolio.findUnique({
-      where: { userId: session.user.id },
+    const portfolio =
+      (await prisma.portfolio.findUnique({ where: { userId: session.user.id } })) ??
+      (await prisma.portfolio.create({ data: { userId: session.user.id } }));
+
+    const existing = await prisma.portfolioHolding.findUnique({
+      where: { portfolioId_ticker: { portfolioId: portfolio.id, ticker } },
+      select: { id: true },
     });
-    if (!portfolio) {
-      portfolio = await prisma.portfolio.create({
-        data: { userId: session.user.id },
-      });
+    if (!existing) {
+      const count = await prisma.portfolioHolding.count({ where: { portfolioId: portfolio.id } });
+      if (count >= MAX_HOLDINGS_PER_PORTFOLIO) {
+        return NextResponse.json(
+          { error: `A portfolio can hold at most ${MAX_HOLDINGS_PER_PORTFOLIO} positions` },
+          { status: 409 },
+        );
+      }
     }
 
     const holding = await prisma.portfolioHolding.upsert({
-      where:  { portfolioId_ticker: { portfolioId: portfolio.id, ticker: ticker.toUpperCase() } },
-      update: { quantity, avgPrice, notes: notes ?? null, updatedAt: new Date() },
+      where:  { portfolioId_ticker: { portfolioId: portfolio.id, ticker } },
+      update: { quantity, avgPrice, notes: notes ?? null },
       create: {
         portfolioId: portfolio.id,
-        ticker:      ticker.toUpperCase(),
+        ticker,
         name,
-        exchange:    exchange ?? "NSE",
-        sector:      sector   ?? "Other",
+        exchange,
+        sector:      sector ?? "Other",
         quantity,
         avgPrice,
         notes:       notes ?? null,

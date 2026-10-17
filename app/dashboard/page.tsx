@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
-  Star, Brain, Search, TrendingUp, Clock,
+  Star, Brain, Search, TrendingUp,
   BarChart2, ArrowRight, RefreshCw, Zap,
-  Activity, ChevronRight, Cpu,
+  Activity, ChevronRight, Cpu, Shield,
 } from "lucide-react";
 import { Navbar }       from "@/components/Navbar";
+import { useMarketIndices } from "@/lib/hooks/useMarketIndices";
 import { MarketTicker } from "@/components/MarketTicker";
-import { useTheme }     from "@/lib/context/ThemeContext";
 import { useWatchlistStore } from "@/store/watchlistStore";
 
 interface UserProfile {
@@ -34,24 +34,8 @@ const TIER_STYLES: Record<string, { bg: string; text: string; border: string; gl
   institutional: { bg: "rgba(0,255,156,0.08)",  text: "#00FF9C", border: "rgba(0,255,156,0.28)",  glow: "0 0 12px rgba(0,255,156,0.12)" },
 };
 
-const MARKET_PULSE = [
-  { label: "NIFTY 50", value: "24,832", change: "+0.34%", up: true  },
-  { label: "SENSEX",   value: "81,547", change: "+0.28%", up: true  },
-  { label: "VIX",      value: "14.2",   change: "-2.1%",  up: false },
-  { label: "USD/INR",  value: "83.42",  change: "+0.05%", up: true  },
-];
-
-const TRENDING_AI = [
-  { ticker: "RELIANCE",  verdict: "BUY",        confidence: 78, color: "#34D399" },
-  { ticker: "HDFCBANK",  verdict: "STRONG BUY", confidence: 84, color: "#00FF9C" },
-  { ticker: "TCS",       verdict: "HOLD",       confidence: 62, color: "#FFB800" },
-  { ticker: "ICICIBANK", verdict: "BUY",        confidence: 71, color: "#34D399" },
-];
-
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const { theme }         = useTheme();
-  const isLight           = theme === "light";
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +43,13 @@ export default function DashboardPage() {
   // Single source of truth — same store the watchlist page and WatchButton use
   const watchlist        = useWatchlistStore(s => s.items);
   const watchlistLoaded  = useWatchlistStore(s => s.loaded);
+
+  // Real quotes only (shared poller). Nothing is shown for an index we have no data for.
+  const market = useMarketIndices();
+  const pulse = market.status === "ready"
+    ? market.data.indices.filter(i => ["NIFTY 50", "SENSEX", "INDIA VIX", "USD/INR"].includes(i.label))
+    : [];
+  const movers = market.status === "ready" ? market.data.movers : null;
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -122,17 +113,24 @@ export default function DashboardPage() {
               className="hidden lg:flex items-center gap-4 px-4 py-2 rounded-xl"
               style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}
             >
-              {MARKET_PULSE.map(item => (
-                <div key={item.label} className="flex items-center gap-1.5">
-                  <span className="text-[8.5px] font-mono font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
+              {market.status === "loading" && (
+                <span className="text-[10px] font-mono" style={{ color: "var(--th-text-faint)" }}>Loading market data…</span>
+              )}
+              {market.status === "error" && (
+                <span className="text-[10px] font-mono" style={{ color: "var(--th-text-faint)" }}>Market data unavailable</span>
+              )}
+              {pulse.map(item => (
+                <div key={item.symbol} className="flex items-center gap-1.5">
+                  <span style={{ fontFamily: "monospace", fontSize: "9px", fontWeight: 400, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--th-text-faint)" }}>
                     {item.label}
                   </span>
-                  <span className="text-[10.5px] font-mono font-bold" style={{ color: "var(--th-text-secondary)" }}>
-                    {item.value}
+                  <span style={{ fontFamily: "monospace", fontSize: "13px", fontWeight: 700, letterSpacing: "-0.01em", color: "var(--th-text-secondary)" }}>
+                    {item.kind === "rate"
+                      ? item.value.toFixed(2)
+                      : item.value.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                   </span>
-                  <span className="text-[9px] font-mono font-semibold"
-                    style={{ color: item.up ? "var(--positive)" : "var(--negative)" }}>
-                    {item.change}
+                  <span style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 600, color: item.changePct >= 0 ? "var(--positive)" : "var(--negative)" }}>
+                    {item.changePct >= 0 ? "+" : ""}{item.changePct.toFixed(2)}%
                   </span>
                 </div>
               ))}
@@ -163,9 +161,9 @@ export default function DashboardPage() {
         {/* ── Stats Strip ── */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { label: "Watchlist",   value: watchlist.length,               icon: Star,   color: "#FFD700", href: "/watchlist" },
+            { label: "Watchlist",   value: watchlist.length,               icon: Star,   color: "var(--gold)", href: "/watchlist" },
             { label: "AI Reports",  value: profile?._count.aiHistory ?? 0, icon: Brain,  color: "#38BDF8", href: "/history"   },
-            { label: "Searches",    value: profile?._count.searches  ?? 0, icon: Search, color: "#00FF9C", href: "/"          },
+            { label: "Searches",    value: profile?._count.searches  ?? 0, icon: Search, color: "var(--positive)", href: "/"          },
           ].map(({ label, value, icon: Icon, color, href }, i) => (
             <motion.div
               key={label}
@@ -200,10 +198,31 @@ export default function DashboardPage() {
                   <Icon size={15} style={{ color }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[22px] font-bold font-mono leading-none mb-1" style={{ color: "var(--th-text-primary)" }}>
+                  {/* Number — hero weight */}
+                  <div
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "32px",
+                      fontWeight: 700,
+                      letterSpacing: "-0.04em",
+                      lineHeight: 1,
+                      color: "var(--th-text-primary)",
+                      marginBottom: "4px",
+                    }}
+                  >
                     {loading ? "—" : value}
                   </div>
-                  <div className="text-[9.5px] font-mono font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
+                  {/* Label — subtle */}
+                  <div
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "10px",
+                      fontWeight: 400,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase" as const,
+                      color: "var(--th-text-muted)",
+                    }}
+                  >
                     {label}
                   </div>
                 </div>
@@ -237,7 +256,7 @@ export default function DashboardPage() {
                   {watchlist.length > 0 && (
                     <span
                       className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full"
-                      style={{ background: "rgba(255,215,0,0.09)", color: "#FFD700", border: "1px solid rgba(255,215,0,0.22)" }}
+                      style={{ background: "rgba(255,215,0,0.09)", color: "var(--gold)", border: "1px solid rgba(255,215,0,0.22)" }}
                     >
                       {watchlist.length}
                     </span>
@@ -318,10 +337,32 @@ export default function DashboardPage() {
                           {item.ticker.slice(0, 3)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="text-[12px] font-mono font-bold truncate" style={{ color: "var(--th-text-primary)" }}>
+                          {/* Ticker — name weight */}
+                          <div
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "14px",
+                              fontWeight: 600,
+                              color: "var(--th-text-primary)",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {item.ticker}
                           </div>
-                          <div className="text-[9px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
+                          {/* Metadata — micro label */}
+                          <div
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "10px",
+                              fontWeight: 400,
+                              color: "var(--th-text-muted)",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {item.exchange} · {item.sector ?? "Stock"}
                           </div>
                         </div>
@@ -346,9 +387,8 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2.5">
                   <Cpu size={12} style={{ color: "var(--gold)" }} />
                   <span className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
-                    AI Signal Radar
+                    Large-Cap Movers
                   </span>
-                  <div className="w-1.5 h-1.5 rounded-full animate-live-dot" style={{ background: "var(--positive)" }} />
                 </div>
                 <Link
                   href="/ai"
@@ -357,57 +397,56 @@ export default function DashboardPage() {
                   onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = "var(--gold)"}
                   onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = "var(--th-text-muted)"}
                 >
-                  Run Analysis <ArrowRight size={9} />
+                  Analyse a stock <ArrowRight size={9} />
                 </Link>
               </div>
-              <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {TRENDING_AI.map((sig, i) => (
-                  <motion.div
-                    key={sig.ticker}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                  >
-                    <Link
-                      href={`/stock/${sig.ticker}`}
-                      className="flex flex-col gap-2.5 p-3 rounded-xl transition-all duration-200 group block"
-                      style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}
-                      onMouseEnter={e => {
-                        const el = e.currentTarget as HTMLAnchorElement;
-                        el.style.borderColor = `${sig.color}40`;
-                        el.style.background  = `${sig.color}08`;
-                        el.style.transform   = "translateY(-2px)";
-                      }}
-                      onMouseLeave={e => {
-                        const el = e.currentTarget as HTMLAnchorElement;
-                        el.style.borderColor = "var(--th-border-subtle)";
-                        el.style.background  = "var(--th-bg-elevated)";
-                        el.style.transform   = "translateY(0)";
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
-                          {sig.ticker}
-                        </span>
-                        <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded"
-                          style={{ color: sig.color, background: `${sig.color}18`, border: `1px solid ${sig.color}30` }}>
-                          {sig.verdict}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="h-1 rounded-full overflow-hidden mb-1" style={{ background: "rgba(255,255,255,0.06)" }}>
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${sig.confidence}%`, background: sig.color }}
-                          />
-                        </div>
-                        <div className="text-[9px] font-mono font-semibold" style={{ color: "var(--th-text-muted)" }}>
-                          {sig.confidence}% confidence
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
+              <div className="p-4">
+                {market.status === "loading" && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="status" aria-label="Loading movers">
+                    {[0, 1, 2, 3].map(i => (
+                      <div key={i} className="h-[74px] rounded-xl animate-pulse" style={{ background: "var(--th-bg-elevated)" }} />
+                    ))}
+                  </div>
+                )}
+                {market.status === "error" && (
+                  <p className="text-[12px] font-mono py-4 text-center" style={{ color: "var(--th-text-muted)" }}>
+                    Market data is temporarily unavailable.
+                  </p>
+                )}
+                {movers && movers.gainers.length + movers.losers.length === 0 && (
+                  <p className="text-[12px] font-mono py-4 text-center" style={{ color: "var(--th-text-muted)" }}>
+                    No movers to show right now.
+                  </p>
+                )}
+                {movers && movers.gainers.length + movers.losers.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {[...movers.gainers.slice(0, 2), ...movers.losers.slice(0, 2)].map((m, i) => {
+                      const up = m.change >= 0;
+                      const color = up ? "#00FF9C" : "#FF4D4D";
+                      return (
+                        <motion.div key={m.ticker} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+                          <Link
+                            href={`/stock/${m.ticker}`}
+                            className="flex flex-col gap-2 p-3 rounded-xl transition-all duration-200 block"
+                            style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}
+                          >
+                            <span style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: 600, color: "var(--th-text-primary)" }}>
+                              {m.ticker}
+                            </span>
+                            <span style={{ fontFamily: "monospace", fontSize: "13px", fontWeight: 700, color }}>
+                              {up ? "▲ +" : "▼ "}{m.change.toFixed(2)}%
+                            </span>
+                          </Link>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+                {market.status === "ready" && (
+                  <p className="text-[10px] font-mono mt-3" style={{ color: "var(--th-text-faint)" }}>
+                    Day change from Yahoo Finance for a fixed large-cap basket. Quotes may be delayed. Not investment advice.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -432,7 +471,7 @@ export default function DashboardPage() {
               <div className="p-3 flex flex-col gap-1">
                 {[
                   { icon: Search,    label: "Search Stocks",  href: "/",         desc: "Any NSE/BSE stock"        },
-                  { icon: Brain,     label: "AI Analysis",    href: "/ai",       desc: "Multi-agent intelligence" },
+                  { icon: Brain,     label: "AI Analysis",    href: "/ai",       desc: "How the analysis works" },
                   { icon: TrendingUp,label: "Markets",        href: "/",         desc: "Live market overview"     },
                   { icon: BarChart2, label: "History",        href: "/history",  desc: "Price & event history"    },
                   { icon: Star,      label: "Watchlist",      href: "/watchlist",desc: "Your tracked stocks"      },
@@ -522,6 +561,20 @@ export default function DashboardPage() {
               </div>
             )}
 
+            {/* Portfolio risk: computed from the user's own holdings on the portfolio page. */}
+            <div className="rounded-xl p-5" style={{ background: "var(--th-bg-card)", border: "1px solid var(--th-border-subtle)" }}>
+              <div className="flex items-center gap-2.5 mb-2">
+                <Shield size={11} style={{ color: "var(--th-text-muted)" }} />
+                <h2 className="text-[10.5px] font-mono font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", margin: 0 }}>Portfolio stress tests</h2>
+              </div>
+              <p className="text-[12px]" style={{ color: "var(--th-text-muted)", margin: "0 0 12px" }}>
+                Market, sector, volatility and historical-crash scenarios computed from your saved holdings and real prices.
+              </p>
+              <Link href="/portfolio" className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: "var(--gold)" }}>
+                Open portfolio risk analysis <ArrowRight size={11} />
+              </Link>
+            </div>
+
             {/* Intelligence CTA */}
             <Link
               href="/ai/analyze"
@@ -552,7 +605,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="text-[12px] font-bold" style={{ color: "var(--gold)" }}>Run AI Analysis</div>
-                  <div className="text-[9.5px] font-mono" style={{ color: "rgba(255,215,0,0.55)" }}>7 agents · Full report in &lt;30s</div>
+                  <div className="text-[9.5px] font-mono" style={{ color: "var(--gold-soft)" }}>Rule-based scores · optional AI narrative</div>
                 </div>
               </div>
               <div className="relative flex items-center gap-1.5 text-[10px] font-mono font-bold"

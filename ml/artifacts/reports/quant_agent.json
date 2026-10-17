@@ -1,0 +1,114 @@
+{
+  "schema": "quant-agent-eval/1",
+  "evaluatedAt": "2026-10-17",
+  "signal": "lib/agents/quant.ts ruleScore (six published rules)",
+  "period": [
+    "2019-01-01",
+    "2026-10-12"
+  ],
+  "criteria": {
+    "minMeanIc": 0.02,
+    "minT": 2,
+    "formerMembersMeanIcPositive": true
+  },
+  "current": {
+    "tickers": 47,
+    "h20": {
+      "horizon": 20,
+      "dates": 92,
+      "observations": 4324,
+      "meanIc": -0.017711874469049916,
+      "icT": -0.8724579564155996,
+      "shareOfDatesIcPositive": 0.43478260869565216,
+      "byView": {
+        "bullish": {
+          "n": 1820,
+          "meanExcess": -0.00012522444069036352
+        },
+        "neutral": {
+          "n": 842,
+          "meanExcess": 0.0009378695066312385
+        },
+        "lean_bullish": {
+          "n": 770,
+          "meanExcess": -0.003818399447411245
+        },
+        "bearish": {
+          "n": 462,
+          "meanExcess": 0.000746613031864107
+        },
+        "lean_bearish": {
+          "n": 430,
+          "meanExcess": 0.004728964444786983
+        }
+      },
+      "bullMinusBear": -0.0038895518146205292
+    },
+    "h5": {
+      "horizon": 5,
+      "dates": 380,
+      "observations": 17860,
+      "meanIc": -0.0019405804968866051,
+      "icT": -0.17081062033767755,
+      "shareOfDatesIcPositive": 0.49736842105263157,
+      "byView": {
+        "bullish": {
+          "n": 7269,
+          "meanExcess": 0.000019835482512735346
+        },
+        "neutral": {
+          "n": 3611,
+          "meanExcess": -0.0011293090016399868
+        },
+        "lean_bullish": {
+          "n": 3154,
+          "meanExcess": 0.0000745252394577178
+        },
+        "bearish": {
+          "n": 1993,
+          "meanExcess": 0.00011701097324494345
+        },
+        "lean_bearish": {
+          "n": 1833,
+          "meanExcess": 0.0018906138612166494
+        }
+      },
+      "bullMinusBear": -0.0009303425463489045
+    }
+  },
+  "former": {
+    "tickers": 25,
+    "h20": {
+      "horizon": 20,
+      "dates": 92,
+      "observations": 2300,
+      "meanIc": 0.03784912675621376,
+      "icT": 1.3321743515871591,
+      "shareOfDatesIcPositive": 0.6086956521739131,
+      "byView": {
+        "neutral": {
+          "n": 429,
+          "meanExcess": -0.003530353638895379
+        },
+        "lean_bearish": {
+          "n": 278,
+          "meanExcess": 0.005060157290986812
+        },
+        "bullish": {
+          "n": 798,
+          "meanExcess": 0.0039484265476036505
+        },
+        "lean_bullish": {
+          "n": 338,
+          "meanExcess": -0.00691847844002332
+        },
+        "bearish": {
+          "n": 457,
+          "meanExcess": -0.0015417958163414709
+        }
+      },
+      "bullMinusBear": -0.00024012976429490726
+    }
+  },
+  "verdict": "NO_EDGE"
+}

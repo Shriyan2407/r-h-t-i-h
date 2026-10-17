@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   MARKET KA BAADSHAH — Search Intelligence Universe
+   EQUITYLENS — Search Intelligence Universe
    Static knowledge graph: stocks, sectors, themes, people, relationships
 ══════════════════════════════════════════════════════════════════════════ */
 

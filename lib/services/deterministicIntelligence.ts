@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Deterministic Intelligence Report Generator
+   EquityLens — Deterministic Intelligence Report Generator
    Builds a complete IntelligenceReport from Yahoo Finance data
    with zero LLM dependency. Used as final fallback tier.
 ═══════════════════════════════════════════════════════════════ */
@@ -187,14 +187,13 @@ export function buildDeterministicReport(
   const newsRatio = news.length > 0 ? (posNews - negNews) / news.length : 0;
 
   const s = computeScores(quote, summary, newsRatio);
-  const { tech, fund, mom, vol, rr, smart, lt, swing, inst, rangePos, change1d, price, hi52, lo52, de } = s;
+  const { tech, fund, mom, vol, rr, smart, lt, swing, inst, rangePos, change1d, price, de } = s;
 
   const sectorProfile = detectSector(quote?.sector, ticker);
   const companyName   = quote?.longName ?? quote?.shortName ?? ticker;
   const exchange      = quote?.exchange ?? "NSE";
 
   const composite = clamp(Math.round(tech * 0.30 + fund * 0.25 + mom * 0.25 + vol * 0.10 + rr * 0.10));
-  const aiConfidence  = clamp(60 + Math.round(Math.abs(composite - 50) / 2), 60, 88);
 
   let currentSentiment: "BULLISH" | "BEARISH" | "NEUTRAL" | "MIXED" = "NEUTRAL";
   if (composite >= 65 && newsRatio >= 0)       currentSentiment = "BULLISH";
@@ -202,10 +201,6 @@ export function buildDeterministicReport(
   else if (composite <= 40 && newsRatio <= 0)   currentSentiment = "BEARISH";
   else if (composite <= 45 || newsRatio < -0.2) currentSentiment = "MIXED";
 
-  const stopLoss  = price * 0.93;
-  const target1   = price * 1.12;
-  const target2   = Math.min(price * 1.24, hi52 * 0.98);
-  const rrRatio   = (target1 - price) / Math.max(price - stopLoss, 1);
 
   const fiiHolding = summary?.majorHoldersBreakdown?.institutionsPercentHeld ?? null;
 
@@ -234,7 +229,6 @@ export function buildDeterministicReport(
     exchange,
     currentTrend,
     currentSentiment,
-    aiConfidence,
     oneLiner: oneLiner(ticker, s, sectorProfile),
     trendState,
     scores: {
@@ -269,13 +263,6 @@ export function buildDeterministicReport(
     macroConnections: `${sectorProfile.macroFactors.slice(0, 2).join(". ")}. ${sectorProfile.label} stocks are influenced by these macro drivers at this juncture.`,
     techAnalysis:     techAnalysisText(ticker, s),
     graphAnalysis:    graphAnalysisText(ticker, s),
-    entryZone: {
-      entry:      `${fmtInr(price * 0.98)}–${fmtInr(price)}`,
-      stopLoss:   `${fmtInr(stopLoss)} (−7%)`,
-      target1:    fmtInr(target1),
-      target2:    fmtInr(target2),
-      riskReward: `1:${rrRatio.toFixed(1)}`,
-    },
     timeframes: {
       intraday:  {
         trend:    change1d > 0 ? "Bullish intraday" : "Bearish intraday",
@@ -287,7 +274,7 @@ export function buildDeterministicReport(
         trend:    rangePos > 0.5 ? "Upward bias" : "Cautious",
         strength: rangePos > 0.65 || rangePos < 0.35 ? "Moderate" : "Weak",
         risk:     "Medium",
-        note:     `Swing target ${fmtInr(target1)}, stop ${fmtInr(stopLoss)}`,
+        note:     `Price is ${(rangePos * 100).toFixed(0)}% of the way from its 52-week low to its 52-week high`,
       },
       positional:{
         trend:    composite >= 60 ? "Positive" : composite <= 45 ? "Cautious" : "Neutral",

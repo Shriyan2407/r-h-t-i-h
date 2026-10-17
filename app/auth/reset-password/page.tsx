@@ -35,8 +35,8 @@ function ResetForm() {
   const strength = getPasswordStrength(password);
 
   const textP = isLight ? "#1A1A1A" : "#EEEEEE";
-  const textM = isLight ? "#7A6A50" : "#5A5A5A";
-  const label = isLight ? "#9A8060" : "#3A3A3A";
+  const textM = "var(--th-text-muted)";
+  const label = "var(--th-text-muted)";
 
   const onSubmit = async (data: Form) => {
     if (!token) { setError("Invalid reset link."); return; }
@@ -73,8 +73,8 @@ function ResetForm() {
   if (!token) {
     return (
       <div className="text-center py-8">
-        <p className="text-[13px] font-mono" style={{ color: "#FF4D4D" }}>Invalid or missing reset token.</p>
-        <Link href="/auth/forgot-password" className="text-[12px] mt-3 block" style={{ color: "#FFD700" }}>
+        <p className="text-[13px] font-mono" style={{ color: "var(--negative)" }}>Invalid or missing reset token.</p>
+        <Link href="/auth/forgot-password" className="text-[12px] mt-3 block" style={{ color: "var(--gold)" }}>
           Request a new link
         </Link>
       </div>
@@ -104,7 +104,7 @@ function ResetForm() {
 
       {error && (
         <div className="mb-4 px-4 py-3 rounded-xl text-[12px] font-mono"
-          style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.22)", color: "#FF4D4D" }}>
+          style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.22)", color: "var(--negative)" }}>
           ⚠ {error}
         </div>
       )}
@@ -123,7 +123,7 @@ function ResetForm() {
             />
             <button type="button" onClick={() => setShowPass(!showPass)} tabIndex={-1}
               className="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-70"
-              style={{ color: isLight ? "#9A9A9A" : "#4A4A4A" }}>
+              style={{ color: "var(--th-text-muted)" }}>
               {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           </div>
@@ -138,7 +138,7 @@ function ResetForm() {
               <span className="text-[9px] font-mono" style={{ color: strength.color }}>{strength.label}</span>
             </div>
           )}
-          {errors.password && <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{errors.password.message}</span>}
+          {errors.password && <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{errors.password.message}</span>}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -151,7 +151,7 @@ function ResetForm() {
             onFocus={e => { (e.target as HTMLInputElement).style.borderColor = "rgba(255,215,0,0.35)"; }}
             onBlur={e => { (e.target as HTMLInputElement).style.borderColor = errors.confirm ? "rgba(255,77,77,0.45)" : isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.09)"; }}
           />
-          {errors.confirm && <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{errors.confirm.message}</span>}
+          {errors.confirm && <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{errors.confirm.message}</span>}
         </div>
 
         <button type="submit" disabled={isSubmitting}
@@ -179,11 +179,11 @@ export default function ResetPasswordPage() {
       style={{ background: isLight ? "#F8F4EC" : "#050505" }}>
       <div className="w-full max-w-[400px]">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <Activity size={18} style={{ color: "#FFD700" }} />
+          <Activity size={18} style={{ color: "var(--gold)" }} />
           <span className="font-bold text-[15px] tracking-wider"
             style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
-            <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>MARKET KA </span>
-            <span style={{ color: "#FFD700" }}>BAADSHAH</span>
+            <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>EQUITY</span>
+            <span style={{ color: "var(--gold)" }}>LENS</span>
           </span>
         </div>
         <div className="rounded-2xl p-8"
@@ -198,7 +198,7 @@ export default function ResetPasswordPage() {
           </Suspense>
           <div className="mt-5 text-center">
             <Link href="/auth/login" className="text-[12px] font-mono hover:opacity-70 transition-opacity"
-              style={{ color: isLight ? "#9A8060" : "#4A4A4A" }}>
+              style={{ color: "var(--th-text-muted)" }}>
               ← Back to sign in
             </Link>
           </div>

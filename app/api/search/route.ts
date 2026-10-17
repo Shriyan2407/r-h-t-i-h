@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import YFClass from "yahoo-finance2";
 import type { SearchResult } from "@/lib/types";
+import { z } from "zod";
+import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 /* yahoo-finance2 v3: default export is the class — must instantiate */
 const yf = new (YFClass as any)();
@@ -20,13 +22,17 @@ function capCategory(mktCap?: number): SearchResult["market_cap_category"] {
   return "Micro Cap";
 }
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const q = searchParams.get("q")?.trim() ?? "";
+const searchQuerySchema = z.string().trim().min(1).max(60);
 
-  if (q.length < 1) {
-    return NextResponse.json([], { status: 200 });
-  }
+export async function GET(req: NextRequest) {
+  const limited = await enforceRateLimit(req, POLICIES.search);
+  if (limited) return limited;
+
+  const { searchParams } = new URL(req.url);
+  const parsedQuery = searchQuerySchema.safeParse(searchParams.get("q") ?? "");
+  // Empty or over-long queries just return no results; they never reach Yahoo.
+  if (!parsedQuery.success) return NextResponse.json([], { status: 200 });
+  const q = parsedQuery.data;
 
   try {
     const raw = await yf.search(q, { newsCount: 0, quotesCount: 12 });

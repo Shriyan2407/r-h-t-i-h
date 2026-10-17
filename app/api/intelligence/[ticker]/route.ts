@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
+import { auth } from "@/lib/auth/auth";
+import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Intelligence API Route
+   EquityLens — Intelligence API Route
    ALWAYS returns a valid report. No error objects, no blockers.
    Falls through: Ollama → Claude → Deterministic Quant.
 ═══════════════════════════════════════════════════════════════ */
@@ -13,7 +16,6 @@ export interface IntelligenceReport {
   exchange?:         string;
   currentTrend?:     string;
   currentSentiment?: string;
-  aiConfidence?:     number;
   oneLiner?:         string;
   trendState?:       string;
   scores?: {
@@ -65,11 +67,21 @@ export async function GET(
 
   try {
     const { ticker } = await params;
-    T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
+    const parsedTicker = parseTicker(ticker);
+    if (!parsedTicker) return invalidTickerResponse();
+    T = parsedTicker;
 
-    // Always bust cache — never serve a cached error object to the UI
+    // Fresh reports are shared via the cache (getIntelligenceReport already evicts cached
+    // error objects). Only a cache MISS costs real work, so only misses are rate limited.
+    const { sharedPeek } = await import("@/lib/cache/shared");
+    if (!(await sharedPeek("intelligence", T))) {
+      const session = await auth();
+      const limited = await enforceRateLimit(req, POLICIES.intelligence, session?.user?.id ? `user:${session.user.id}` : undefined);
+      if (limited) return limited;
+    }
+
     const { getIntelligenceReport } = await import("@/lib/services/intelligenceEngine");
-    const report = await getIntelligenceReport(T, true);
+    const report = await getIntelligenceReport(T);
 
     if (isValidReport(report)) {
       return NextResponse.json(report, {
@@ -109,7 +121,6 @@ export async function GET(
         companyName:      T,
         sector:           "Market Data Unavailable",
         currentSentiment: "NEUTRAL",
-        aiConfidence:     50,
         oneLiner:         `Live data temporarily unavailable for ${T}. Analysis will refresh automatically.`,
         trendState:       "Data loading",
         scores: {

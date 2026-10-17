@@ -1,0 +1,43 @@
+# Local stack: PostgreSQL + migrations + EquityLens.
+#   cp .env.example .env.docker   # fill NEXTAUTH_SECRET at minimum (DATABASE_URL is set below)
+#   docker compose up --build
+# Uses its own database; it never reads .env.local.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: equitylens
+      POSTGRES_USER: equitylens
+      POSTGRES_PASSWORD: equitylens_local_only
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U equitylens"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build: { context: ., target: migrate }
+    environment:
+      DATABASE_URL: postgresql://equitylens:equitylens_local_only@postgres:5432/equitylens
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  app:
+    build: { context: ., target: runner }
+    env_file: [.env.docker]
+    environment:
+      DATABASE_URL: postgresql://equitylens:equitylens_local_only@postgres:5432/equitylens
+      NEXTAUTH_URL: http://localhost:3000
+      AUTH_TRUST_HOST: "true"
+    ports:
+      - "3000:3000"
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+volumes:
+  pgdata:

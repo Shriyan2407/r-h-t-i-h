@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — In-Memory TTL Cache
+   EquityLens — In-Memory TTL Cache
    Server-side singleton. Survives across requests in a single
    Node.js process. Drop-in compatible with Redis when needed.
 ═══════════════════════════════════════════════════════════════ */
@@ -81,9 +81,9 @@ class InMemoryCache {
 }
 
 /* Singleton — shared across all API route invocations */
-const globalForCache = global as typeof globalThis & { rhtihCache?: InMemoryCache };
-export const cache = globalForCache.rhtihCache ?? new InMemoryCache();
-if (process.env.NODE_ENV !== "production") globalForCache.rhtihCache = cache;
+const globalForCache = global as typeof globalThis & { equitylensCache?: InMemoryCache };
+export const cache = globalForCache.equitylensCache ?? new InMemoryCache();
+if (process.env.NODE_ENV !== "production") globalForCache.equitylensCache = cache;
 
 /* Typed TTL constants (seconds) */
 export const TTL = {

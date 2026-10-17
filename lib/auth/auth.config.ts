@@ -1,7 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 
 // These are the ONLY pages accessible without authentication
-const PUBLIC_PAGES = ["/", "/auth/login", "/auth/signup", "/auth/forgot-password", "/auth/reset-password", "/auth/error"];
+const PUBLIC_PAGES = ["/", "/team", "/auth/login", "/auth/signup", "/auth/forgot-password", "/auth/reset-password", "/auth/verify-email", "/auth/error"];
 
 export const authConfig: NextAuthConfig = {
   pages: {
@@ -16,8 +16,8 @@ export const authConfig: NextAuthConfig = {
       // Always allow NextAuth's own API routes and Telegram webhook
       if (pathname.startsWith("/api/auth")) return true;
       if (pathname.startsWith("/api/telegram/webhook")) return true;
-      // Intelligence API is public — used by bot and public stock pages
-      if (pathname.startsWith("/api/intelligence/")) return true;
+      // Health: public liveness; detail inside the handler requires a bearer secret
+      if (pathname === "/api/health") return true;
       // Cron endpoints — authenticated via CRON_SECRET header, not session
       if (pathname.startsWith("/api/cron/")) return true;
 

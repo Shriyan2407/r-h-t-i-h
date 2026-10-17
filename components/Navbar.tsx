@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Search, TrendingUp, Star, Menu, X, Activity, Brain, Target, Newspaper, LayoutDashboard, User, LogOut, ChevronDown, PieChart, Bell } from "lucide-react";
 import { useWatchlistStore } from "@/store/watchlistStore";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,6 @@ export function Navbar() {
   const [scrolled,     setScrolled]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const router      = useRouter();
   const pathname    = usePathname();
   const { theme }   = useTheme();
   const isLight     = theme === "light";
@@ -56,6 +55,8 @@ export function Navbar() {
     { label: "Analyze",      href: "/ai/analyze",  icon: Target     },
     { label: "News",         href: "/news",        icon: Newspaper  },
     { label: "Portfolio",    href: "/portfolio",   icon: PieChart   },
+    { label: "Backtest",     href: "/backtest",    icon: Activity   },
+    { label: "Models",       href: "/models",      icon: Target     },
     { label: "Watchlist",    href: "/watchlist",   icon: Star       },
     { label: "Alerts",       href: "/alerts",      icon: Bell       },
   ];
@@ -110,24 +111,25 @@ export function Navbar() {
               style={{ background: "var(--positive)" }} />
           </div>
 
-          <div className="flex flex-col leading-none">
+          <span className="sr-only min-[400px]:hidden">EquityLens home</span>
+          <div className="hidden min-[400px]:flex flex-col leading-none">
             <span className="font-bold text-[15px] tracking-wider"
               style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
               <span className="transition-colors duration-300"
                 style={{ color: "var(--text)" }}>
-                MARKET KA{" "}
+                EQUITY
               </span>
-              <span style={{ color: "var(--gold)" }}>BAADSHAH</span>
+              <span style={{ color: "var(--gold)" }}>LENS</span>
             </span>
             <span className="text-[7.5px] font-mono uppercase tracking-[0.18em] mt-0.5"
-              style={{ color: "var(--text-dim)" }}>
+              style={{ color: "var(--th-text-muted)" }}>
               Equity Intelligence
             </span>
           </div>
         </Link>
 
         {/* ── Center Nav ── */}
-        <div className="hidden md:flex items-center gap-0.5">
+        <div className="hidden min-[1440px]:flex items-center gap-0.5 min-w-0 overflow-x-auto [scrollbar-width:none]">
           {navLinks.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || (href !== "/" && pathname.startsWith(href));
             return (
@@ -187,10 +189,11 @@ export function Navbar() {
         </div>
 
         {/* ── Right Controls ── */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Search button */}
           <button
-            onClick={() => router.push("/")}
+            onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
+            aria-keyshortcuts="Control+K Meta+K"
             className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all duration-200"
             style={{
               background: "var(--th-gold-bg)",
@@ -211,13 +214,13 @@ export function Navbar() {
             }}
           >
             <Search size={11} />
-            <span className="hidden lg:inline">Search stocks</span>
-            <kbd className="px-1.5 py-0.5 rounded text-[9px]"
+            <span className="sr-only lg:not-sr-only">Search stocks</span>
+            <kbd aria-hidden="true" className="px-1.5 py-0.5 rounded text-[9px]"
               style={{
                 background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.04)",
                 border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.07)",
               }}>
-              ⌘K
+              Ctrl K
             </kbd>
           </button>
 
@@ -350,7 +353,7 @@ export function Navbar() {
               /* ── Not logged in: Sign In button ── */
               <Link
                 href="/auth/login"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all duration-200"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono whitespace-nowrap transition-all duration-200"
                 style={{
                   background: "linear-gradient(135deg, rgba(198,162,42,0.18), rgba(232,195,69,0.12))",
                   border: "1px solid var(--gold-border-soft)",
@@ -370,11 +373,14 @@ export function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-1.5 transition-colors"
+            className="min-[1440px]:hidden p-1.5 transition-colors"
             style={{ color: "var(--text-muted)" }}
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+            aria-controls="navbar-menu"
           >
-            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+            {mobileOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -387,7 +393,8 @@ export function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="md:hidden overflow-hidden px-4 py-3 flex flex-col gap-1"
+            id="navbar-menu"
+            className="min-[1440px]:hidden overflow-hidden px-4 py-3 flex flex-col gap-1"
             style={{
               background: isLight ? "rgba(244,240,232,0.99)" : "rgba(5,5,5,0.98)",
               borderTop: "1px solid var(--gold-border)",

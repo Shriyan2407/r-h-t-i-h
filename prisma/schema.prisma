@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id               String    @id @default(cuid())
   name             String?
@@ -19,6 +24,10 @@ model User {
   updatedAt        DateTime  @updatedAt
   lastLogin        DateTime?
   subscriptionTier String    @default("free")
+  // Authorisation role. Only ever changed by an operator (scripts/promote-admin.ts), never by a client.
+  role             Role      @default(USER)
+  // Bumped whenever credentials change; JWTs carrying an older value are rejected.
+  sessionVersion   Int       @default(0)
 
   accounts           Account[]
   sessions           Session[]
@@ -152,8 +161,8 @@ model PortfolioHolding {
   name        String
   exchange    String    @default("NSE")
   sector      String?
-  quantity    Float
-  avgPrice    Float
+  quantity    Decimal   @db.Decimal(20, 6)
+  avgPrice    Decimal   @db.Decimal(18, 4)
   notes       String?
   addedAt     DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -164,11 +173,12 @@ model PortfolioHolding {
 }
 
 model PasswordResetToken {
-  id      String   @id @default(cuid())
-  userId  String
-  token   String   @unique
-  expires DateTime
-  used    Boolean  @default(false)
+  id        String   @id @default(cuid())
+  userId    String
+  // SHA-256 of the emailed token. The raw token is never stored.
+  tokenHash String   @unique
+  expires   DateTime
+  used      Boolean  @default(false)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -26,6 +26,9 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error,        setError]        = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
+  const justVerified = searchParams.get("verified") === "1";
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -34,6 +37,8 @@ export function LoginForm() {
   const onSubmit = async (data: LoginForm) => {
     setIsSubmitting(true);
     setError(null);
+    setUnverifiedEmail(null);
+    setResendState("idle");
     try {
       const result = await signIn("credentials", {
         email:    data.email,
@@ -41,7 +46,14 @@ export function LoginForm() {
         redirect: false,
       });
       if (result?.error) {
-        setError("Invalid email or password. Please try again.");
+        if (result.code === "email_not_verified") {
+          setError("Please verify your email before signing in. Check your inbox for the link.");
+          setUnverifiedEmail(data.email);
+        } else if (result.code === "rate_limited") {
+          setError("Too many attempts. Please wait a few minutes and try again.");
+        } else {
+          setError("Invalid email or password. Please try again.");
+        }
       } else {
         router.push(callbackUrl);
         router.refresh();
@@ -50,6 +62,20 @@ export function LoginForm() {
       setError("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const resendVerification = async () => {
+    if (!unverifiedEmail) return;
+    setResendState("sending");
+    try {
+      await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+    } finally {
+      setResendState("sent");
     }
   };
 
@@ -80,13 +106,13 @@ export function LoginForm() {
       <div
         className="flex lg:hidden items-center justify-center gap-2 mb-8"
       >
-        <Activity size={18} style={{ color: "#FFD700" }} />
+        <Activity size={18} style={{ color: "var(--gold)" }} />
         <span
           className="font-bold text-[15px] tracking-wider"
           style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}
         >
-          <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>MARKET KA </span>
-          <span style={{ color: "#FFD700" }}>BAADSHAH</span>
+          <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>EQUITY</span>
+          <span style={{ color: "var(--gold)" }}>LENS</span>
         </span>
       </div>
 
@@ -118,11 +144,21 @@ export function LoginForm() {
           </h2>
           <p
             className="text-[13px]"
-            style={{ color: isLight ? "#7A6A50" : "#5A5A5A" }}
+            style={{ color: "var(--th-text-muted)" }}
           >
             Sign in to your intelligence account
           </p>
         </div>
+
+        {justVerified && !error && (
+          <div
+            role="status"
+            className="mb-5 px-4 py-3 rounded-xl text-[12px] font-mono"
+            style={{ background: "rgba(0,255,156,0.08)", border: "1px solid rgba(0,255,156,0.22)", color: "#00CC7A" }}
+          >
+            Email verified. You can sign in now.
+          </div>
+        )}
 
         {/* Error banner */}
         {error && (
@@ -131,11 +167,23 @@ export function LoginForm() {
             style={{
               background: "rgba(255,77,77,0.08)",
               border: "1px solid rgba(255,77,77,0.22)",
-              color: "#FF4D4D",
+              color: "var(--negative)",
             }}
           >
             <span className="flex-shrink-0">⚠</span>
-            {error}
+            <span>
+              {error}
+              {unverifiedEmail && (
+                <button
+                  type="button"
+                  onClick={resendVerification}
+                  disabled={resendState !== "idle"}
+                  className="block mt-2 underline disabled:opacity-60"
+                >
+                  {resendState === "sent" ? "New link sent (if the account needs one)" : resendState === "sending" ? "Sending…" : "Resend verification email"}
+                </button>
+              )}
+            </span>
           </div>
         )}
 
@@ -144,12 +192,16 @@ export function LoginForm() {
           {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label
+              htmlFor="login-email"
               className="text-[10.5px] font-mono uppercase tracking-widest"
-              style={{ color: isLight ? "#9A8060" : "#3A3A3A" }}
+              style={{ color: isLight ? "#6B5536" : "var(--th-text-muted)" }}
             >
               Email
             </label>
             <input
+              id="login-email"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "login-email-error" : undefined}
               {...register("email")}
               type="email"
               placeholder="analyst@firm.com"
@@ -165,7 +217,7 @@ export function LoginForm() {
               }}
             />
             {errors.email && (
-              <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>
+              <span id="login-email-error" role="alert" className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>
                 {errors.email.message}
               </span>
             )}
@@ -175,21 +227,24 @@ export function LoginForm() {
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label
+                htmlFor="login-password"
                 className="text-[10.5px] font-mono uppercase tracking-widest"
-                style={{ color: isLight ? "#9A8060" : "#3A3A3A" }}
+                style={{ color: isLight ? "#6B5536" : "var(--th-text-muted)" }}
               >
                 Password
               </label>
               <Link
                 href="/auth/forgot-password"
                 className="text-[11px] font-mono transition-opacity hover:opacity-80"
-                style={{ color: "#FFD700" }}
+                style={{ color: "var(--gold)" }}
               >
                 Forgot?
               </Link>
             </div>
             <div className="relative">
               <input
+                id="login-password"
+                aria-invalid={!!errors.password}
                 {...register("password")}
                 type={showPass ? "text" : "password"}
                 placeholder="••••••••"
@@ -207,15 +262,17 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPass(!showPass)}
+                aria-label={showPass ? "Hide password" : "Show password"}
+                aria-pressed={showPass}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
-                style={{ color: isLight ? "#9A9A9A" : "#4A4A4A" }}
+                style={{ color: "var(--th-text-muted)" }}
                 tabIndex={-1}
               >
                 {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
             {errors.password && (
-              <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>
+              <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>
                 {errors.password.message}
               </span>
             )}
@@ -251,7 +308,7 @@ export function LoginForm() {
                 />
                 <span
                   className="text-[9.5px] font-mono"
-                  style={{ color: isLight ? "#BBAA90" : "#2A2A2A" }}
+                  style={{ color: "var(--th-text-muted)" }}
                 >
                   or continue with
                 </span>
@@ -301,14 +358,14 @@ export function LoginForm() {
         <div className="mt-6 text-center">
           <span
             className="text-[12px]"
-            style={{ color: isLight ? "#9A9A9A" : "#3A3A3A" }}
+            style={{ color: "var(--th-text-muted)" }}
           >
             Don&apos;t have an account?{" "}
           </span>
           <Link
             href="/auth/signup"
             className="text-[12px] font-semibold transition-opacity hover:opacity-80"
-            style={{ color: "#FFD700" }}
+            style={{ color: "var(--gold)" }}
           >
             Create account
           </Link>

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Company History Engine
+   EquityLens — Company History Engine
    Dynamic sector-playbook generator for tickers not in the
    hardcoded institutional archive (stockHistory.ts).
 

@@ -1,0 +1,6 @@
+{
+  "note": "Robustness set: companies that were in the Nifty 50 at some point since 2011 but are not current constituents and still trade. Never used for training. Membership dates are not available, so this tests generalisation to other large/mid caps, including several that fell sharply (survivorship check).",
+  "index": "^NSEI",
+  "vix": "^INDIAVIX",
+  "symbols": ["YESBANK","ZEEL","VEDL","IOC","GAIL","UPL","BHEL","DLF","PNB","BANKBARODA","AMBUJACEM","ACC","HINDPETRO","LUPIN","AUROPHARMA","BOSCHLTD","TATAPOWER","SHREECEM","INDUSTOWER","IDEA","SAIL","NMDC","JINDALSTEL","DABUR","PIDILITIND"]
+}

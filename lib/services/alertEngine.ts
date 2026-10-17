@@ -2,11 +2,12 @@ import { prisma } from "@/lib/auth/prisma";
 import {
   tgSendToUser,
   fmtBreakout, fmtBreakdown, fmtVolumeSpike,
-  fmtBuySignal, fmtSellSignal, fmtDailyBriefing,
+  fmtMomentumAlert, fmtDailyBriefing,
   fmtNewsAlert, fmtEarningsAlert,
 } from "./telegramService";
 import { sendPushToUser } from "./pushService";
 import { getStockNews } from "./newsAggregator";
+import { getMarketSnapshot } from "./marketSnapshot";
 import type { NewsItem } from "./newsAggregator";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -38,7 +39,7 @@ type PrefWithUser = Awaited<ReturnType<typeof loadPrefs>>[number];
 // ── Alert detection ──────────────────────────────────────────────────────────
 
 export function detectBreakout(q: QuoteData): boolean {
-  // Breakout above 52-week high (within 0.2%)
+  // At or within 0.2% of the 52-week high
   return q.price >= q.fiftyTwoWeekHigh * 0.998;
 }
 
@@ -381,31 +382,28 @@ export async function processMarketAlerts(): Promise<{
         }
       }
 
-      // AI signals (non-free tier) — cooldown 8h
+      // Momentum screen (non-free tier) — cooldown 8h. Stored under the legacy "ai_buy" /
+      // "ai_sell" types so existing preferences and history keep working; it is a rule, not AI.
       if ((pref.aiBuySignals || pref.aiSellSignals) && pref.tier !== "free") {
-        const signal = deriveSimpleSignal(q);
-        if (signal === "BUY" && pref.aiBuySignals) {
-          if (!(await isDuplicate(pref.userId, "ai_buy", ticker, 8))) {
-            const sl = q.price * 0.95;
-            const t1 = q.price * 1.08;
-            const t2 = q.price * 1.15;
+        const m = detectMomentum(q);
+        if (m.direction) {
+          const wantsIt = m.direction === "up" ? pref.aiBuySignals : pref.aiSellSignals;
+          const type = m.direction === "up" ? "ai_buy" : "ai_sell";
+          if (wantsIt && !(await isDuplicate(pref.userId, type, ticker, 8))) {
+            const sign = q.changePercent >= 0 ? "+" : "";
             await notifyUser(pref.userId, pref, {
-              type:      "ai_buy",
+              type,
               ticker,
-              title:     `💡 AI Buy Signal: ${ticker}`,
-              message:   `AI buy signal for ${ticker} at ₹${q.price.toFixed(2)} | Target ₹${t1.toFixed(2)}`,
-              tgMessage: fmtBuySignal(ticker, q.price, t1, t2, sl, 72),
-            });
-            priceAlerts++;
-          }
-        } else if (signal === "SELL" && pref.aiSellSignals) {
-          if (!(await isDuplicate(pref.userId, "ai_sell", ticker, 8))) {
-            await notifyUser(pref.userId, pref, {
-              type:      "ai_sell",
-              ticker,
-              title:     `🔴 AI Sell Signal: ${ticker}`,
-              message:   `AI sell signal for ${ticker} at ₹${q.price.toFixed(2)}`,
-              tgMessage: fmtSellSignal(ticker, q.price, 68),
+              title:     `${m.direction === "up" ? "📈" : "📉"} ${ticker} momentum ${m.direction} (${sign}${q.changePercent.toFixed(1)}%)`,
+              message:   `${ticker} ${sign}${q.changePercent.toFixed(2)}% on ${m.volumeMultiple.toFixed(1)}x volume at ₹${q.price.toFixed(2)}`,
+              tgMessage: fmtMomentumAlert({
+                ticker,
+                direction:        m.direction,
+                price:            q.price,
+                changePercent:    q.changePercent,
+                volumeMultiple:   m.volumeMultiple,
+                rangePositionPct: m.rangePositionPct,
+              }),
             });
             priceAlerts++;
           }
@@ -427,17 +425,43 @@ export async function processMarketAlerts(): Promise<{
   };
 }
 
-function deriveSimpleSignal(q: QuoteData): "BUY" | "SELL" | "HOLD" {
-  const rangePos = (q.price - q.fiftyTwoWeekLow) / (q.fiftyTwoWeekHigh - q.fiftyTwoWeekLow);
-  if (q.changePercent > 2.5 && rangePos > 0.6 && q.volume > q.averageVolume * 1.5) return "BUY";
-  if (q.changePercent < -2.5 && rangePos < 0.4 && q.volume > q.averageVolume * 1.5) return "SELL";
-  return "HOLD";
+export interface MomentumResult {
+  direction: "up" | "down" | null;
+  volumeMultiple: number;
+  /** 0-100 position within the 52-week range; 50 when the range is degenerate. */
+  rangePositionPct: number;
+}
+
+/**
+ * Momentum screen: a move of more than 2.5% in either direction on volume above 1.5x the
+ * average, with price in the upper (up) or lower (down) part of its 52-week range.
+ * Returns facts, never a recommendation. Pure and exported for testing.
+ */
+export function detectMomentum(q: QuoteData): MomentumResult {
+  const span = q.fiftyTwoWeekHigh - q.fiftyTwoWeekLow;
+  const rangePos = span > 0 ? (q.price - q.fiftyTwoWeekLow) / span : 0.5;
+  const volumeMultiple = q.averageVolume > 0 ? q.volume / q.averageVolume : 1;
+  const heavyVolume = volumeMultiple > 1.5;
+
+  let direction: MomentumResult["direction"] = null;
+  if (q.changePercent > 2.5 && rangePos > 0.6 && heavyVolume) direction = "up";
+  else if (q.changePercent < -2.5 && rangePos < 0.4 && heavyVolume) direction = "down";
+
+  return { direction, volumeMultiple, rangePositionPct: Math.max(0, Math.min(100, rangePos * 100)) };
 }
 
 // ── Daily briefing ────────────────────────────────────────────────────────────
 
-export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> {
-  const indices = await fetchIndices();
+export async function generateAndSendDailyBriefing(): Promise<{ sent: number; skipped?: string }> {
+  const snapshot = await getMarketSnapshot();
+
+  // Never send a briefing without real index data - skip instead of fabricating one.
+  if (!snapshot.nifty) {
+    console.warn("[alerts] daily briefing skipped: live NIFTY data unavailable");
+    return { sent: 0, skipped: "live market data unavailable" };
+  }
+  const nifty = snapshot.nifty;
+
   const prefs = await prisma.alertPreference.findMany({
     where: { marketSummary: true, OR: [{ telegramEnabled: true }, { pushEnabled: true }] },
   });
@@ -448,16 +472,11 @@ export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> 
 
   const briefingText = fmtDailyBriefing({
     date:       dateStr,
-    nifty:      indices.nifty,
-    banknifty:  indices.banknifty,
-    topGainers: indices.topGainers,
-    topLosers:  indices.topLosers,
-    aiPicks:    indices.aiPicks,
-    fii:        indices.fii,
-    dii:        indices.dii,
-    usdinr:     indices.usdinr,
-    riskLevel:  indices.riskLevel,
-    outlook:    indices.outlook,
+    nifty,
+    banknifty:  snapshot.banknifty,
+    usdinr:     snapshot.usdinr,
+    topGainers: snapshot.topGainers,
+    topLosers:  snapshot.topLosers,
   });
 
   let sent = 0;
@@ -470,8 +489,8 @@ export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> 
     }
     if (pref.pushEnabled) {
       await sendPushToUser(pref.userId, {
-        title: "📊 Market Ka Baadshah — Daily Briefing",
-        body:  `NIFTY ${indices.nifty.change >= 0 ? "▲" : "▼"} ${Math.abs(indices.nifty.change).toFixed(2)}% · ${dateStr}`,
+        title: "📊 EquityLens — Market Briefing",
+        body:  `NIFTY ${nifty.change >= 0 ? "▲" : "▼"} ${Math.abs(nifty.change).toFixed(2)}% · ${dateStr}`,
         tag:   "daily-briefing",
         url:   "/alerts",
       }).catch(() => {});
@@ -480,7 +499,7 @@ export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> 
       data: {
         userId:  pref.userId,
         type:    "market_summary",
-        title:   `Daily Briefing — ${dateStr}`,
+        title:   `Market Briefing — ${dateStr}`,
         message: briefingText.replace(/<[^>]+>/g, ""),
         channel: [pref.telegramEnabled ? "telegram" : "", pref.pushEnabled ? "push" : ""].filter(Boolean).join(","),
       },
@@ -489,62 +508,4 @@ export async function generateAndSendDailyBriefing(): Promise<{ sent: number }> 
   }
 
   return { sent };
-}
-
-// ── Index data fetcher ────────────────────────────────────────────────────────
-
-async function fetchIndices() {
-  const fallback = {
-    nifty:      { price: 24000, change: 0.15 },
-    banknifty:  { price: 51500, change: 0.08 },
-    topGainers: [{ ticker: "RELIANCE", change: 1.8 }, { ticker: "INFY", change: 1.2 }],
-    topLosers:  [{ ticker: "WIPRO", change: -1.5 }, { ticker: "HCLTECH", change: -0.9 }],
-    aiPicks: [
-      { ticker: "HDFCBANK", verdict: "ACCUMULATE", note: "Near support with FII buying" },
-      { ticker: "TCS",      verdict: "HOLD",       note: "Near resistance, await breakout" },
-    ],
-    fii:       "Data unavailable",
-    dii:       "Data unavailable",
-    usdinr:    "83.50",
-    riskLevel: 5,
-    outlook:   "Markets in consolidation phase.",
-  };
-
-  try {
-    const YFClass = (await import("yahoo-finance2")).default;
-    const yf = new (YFClass as any)();
-    const [niftyQ, bnQ, usdinrQ] = await Promise.allSettled([
-      yf.quote("^NSEI"),
-      yf.quote("^NSEBANK"),
-      yf.quote("USDINR=X"),
-    ]);
-
-    const nd = niftyQ.status === "fulfilled" ? niftyQ.value : null;
-    const bd = bnQ.status   === "fulfilled" ? bnQ.value   : null;
-    const ud = usdinrQ.status === "fulfilled" ? usdinrQ.value : null;
-
-    const niftyChange = (nd as any)?.regularMarketChangePercent ?? 0;
-    const riskLevel = Math.min(10, Math.max(1,
-      5 + Math.round(Math.abs(niftyChange) * -2 * Math.sign(niftyChange))
-    ));
-
-    return {
-      nifty:     { price: (nd as any)?.regularMarketPrice ?? fallback.nifty.price, change: niftyChange },
-      banknifty: { price: (bd as any)?.regularMarketPrice ?? fallback.banknifty.price, change: (bd as any)?.regularMarketChangePercent ?? 0 },
-      topGainers: fallback.topGainers,
-      topLosers:  fallback.topLosers,
-      aiPicks:    fallback.aiPicks,
-      fii:        "See NSE website",
-      dii:        "See NSE website",
-      usdinr:     (ud as any)?.regularMarketPrice?.toFixed(2) ?? "83.50",
-      riskLevel,
-      outlook: niftyChange > 0.5
-        ? "Markets trending bullish. Stay disciplined."
-        : niftyChange < -0.5
-        ? "Markets under pressure. Manage risk carefully."
-        : "Markets consolidating. Wait for clear direction.",
-    };
-  } catch {
-    return fallback;
-  }
 }

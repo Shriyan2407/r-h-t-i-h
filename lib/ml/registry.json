@@ -1,0 +1,322 @@
+{
+  "schema": 1,
+  "models": [
+    {
+      "id": "volatility-ridge",
+      "version": "1.0.0",
+      "task": "volatility_forecast",
+      "status": "superseded",
+      "artifact": "lib/ml/artifacts/volatility-ridge-1.0.0.json",
+      "artifactSha256": "f1d8d319d03c8f82d11442eff23ba09174833d0ed8dc8815efeb8e1bff95f4e3",
+      "trainedAt": "2026-10-14",
+      "featureVersion": "f1",
+      "datasetSha256": "5c4620a76eeb73c88207da2d2b1ab157f375646b85fd0a54cc0cbd90e1a80773",
+      "fitRange": [
+        "2011-01-03",
+        "2025-09-23"
+      ],
+      "calibRange": [
+        "2025-10-01",
+        "2026-10-01"
+      ],
+      "hyperparameters": {
+        "ridgeAlpha": 100.0,
+        "winsor": [
+          0.01,
+          0.99
+        ],
+        "calibrationDays": 365
+      },
+      "validation": {
+        "method": "purged expanding-window walk-forward, 14 six-month folds",
+        "range": [
+          "2019-01-01",
+          "2025-10-01"
+        ],
+        "rows": 78396,
+        "r2VsNaive": 0.2734226389578258,
+        "mseVsPersist": -0.11937992568286859,
+        "foldsBeatingPersist": 14,
+        "folds": 14,
+        "interval80Coverage": 0.7921067401398031,
+        "persistR2": 0.17492528022871634,
+        "ownVolMonotoneRate": null
+      },
+      "holdout": {
+        "range": [
+          "2025-10-01",
+          "2026-10-01"
+        ],
+        "rows": 11656,
+        "r2VsNaive": 0.2426179177399802,
+        "mseVsPersist": -0.09758854925954819,
+        "interval80Coverage": 0.7964138641043239,
+        "pristine": true
+      },
+      "limitations": [
+        "Forecasts the size of moves (volatility), NOT their direction.",
+        "Trained on 47 current Nifty-50 constituents (survivorship bias); behaviour on small caps is untested.",
+        "Log-scale intervals are calibrated on average; coverage can degrade in unprecedented regimes."
+      ],
+      "supersededBy": "1.1.0",
+      "reason": "Specification defect: raw and log volatility features were collinear, so the forecast FELL when a stock's own volatility rose in 18 of 25 sampled cases. Fixed in 1.1.0 (log-only volatility features, monotonicity gate)."
+    },
+    {
+      "id": "direction-logistic_l2-abs",
+      "version": "0.1.0",
+      "task": "direction_classification",
+      "status": "rejected",
+      "target": "next-5-day return > 0",
+      "artifact": null,
+      "artifactSha256": null,
+      "trainedAt": "2026-10-14",
+      "featureVersion": "f1",
+      "datasetSha256": "ab7eefb19164a19d02d0678b5599a4218f57b69797423594e67e8c43de1e90da",
+      "validation": {
+        "method": "purged expanding-window walk-forward, 14 six-month folds",
+        "range": [
+          "2019-01-01",
+          "2025-10-01"
+        ],
+        "rocAuc": 0.4978418222394797,
+        "brierSkill": -0.004806591376236291,
+        "ece": 0.02309888608915055,
+        "rankIC": 0.0032806548470751622,
+        "netSharpe": 0.016212004127700606,
+        "benchmarkSharpe": 0.7987881933532649
+      },
+      "gate": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "reason": "Failed the pre-registered deployment gate: pooledAuc>=0.52, brierSkill>0, rankIC>0&|t|>2, netSharpe>benchmark"
+    },
+    {
+      "id": "direction-random_forest-abs",
+      "version": "0.1.0",
+      "task": "direction_classification",
+      "status": "rejected",
+      "target": "next-5-day return > 0",
+      "artifact": null,
+      "artifactSha256": null,
+      "trainedAt": "2026-10-14",
+      "featureVersion": "f1",
+      "datasetSha256": "ab7eefb19164a19d02d0678b5599a4218f57b69797423594e67e8c43de1e90da",
+      "validation": {
+        "method": "purged expanding-window walk-forward, 14 six-month folds",
+        "range": [
+          "2019-01-01",
+          "2025-10-01"
+        ],
+        "rocAuc": 0.5123993496051451,
+        "brierSkill": -0.003452474308943243,
+        "ece": 0.021583698785154818,
+        "rankIC": 0.015347143317721698,
+        "netSharpe": -0.05437683346679327,
+        "benchmarkSharpe": 0.7987881933532649
+      },
+      "gate": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "reason": "Failed the pre-registered deployment gate: pooledAuc>=0.52, brierSkill>0, rankIC>0&|t|>2, netSharpe>benchmark"
+    },
+    {
+      "id": "direction-hist_gradient_boosting-abs",
+      "version": "0.1.0",
+      "task": "direction_classification",
+      "status": "rejected",
+      "target": "next-5-day return > 0",
+      "artifact": null,
+      "artifactSha256": null,
+      "trainedAt": "2026-10-14",
+      "featureVersion": "f1",
+      "datasetSha256": "ab7eefb19164a19d02d0678b5599a4218f57b69797423594e67e8c43de1e90da",
+      "validation": {
+        "method": "purged expanding-window walk-forward, 14 six-month folds",
+        "range": [
+          "2019-01-01",
+          "2025-10-01"
+        ],
+        "rocAuc": 0.5003092381501208,
+        "brierSkill": -0.003699738656890661,
+        "ece": 0.037744276831578584,
+        "rankIC": 0.0013592259866949375,
+        "netSharpe": 0.017912402114035546,
+        "benchmarkSharpe": 0.7987881933532649
+      },
+      "gate": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "reason": "Failed the pre-registered deployment gate: pooledAuc>=0.52, brierSkill>0, rankIC>0&|t|>2, netSharpe>benchmark"
+    },
+    {
+      "id": "direction-logistic_l2-rel",
+      "version": "0.1.0",
+      "task": "direction_classification",
+      "status": "rejected",
+      "target": "5-day return beats same-day median",
+      "artifact": null,
+      "artifactSha256": null,
+      "trainedAt": "2026-10-14",
+      "featureVersion": "f1",
+      "datasetSha256": "ab7eefb19164a19d02d0678b5599a4218f57b69797423594e67e8c43de1e90da",
+      "validation": {
+        "method": "purged expanding-window walk-forward, 14 six-month folds",
+        "range": [
+          "2019-01-01",
+          "2025-10-01"
+        ],
+        "rocAuc": 0.5049044970571348,
+        "brierSkill": -3.289407461970484e-05,
+        "ece": 0.0007712972492185533,
+        "rankIC": 0.007849086133498382,
+        "netSharpe": -0.05037300160348384,
+        "benchmarkSharpe": 0.7987881933532649
+      },
+      "gate": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "reason": "Failed the pre-registered deployment gate: pooledAuc>=0.52, brierSkill>0, rankIC>0&|t|>2, netSharpe>benchmark"
+    },
+    {
+      "id": "direction-random_forest-rel",
+      "version": "0.1.0",
+      "task": "direction_classification",
+      "status": "rejected",
+      "target": "5-day return beats same-day median",
+      "artifact": null,
+      "artifactSha256": null,
+      "trainedAt": "2026-10-14",
+      "featureVersion": "f1",
+      "datasetSha256": "ab7eefb19164a19d02d0678b5599a4218f57b69797423594e67e8c43de1e90da",
+      "validation": {
+        "method": "purged expanding-window walk-forward, 14 six-month folds",
+        "range": [
+          "2019-01-01",
+          "2025-10-01"
+        ],
+        "rocAuc": 0.5059968612926362,
+        "brierSkill": -0.00030023741532669845,
+        "ece": 0.0046731825320016854,
+        "rankIC": 0.009294160568663598,
+        "netSharpe": 0.022841725529212913,
+        "benchmarkSharpe": 0.7987881933532649
+      },
+      "gate": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "reason": "Failed the pre-registered deployment gate: pooledAuc>=0.52, brierSkill>0, rankIC>0&|t|>2, netSharpe>benchmark"
+    },
+    {
+      "id": "direction-hist_gradient_boosting-rel",
+      "version": "0.1.0",
+      "task": "direction_classification",
+      "status": "rejected",
+      "target": "5-day return beats same-day median",
+      "artifact": null,
+      "artifactSha256": null,
+      "trainedAt": "2026-10-14",
+      "featureVersion": "f1",
+      "datasetSha256": "ab7eefb19164a19d02d0678b5599a4218f57b69797423594e67e8c43de1e90da",
+      "validation": {
+        "method": "purged expanding-window walk-forward, 14 six-month folds",
+        "range": [
+          "2019-01-01",
+          "2025-10-01"
+        ],
+        "rocAuc": 0.503683149169331,
+        "brierSkill": -0.00029256371036634476,
+        "ece": 0.0033389162384611106,
+        "rankIC": 0.0057197506079642154,
+        "netSharpe": 0.003859144361091115,
+        "benchmarkSharpe": 0.7987881933532649
+      },
+      "gate": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": false,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "reason": "Failed the pre-registered deployment gate: pooledAuc>=0.52, majorityFoldsAuc>0.5, brierSkill>0, rankIC>0&|t|>2, netSharpe>benchmark"
+    },
+    {
+      "id": "volatility-ridge",
+      "version": "1.1.0",
+      "task": "volatility_forecast",
+      "status": "production",
+      "artifact": "lib/ml/artifacts/volatility-ridge-1.1.0.json",
+      "artifactSha256": "1118ab6a3f1cf5f8bfe6e5540fb1d266375b71341e9ec67d891dc80b0aeb3966",
+      "trainedAt": "2026-10-14",
+      "featureVersion": "f1",
+      "datasetSha256": "5c4620a76eeb73c88207da2d2b1ab157f375646b85fd0a54cc0cbd90e1a80773",
+      "fitRange": [
+        "2011-01-03",
+        "2025-09-23"
+      ],
+      "calibRange": [
+        "2025-10-01",
+        "2026-10-01"
+      ],
+      "hyperparameters": {
+        "ridgeAlpha": 100.0,
+        "winsor": [
+          0.01,
+          0.99
+        ],
+        "calibrationDays": 365
+      },
+      "validation": {
+        "method": "purged expanding-window walk-forward, 14 six-month folds",
+        "range": [
+          "2019-01-01",
+          "2025-10-01"
+        ],
+        "rows": 78396,
+        "r2VsNaive": 0.2747080321207199,
+        "mseVsPersist": -0.120937836902413,
+        "foldsBeatingPersist": 14,
+        "folds": 14,
+        "interval80Coverage": 0.7925659472422062,
+        "persistR2": 0.17492528022871634,
+        "ownVolMonotoneRate": 1.0
+      },
+      "holdout": {
+        "range": [
+          "2025-10-01",
+          "2026-10-01"
+        ],
+        "rows": 11656,
+        "r2VsNaive": 0.24340352734837656,
+        "mseVsPersist": -0.09852459346106024,
+        "interval80Coverage": 0.7957275223061084,
+        "pristine": false
+      },
+      "limitations": [
+        "Forecasts the size of moves (volatility), NOT their direction.",
+        "Trained on 47 current Nifty-50 constituents (survivorship bias); behaviour on small caps is untested.",
+        "Log-scale intervals are calibrated on average; coverage can degrade in unprecedented regimes."
+      ],
+      "notes": "Holdout 2025-10-01.. was first scored on v1.0.0; v1.1.0's holdout is a second look and is NOT pristine."
+    }
+  ]
+}

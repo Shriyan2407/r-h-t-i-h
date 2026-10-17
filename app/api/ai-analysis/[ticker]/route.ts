@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cache, TTL }     from "@/lib/services/cache";
+import { TTL }               from "@/lib/services/cache";
+import { sharedPeek, sharedWrap } from "@/lib/cache/shared";
+import { timed }             from "@/lib/observability/metrics";
 import { computeQuantScore, buildQuantSummary } from "@/lib/scoring/quantEngine";
-import { callOllama, isOllamaOnline, getOllamaModel } from "@/lib/ai/ollamaClient";
+import { callOllama, getOllamaModel } from "@/lib/ai/ollamaClient";
 import { generateDeterministicAnalysis }   from "@/lib/ai/narrativeEngine";
 import type { AIAnalysis, Verdict, TechnicalIndicators, FundamentalData } from "@/lib/types";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
+import { getTechnicals } from "@/lib/services/technicals";
+import { getFundamentals } from "@/lib/services/fundamentals";
+import { getMacroIntelligence } from "@/lib/services/macro";
+import { auth } from "@/lib/auth/auth";
+import { enforceRateLimit, POLICIES } from "@/lib/ratelimit/guard";
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Compressed Intelligence AI Analysis
+   EquityLens — Compressed Intelligence AI Analysis
    Priority: 1) Ollama local LLM  2) Claude (if key set)  3) Deterministic quant
    NEVER returns 503. Works fully offline.
 ═══════════════════════════════════════════════════════════════ */
@@ -18,20 +26,24 @@ function safeNum(v: any): number | null {
   return isNaN(n) ? null : Math.round(n * 100) / 100;
 }
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
-function clamp(v: number, lo = 50, hi = 95): number { return Math.max(lo, Math.min(hi, Math.round(v))); }
 
 /* ── Internal data fetchers ──────────────────────────────── */
 
-async function fetchInternal<T>(path: string, ms = 14_000): Promise<T | null> {
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-  const ctrl = new AbortController();
-  const t    = setTimeout(() => ctrl.abort(), ms);
-  try {
-    const res = await fetch(`${base}${path}`, { signal: ctrl.signal, cache: "no-store" });
-    clearTimeout(t);
-    if (!res.ok) return null;
-    return res.json() as Promise<T>;
-  } catch { clearTimeout(t); return null; }
+/**
+ * Resolve a service call, or `null` if it fails or exceeds `ms`. Services are called
+ * IN-PROCESS: the previous implementation fetched this app's own /api routes over HTTP,
+ * which carried no session (so the auth proxy answered 401) and defaulted to
+ * http://localhost:3000, so technicals, fundamentals and macro were always missing and every
+ * stock fell through to a placeholder HOLD.
+ */
+function withTimeout<X>(p: Promise<X>, ms: number): Promise<X | null> {
+  return Promise.race([
+    p.catch((err) => {
+      console.warn("[ai-analysis] upstream failed:", (err as Error).message);
+      return null;
+    }),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
 }
 
 async function getQuoteData(ticker: string) {
@@ -54,17 +66,14 @@ async function getNewsHeadlines(ticker: string): Promise<string[]> {
   } catch { return []; }
 }
 
-async function getMacroData() {
-  return fetchInternal("/api/macro", 10_000);
-}
 
 /* ── Ollama prompt (compressed ~500 tokens) ──────────────── */
 
 function buildOllamaPrompt(ticker: string, quote: any, quantSummary: string, headlines: string[]): string {
   const price    = safeNum(quote?.regularMarketPrice) ?? 0;
   const chgPct   = safeNum(quote?.regularMarketChangePercent) ?? 0;
-  const hi52     = safeNum(quote?.fiftyTwoWeekHigh) ?? price * 1.3;
-  const lo52     = safeNum(quote?.fiftyTwoWeekLow)  ?? price * 0.7;
+  const hi52     = safeNum(quote?.fiftyTwoWeekHigh);
+  const lo52     = safeNum(quote?.fiftyTwoWeekLow);
   const mktCap   = quote?.marketCap ? `₹${(quote.marketCap / 1e12).toFixed(2)}T` : "N/A";
   const pe       = safeNum(quote?.trailingPE);
   const mktCapCat = (quote?.marketCap ?? 0) >= 2e12 ? "Large Cap" : (quote?.marketCap ?? 0) >= 5e11 ? "Mid Cap" : "Small Cap";
@@ -72,9 +81,9 @@ function buildOllamaPrompt(ticker: string, quote: any, quantSummary: string, hea
     ? headlines.slice(0, 12).map((h, i) => `${i + 1}. ${h}`).join("\n")
     : "No recent news. Use sector knowledge.";
 
-  return `R.H.T.I.H INTELLIGENCE — ${new Date().toLocaleDateString("en-IN")}
+  return `EQUITYLENS — ${new Date().toLocaleDateString("en-IN")}
 ${ticker} | ₹${price.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}%) | ${mktCapCat} ${mktCap}
-52W: ₹${lo52.toFixed(0)}–₹${hi52.toFixed(0)} | P/E: ${pe?.toFixed(1) ?? "N/A"}
+52W: ${hi52 != null && lo52 != null ? `₹${lo52.toFixed(0)}–₹${hi52.toFixed(0)}` : "N/A"} | P/E: ${pe?.toFixed(1) ?? "N/A"}
 Company: ${quote?.longName ?? quote?.shortName ?? ticker}
 Sector: ${quote?.sector ?? "Unknown"} | Industry: ${quote?.industry ?? "Unknown"}
 
@@ -93,7 +102,7 @@ Return ONLY valid JSON (no markdown). Schema:
   "macro":{"summary":"<2 s>","rbi_impact":"<1 s>","budget_impact":"<1 s>","sector_tailwinds":["<t1>","<t2>","<t3>"],"sector_headwinds":["<h1>","<h2>"],"policy_risks":["<r1>","<r2>"],"facts_vs_interpretation":{"facts":["<f1>","<f2>","<f3>"],"interpretations":["<i1>","<i2>","<i3>"]}},
   "sentiment":{"overall":"POSITIVE|NEGATIVE|NEUTRAL|MIXED","score":<-1 to 1>,"key_catalysts":["<c1>","<c2>"],"key_risks_from_news":["<r1>","<r2>"],"noise_filtered_summary":"<2 s>","sources":[{"headline":"<h>","source":"<s>","sentiment":"POSITIVE|NEGATIVE|NEUTRAL","signal_type":"SIGNAL|NOISE","published_at":"${new Date().toISOString()}"}]},
   "scenarios":[{"type":"BULL","target_price":<₹ ~25% above ${price.toFixed(0)}>,"probability":<35-45>,"timeline":"12 months","key_drivers":["<d1>","<d2>"],"invalidation_level":<₹>},{"type":"BASE","target_price":<₹ ~10% above ${price.toFixed(0)}>,"probability":<40-50>,"timeline":"12 months","key_drivers":["<d1>","<d2>"],"invalidation_level":<₹>},{"type":"BEAR","target_price":<₹ ~15% below ${price.toFixed(0)}>,"probability":<15-25>,"timeline":"9 months","key_drivers":["<d1>","<d2>"],"invalidation_level":<₹>}],
-  "verdict":{"rating":"STRONG BUY|BUY|HOLD|SELL|STRONG SELL","confidence":<50-90>,"timeline":"<3-6|6-12|12-18 months>","entry_range":[<₹lo>,<₹hi>],"stop_loss":<₹>,"target_1":<₹>,"target_2":<₹>,"risk_reward":<1.5-4>,"key_risks":["<r1>","<r2>","<r3>"],"key_catalysts":["<c1>","<c2>","<c3>"],"investment_thesis":"<2 sentences SPECIFIC to ${ticker}>","when_to_review":"<trigger>"}
+  "verdict":{"rating":"STRONG BUY|BUY|HOLD|SELL|STRONG SELL","timeline":"<3-6|6-12|12-18 months>","entry_range":[<₹lo>,<₹hi>],"stop_loss":<₹>,"target_1":<₹>,"target_2":<₹>,"risk_reward":<1.5-4>,"key_risks":["<r1>","<r2>","<r3>"],"key_catalysts":["<c1>","<c2>","<c3>"],"investment_thesis":"<2 sentences SPECIFIC to ${ticker}>","when_to_review":"<trigger>"}
 }
 RULES: Use price ₹${price.toFixed(2)}. Be SPECIFIC to ${ticker}. BULL+BASE+BEAR=100.`;
 }
@@ -194,7 +203,9 @@ function parseAndDefault(raw: string, ticker: string, quote: any, quantScore: an
       const valid: Verdict[] = ["STRONG BUY","BUY","HOLD","SELL","STRONG SELL"];
       return {
         rating:            valid.includes(v.rating) ? v.rating : quantScore.verdict,
-        confidence:        clamp(safeNum(v.confidence) ?? quantScore.confidence),
+        // Never taken from the LLM: a model-written "confidence" is not a calibrated probability.
+        signal_strength:   quantScore.signalStrength,
+        probability:       null,
         timeline:          v.timeline ?? "6-12 months",
         entry_range:       Array.isArray(v.entry_range) && v.entry_range.length === 2 ? v.entry_range : [Math.round(price * 0.97), Math.round(price)],
         stop_loss:         safeNum(v.stop_loss)   ?? Math.round(price * 0.90),
@@ -218,23 +229,24 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
 
   const [quote, techData, fundData, headlines, macro] = await Promise.all([
     Promise.race([getQuoteData(T), new Promise<null>(r => setTimeout(() => r(null), 12_000))]),
-    fetchInternal<TechnicalIndicators & { error?: string }>(`/api/technicals/${T}`, 12_000),
-    fetchInternal<FundamentalData & { error?: string }>(`/api/fundamentals/${T}`, 12_000),
+    withTimeout(getTechnicals(T), 12_000),
+    withTimeout(getFundamentals(T), 12_000),
     Promise.race([getNewsHeadlines(T), new Promise<string[]>(r => setTimeout(() => r([]), 8_000))]),
-    getMacroData(),
+    withTimeout(getMacroIntelligence(), 10_000),
   ]);
 
   const price = safeNum(quote?.regularMarketPrice) ?? 0;
-  const hi52  = safeNum(quote?.fiftyTwoWeekHigh)   ?? price * 1.3;
-  const lo52  = safeNum(quote?.fiftyTwoWeekLow)    ?? price * 0.7;
+  // A missing 52-week range is passed as NaN so the range-position rule is skipped, not fed an invented range.
+  const hi52  = safeNum(quote?.fiftyTwoWeekHigh)   ?? NaN;
+  const lo52  = safeNum(quote?.fiftyTwoWeekLow)    ?? NaN;
 
   // Always compute deterministic quant scores
-  const emptyFund: FundamentalData = { pe_ratio: null, pb_ratio: null, ps_ratio: null, ev_ebitda: null, sector_pe: null, roe: null, roce: null, roa: null, net_margin: null, operating_margin: null, gross_margin: null, revenue_growth_yoy: null, profit_growth_yoy: null, eps_growth_3yr: null, debt_to_equity: null, current_ratio: null, quick_ratio: null, interest_coverage: null, free_cash_flow: null, promoter_holding: null, fii_holding: null, dii_holding: null, pledged_shares: null, asset_turnover: null, inventory_turnover: null, receivables_turnover: null };
-  const hasTech = techData && !techData.error;
-  const hasFund = fundData && !fundData.error;
+  const emptyFund: FundamentalData = { pe_ratio: null, forward_pe: null, pb_ratio: null, ps_ratio: null, ev_ebitda: null, sector_pe: null, roe: null, roce: null, roa: null, net_margin: null, operating_margin: null, gross_margin: null, revenue_growth_yoy: null, profit_growth_yoy: null, eps_growth_3yr: null, debt_to_equity: null, current_ratio: null, quick_ratio: null, interest_coverage: null, free_cash_flow: null, promoter_holding: null, fii_holding: null, dii_holding: null, pledged_shares: null, asset_turnover: null, inventory_turnover: null, receivables_turnover: null };
+  const hasTech = techData !== null;
+  const hasFund = fundData !== null;
   const quantScore = hasTech && price > 0
     ? computeQuantScore(techData as TechnicalIndicators, hasFund ? fundData as FundamentalData : emptyFund, price, hi52, lo52)
-    : { technical: 50, momentum: 50, fundamental: 50, volatility: 50, risk: 60, composite: 52, verdict: "HOLD" as const, confidence: 65, signals: { bullish: [], bearish: [], neutral: ["Insufficient data for full scoring"] } };
+    : { technical: 50, momentum: 50, fundamental: 50, volatility: 50, risk: 60, composite: 52, verdict: "HOLD" as const, signalStrength: 0, signals: { bullish: [], bearish: [], neutral: ["Insufficient data for full scoring"] } };
 
   const quantSummary = buildQuantSummary(quantScore, price, T);
 
@@ -267,7 +279,7 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
         try {
           const msg = await client.messages.create({
             model, max_tokens: 4000,
-            system: "You are R.H.T.I.H Intelligence Core — institutional AI equity analyst for Indian markets. Return ONLY valid JSON. No markdown.",
+            system: "You are the EquityLens research assistant — an equity analyst for Indian markets. Return ONLY valid JSON. No markdown.",
             messages: [{ role: "user", content: prompt }],
           });
           const text = msg.content.find(c => c.type === "text")?.text ?? "";
@@ -308,15 +320,27 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
 /* ── Route handler ─────────────────────────────────────────── */
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ ticker: string }> },
 ) {
   let T = "UNKNOWN";
   try {
     const { ticker } = await params;
-    T = ticker.toUpperCase().replace(/\.(NS|BO)$/i, "");
+    const parsedTicker = parseTicker(ticker);
+    if (!parsedTicker) return invalidTickerResponse();
+    T = parsedTicker;
 
-    const analysis = await cache.wrap(`ai-analysis-v3:${T}`, TTL.INTELLIGENCE, () => generateAnalysis(T));
+    // Only a cache miss costs real work (Yahoo, news, an LLM call), so only misses are limited.
+    const cacheKey = `ai-analysis-v3:${T}`;
+    if (!(await sharedPeek("ai-analysis", cacheKey))) {
+      const session = await auth();
+      const limited = await enforceRateLimit(
+        req, POLICIES.aiAnalysis, session?.user?.id ? `user:${session.user.id}` : undefined,
+      );
+      if (limited) return limited;
+    }
+
+    const analysis = await sharedWrap("ai-analysis", cacheKey, TTL.INTELLIGENCE, () => timed("ai.analysis.generate", () => generateAnalysis(T)));
 
     return NextResponse.json(analysis, {
       headers: {
@@ -329,6 +353,7 @@ export async function GET(
   } catch (err) {
     const msg = (err as Error).message ?? String(err);
     console.error(`[ai-analysis/${T}]`, msg);
-    return NextResponse.json({ error: msg, code: "ANALYSIS_FAILED", ticker: T }, { status: 500 });
+    // Internal error text can contain upstream URLs, stack details or provider messages.
+    return NextResponse.json({ error: "Analysis is temporarily unavailable.", code: "ANALYSIS_FAILED", ticker: T }, { status: 500 });
   }
 }

@@ -23,10 +23,11 @@ interface MacroData {
     type:        "RISK_ON" | "RISK_OFF" | "NEUTRAL";
     label:       string;
     description: string;
-    confidence:  number;
+    signalStrength: number;
+    inputs:      number;
   };
   pressure_score: number;
-  rbi_stance:    "HAWKISH" | "NEUTRAL" | "DOVISH";
+  rbi_stance:    "HAWKISH" | "NEUTRAL" | "DOVISH" | "UNKNOWN";
   indices: {
     nifty50?:   IndexData;
     nifty_bank?: IndexData;
@@ -42,7 +43,7 @@ interface MacroData {
 
 /* ── Subcomponents ─────────────────────────────────────── */
 
-function RegimeBadge({ type, label, confidence }: { type: string; label: string; confidence: number }) {
+function RegimeBadge({ type, label, signalStrength, inputs }: { type: string; label: string; signalStrength: number; inputs: number }) {
   const cfg = {
     RISK_ON:  { color: "#00ff88", bg: "rgba(0,255,136,0.08)", border: "rgba(0,255,136,0.3)", icon: TrendingUp  },
     RISK_OFF: { color: "#ff4466", bg: "rgba(255,68,102,0.08)",  border: "rgba(255,68,102,0.3)",  icon: TrendingDown },
@@ -54,7 +55,7 @@ function RegimeBadge({ type, label, confidence }: { type: string; label: string;
     <div className="flex items-center gap-2 px-3 py-2 rounded-xl border" style={{ background: cfg.bg, borderColor: cfg.border }}>
       <Icon size={13} style={{ color: cfg.color }} />
       <span className="text-xs font-mono font-bold" style={{ color: cfg.color }}>{label}</span>
-      <span className="text-[10px] font-mono text-[#484f58] ml-1">{confidence}% confidence</span>
+      <span className="text-[10px] font-mono text-[#484f58] ml-1" title="How one-sided the rule inputs are (0-100). Not a probability.">signal strength {signalStrength}/100 · {inputs} inputs</span>
     </div>
   );
 }
@@ -118,9 +119,9 @@ function IndexCard({ data, label }: { data?: IndexData; label: string }) {
 
 function RbiStanceBadge({ stance }: { stance: string }) {
   const cfg = {
-    HAWKISH: { color: "#ff4466", label: "Hawkish (Rate-Hold/Hike bias)" },
-    DOVISH:  { color: "#00ff88", label: "Dovish (Rate-Cut bias)" },
-    NEUTRAL: { color: "#ffcc00", label: "Neutral (Data-Dependent)" },
+    HAWKISH: { color: "#ff4466", label: "Tightening pressure" },
+    DOVISH:  { color: "#00ff88", label: "Easing pressure" },
+    NEUTRAL: { color: "#ffcc00", label: "Neutral" },
   }[stance] ?? { color: "#8b949e", label: "Unknown" };
   return (
     <div className="flex items-center gap-2">
@@ -237,7 +238,7 @@ export function MacroPanel({ ticker }: { ticker?: string }) {
 
       {/* Regime */}
       <div className="flex flex-col gap-2">
-        <RegimeBadge type={data.regime.type} label={data.regime.label} confidence={data.regime.confidence} />
+        <RegimeBadge type={data.regime.type} label={data.regime.label} signalStrength={data.regime.signalStrength} inputs={data.regime.inputs} />
         <p className="text-[11px] text-[#8b949e] leading-relaxed px-1">{data.regime.description}</p>
       </div>
 
@@ -275,8 +276,9 @@ export function MacroPanel({ ticker }: { ticker?: string }) {
 
       {/* RBI Stance */}
       <div className="p-3 bg-[#0d1117] border border-[#30363d] rounded-xl flex flex-col gap-2">
-        <div className="text-[9px] font-mono uppercase tracking-widest text-[#484f58]">RBI Policy Stance</div>
+        <div className="text-[9px] font-mono uppercase tracking-widest text-[#484f58]">Rate pressure (market-implied)</div>
         <RbiStanceBadge stance={data.rbi_stance} />
+        <div className="text-[10px] text-[#8b949e]">Inferred from USD/INR, US 10Y and India VIX. Not the RBI&apos;s announced policy stance.</div>
       </div>
 
       {/* Sector Rotation */}

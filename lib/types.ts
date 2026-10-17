@@ -82,7 +82,10 @@ export interface TechnicalSignal {
 
 export interface FundamentalData {
   // Valuation
+  /** Trailing twelve-month P/E only. */
   pe_ratio: number | null;
+  /** Forward P/E from analyst estimates; kept separate so the two are never confused. */
+  forward_pe: number | null;
   pb_ratio: number | null;
   ps_ratio: number | null;
   ev_ebitda: number | null;
@@ -234,7 +237,13 @@ export interface AIAnalysis {
   // Final Verdict
   verdict: {
     rating: Verdict;
-    confidence: number; // 0-100
+    /** 0-100 agreement of the rule-based signals. Not a probability. */
+    signal_strength: number;
+    /**
+     * Calibrated probability that the call is right, 0-1. `null` = unavailable: no model has
+     * been validated, so the UI must say so rather than show a made-up percentage.
+     */
+    probability: number | null;
     timeline: string;
     entry_range: [number, number] | null;
     stop_loss: number | null;
@@ -286,7 +295,8 @@ export interface MacroIntelligence {
     confidence:   number;
   };
   pressure_score: number;
-  rbi_stance:     "HAWKISH" | "NEUTRAL" | "DOVISH";
+  /** Market-implied rate pressure, not the RBI's announced stance. */
+  rbi_stance:     "HAWKISH" | "NEUTRAL" | "DOVISH" | "UNKNOWN";
   indices: {
     nifty50?:    MacroIndex | null;
     nifty_bank?: MacroIndex | null;
@@ -327,7 +337,7 @@ export interface MarketBreadth {
 // ─── UI State Types ───────────────────────────────────────────────────────────
 
 export type ChartInterval = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y" | "5Y" | "MAX";
-export type AnalysisTab = "overview" | "technical" | "fundamentals" | "macro" | "news" | "ai-report";
+export type AnalysisTab = "overview" | "technical" | "fundamentals" | "macro" | "news" | "ai-report" | "risk";
 
 export interface TickerItem {
   ticker: string;

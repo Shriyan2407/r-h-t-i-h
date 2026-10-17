@@ -1,8 +1,11 @@
+import { noFOUCScript } from "@/lib/bootstrap/noFouc";
+import { CommandPalette } from "@/components/CommandPalette";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/context/ThemeContext";
 import { AuthSessionProvider } from "@/components/auth/SessionProvider";
+import { DemoBanner } from "@/components/ui/DemoBanner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,11 +21,11 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["400", "500", "600", "700"],
 });
 
-const SITE_URL = "https://market-ka-baadshah.vercel.app";
-const SITE_NAME = "Market Ka Baadshah";
-const SITE_TITLE = "MARKET KA BAADSHAH — AI-Powered Indian Equity Intelligence";
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://market-ka-baadshah.vercel.app";
+const SITE_NAME = "EquityLens";
+const SITE_TITLE = "EQUITYLENS — Indian Equity Research and Risk Analytics";
 const SITE_DESC =
-  "Institutional-grade AI equity research terminal for NSE and BSE. Multi-agent technical analysis, fundamental research, macro intelligence, and decisive AI verdicts. India ka sabse powerful stock analysis platform.";
+  "Research NSE and BSE stocks: prices, technical and fundamental indicators, news, backtesting, portfolio risk and a validated 5-day volatility forecast. Informational only; not investment advice.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -33,9 +36,9 @@ export const metadata: Metadata = {
   description: SITE_DESC,
   keywords: [
     "NSE", "BSE", "Indian stocks", "equity research", "technical analysis",
-    "AI trading", "stock market", "institutional research", "market ka baadshah",
+    "stock market", "stock research", "volatility forecast", "equitylens",
     "Indian equity intelligence", "stock analysis India", "Nifty 50", "Sensex",
-    "AI stock analysis", "multi-agent AI", "market intelligence",
+    "AI stock analysis", "market intelligence",
   ],
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
@@ -76,18 +79,7 @@ const swScript = `
 })();
 `;
 
-const noFOUCScript = `
-(function(){
-  try {
-    var t = localStorage.getItem('mkb-theme');
-    if (!t) t = localStorage.getItem('rhtih-theme');
-    if (t === 'light' || t === 'dark') {
-      document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('mkb-theme', t);
-    }
-  } catch(e) {}
-})();
-`;
+
 
 export default function RootLayout({
   children,
@@ -111,6 +103,8 @@ export default function RootLayout({
         <AuthSessionProvider>
           <ThemeProvider>
             {children}
+            <CommandPalette />
+            <DemoBanner />
           </ThemeProvider>
         </AuthSessionProvider>
       </body>

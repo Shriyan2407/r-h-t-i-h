@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — STOCK HISTORICAL INTELLIGENCE ARCHIVE
+   EquityLens — STOCK HISTORICAL INTELLIGENCE ARCHIVE
    Institutional narrative timelines for NSE/BSE equities
 ═══════════════════════════════════════════════════════════════ */
 

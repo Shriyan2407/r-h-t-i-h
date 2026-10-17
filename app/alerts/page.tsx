@@ -57,34 +57,34 @@ interface AlertItem {
 // ── Alert type metadata ───────────────────────────────────────────────────────
 
 const ALERT_TYPES = [
-  { key: "breakoutAlerts",  label: "Breakout Alerts",   desc: "52-week high breakouts",    icon: TrendingUp,  color: "#00FF9C", tier: "free"  },
+  { key: "breakoutAlerts",  label: "Breakout Alerts",   desc: "52-week high breakouts",    icon: TrendingUp,  color: "var(--positive)", tier: "free"  },
   { key: "breakdownAlerts", label: "Breakdown Alerts",  desc: "52-week low breakdowns",    icon: TrendingDown,color: "#FF4D6A", tier: "free"  },
-  { key: "aiBuySignals",    label: "AI Buy Signals",    desc: "AI-generated entry signals",icon: Brain,       color: "#FFD700", tier: "pro"   },
-  { key: "aiSellSignals",   label: "AI Sell Signals",   desc: "AI exit / profit booking",  icon: Target,      color: "#FF8C00", tier: "pro"   },
+  { key: "aiBuySignals",    label: "Momentum Up",        desc: "Sharp rises on heavy volume",icon: Brain,       color: "var(--gold)", tier: "pro"   },
+  { key: "aiSellSignals",   label: "Momentum Down",      desc: "Sharp falls on heavy volume",icon: Target,      color: "#FF8C00", tier: "pro"   },
   { key: "volumeAlerts",    label: "Volume Spikes",     desc: "3x+ above-average volume",  icon: BarChart2,   color: "#4FC3F7", tier: "pro"   },
   { key: "slHitAlerts",     label: "Stop Loss Hit",     desc: "Price hits your SL level",  icon: Shield,      color: "#FF4D6A", tier: "free"  },
-  { key: "targetAlerts",    label: "Target Hit",        desc: "Price hits your target",    icon: Star,        color: "#00FF9C", tier: "free"  },
+  { key: "targetAlerts",    label: "Target Hit",        desc: "Price hits your target",    icon: Star,        color: "var(--positive)", tier: "free"  },
   { key: "earningsAlerts",  label: "Earnings Alerts",   desc: "Quarterly results alerts",  icon: Zap,         color: "#CE93D8", tier: "pro"   },
-  { key: "marketSummary",   label: "Daily Briefing",    desc: "9:15 AM IST market summary",icon: Globe,       color: "#FFD700", tier: "free"  },
+  { key: "marketSummary",   label: "Daily Briefing",    desc: "9:15 AM IST market summary",icon: Globe,       color: "var(--gold)", tier: "free"  },
   { key: "macroNews",       label: "Macro News",        desc: "RBI, FII, macro events",    icon: AlertCircle, color: "#4FC3F7", tier: "elite" },
 ];
 
 const TYPE_ICON: Record<string, { icon: any; color: string }> = {
-  breakout:     { icon: TrendingUp,  color: "#00FF9C" },
+  breakout:     { icon: TrendingUp,  color: "var(--positive)" },
   breakdown:    { icon: TrendingDown,color: "#FF4D6A" },
   volume:       { icon: BarChart2,   color: "#4FC3F7" },
-  ai_buy:       { icon: Brain,       color: "#FFD700" },
+  ai_buy:       { icon: Brain,       color: "var(--gold)" },
   ai_sell:      { icon: Target,      color: "#FF8C00" },
   sl_hit:       { icon: Shield,      color: "#FF4D6A" },
-  target_hit:   { icon: Star,        color: "#00FF9C" },
+  target_hit:   { icon: Star,        color: "var(--positive)" },
   earnings:     { icon: Zap,         color: "#CE93D8" },
-  market_summary:{ icon: Globe,      color: "#FFD700" },
+  market_summary:{ icon: Globe,      color: "var(--gold)" },
   macro:        { icon: AlertCircle, color: "#4FC3F7" },
 };
 
 const TIER_CONFIG = {
   free:  { label: "FREE",  color: "#888",    bg: "rgba(136,136,136,0.1)"  },
-  pro:   { label: "PRO",   color: "#FFD700", bg: "rgba(255,215,0,0.12)"   },
+  pro:   { label: "PRO",   color: "var(--gold)", bg: "rgba(255,215,0,0.12)"   },
   elite: { label: "ELITE", color: "#CE93D8", bg: "rgba(206,147,216,0.12)" },
 };
 
@@ -385,7 +385,7 @@ export default function AlertsPage() {
               )}
             </div>
             <p className="text-[13px]" style={mutedText}>
-              Telegram · Browser Push · Email — real-time stock intelligence delivered to you
+              Telegram and browser push alerts, checked several times each trading day (not real-time)
             </p>
           </div>
         </div>
@@ -784,80 +784,8 @@ export default function AlertsPage() {
           )}
         </section>
 
-        {/* ── Premium Tiers ─────────────────────────────────────────────── */}
-        <section>
-          <h2 className="text-[11px] font-mono uppercase tracking-[0.18em] mb-4" style={dimText}>
-            Upgrade Your Intelligence
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {([
-              {
-                tier: "free", label: "FREE", color: "#888",
-                price: "₹0", period: "forever",
-                features: ["Breakout & breakdown alerts", "Stop loss & target hit", "Daily market briefing", "5 watchlist stocks"],
-              },
-              {
-                tier: "pro", label: "PRO", color: "#FFD700",
-                price: "₹999", period: "/month",
-                features: ["Everything in Free", "AI buy/sell signals", "Volume spike alerts", "Earnings alerts", "Unlimited watchlist", "Real-time alerts"],
-                badge: "POPULAR",
-              },
-              {
-                tier: "elite", label: "ELITE", color: "#CE93D8",
-                price: "₹2,999", period: "/month",
-                features: ["Everything in Pro", "AI Telegram assistant", "Institutional signals", "Smart money tracking", "Macro alerts", "Priority support"],
-              },
-            ] as const).map(({ tier: t, label, color, price, period, features, badge }: any) => (
-              <motion.div
-                key={t}
-                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: t === "free" ? 0 : t === "pro" ? 0.06 : 0.12 }}
-                className="p-5 space-y-4 relative"
-                style={{
-                  ...cardBase,
-                  boxShadow: tier === t ? `0 0 32px ${color}18` : "none",
-                  borderColor: tier === t ? `${color}40` : undefined,
-                }}
-              >
-                {badge && (
-                  <div
-                    className="absolute top-3 right-3 px-2 py-0.5 rounded text-[9px] font-mono font-bold"
-                    style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}
-                  >
-                    {badge}
-                  </div>
-                )}
-                <div>
-                  <div className="text-[11px] font-mono font-bold tracking-widest" style={{ color }}>{label}</div>
-                  <div className="flex items-baseline gap-1 mt-1">
-                    <span className="text-[22px] font-bold" style={{ color: "var(--text)" }}>{price}</span>
-                    <span className="text-[11px]" style={dimText}>{period}</span>
-                  </div>
-                </div>
-                <ul className="space-y-2">
-                  {features.map((f: string) => (
-                    <li key={f} className="flex items-center gap-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
-                      <CheckCircle size={12} style={{ color, flexShrink: 0 }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                {tier === t ? (
-                  <div className="py-2 text-center text-[11px] font-mono" style={{ color }}>
-                    ✓ Current Plan
-                  </div>
-                ) : (
-                  <button
-                    className="w-full py-2 rounded-lg text-[11px] font-mono transition-all"
-                    style={{ background: `${color}12`, border: `1px solid ${color}30`, color }}
-                    onClick={() => alert("Upgrade coming soon! Stay tuned.")}
-                  >
-                    Upgrade to {label}
-                  </button>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </section>
+        {/* Paid plans were removed: there is no billing system and several advertised features
+            ("institutional signals", "smart money tracking", "real-time alerts") did not exist. */}
 
       </main>
     </div>

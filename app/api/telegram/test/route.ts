@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
   const result = await tgSendToUser(
     session.user.id,
-    `✅ <b>Test Alert — Market Ka Baadshah</b>\n\nYour Telegram notifications are working!\n\nYou'll receive:\n• 🚀 Breakout alerts\n• 💡 AI buy/sell signals\n• 📊 Daily market briefings\n\n<i>Market Ka Baadshah AI</i>`
+    `✅ <b>Test Alert — EquityLens</b>\n\nYour Telegram notifications are working!\n\nYou'll receive:\n• 🚀 52-week high/low alerts\n• 💡 Momentum alerts (rule-based)\n• 📊 Daily market briefings\n\n<i>EquityLens</i>`
   );
 
   if (!result) return Response.json({ error: "Telegram not connected or bot token missing" }, { status: 400 });

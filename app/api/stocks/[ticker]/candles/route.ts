@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import YFConstructor from "yahoo-finance2";
+import { parseTicker, invalidTickerResponse } from "@/lib/validation/ticker";
 /* yahoo-finance2 v3: default export is the class — must instantiate */
 const yf = new (YFConstructor as any)();
 
@@ -48,7 +49,9 @@ export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ ticker: string }> }
 ) {
-  const { ticker } = await context.params;
+  const { ticker: rawTicker } = await context.params;
+  const ticker = parseTicker(rawTicker);
+  if (!ticker) return invalidTickerResponse();
   const { searchParams } = new URL(_req.url);
   const rangeParam = (searchParams.get("range") ?? "3M").toUpperCase();
   const cfg = RANGE_MAP[rangeParam] ?? RANGE_MAP["3M"];

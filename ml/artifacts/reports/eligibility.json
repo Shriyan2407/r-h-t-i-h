@@ -1,0 +1,78 @@
+{
+  "walkforward.json": [
+    {
+      "model": "logistic_l2",
+      "kind": "ml",
+      "checks": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "eligible": false
+    },
+    {
+      "model": "random_forest",
+      "kind": "ml",
+      "checks": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "eligible": false
+    },
+    {
+      "model": "hist_gradient_boosting",
+      "kind": "ml",
+      "checks": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "eligible": false
+    }
+  ],
+  "walkforward_rel.json": [
+    {
+      "model": "logistic_l2",
+      "kind": "ml",
+      "checks": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "eligible": false
+    },
+    {
+      "model": "random_forest",
+      "kind": "ml",
+      "checks": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": true,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "eligible": false
+    },
+    {
+      "model": "hist_gradient_boosting",
+      "kind": "ml",
+      "checks": {
+        "pooledAuc>=0.52": false,
+        "majorityFoldsAuc>0.5": false,
+        "brierSkill>0": false,
+        "rankIC>0&|t|>2": false,
+        "netSharpe>benchmark": false
+      },
+      "eligible": false
+    }
+  ]
+}

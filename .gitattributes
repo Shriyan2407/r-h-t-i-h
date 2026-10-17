@@ -1,0 +1,7 @@
+# Byte-identical on every OS: these files are hashed (model registry) or checksummed (Prisma migrations).
+lib/ml/artifacts/*.json text eol=lf
+lib/ml/*.json text eol=lf
+ml/artifacts/reports/*.json text eol=lf
+ml/data/*.json text eol=lf
+tests/ml/fixtures/*.json text eol=lf
+prisma/migrations/**/*.sql text eol=lf

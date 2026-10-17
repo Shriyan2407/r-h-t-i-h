@@ -11,12 +11,13 @@ import {
 import { Navbar }       from "@/components/Navbar";
 import { MarketTicker } from "@/components/MarketTicker";
 import type { HistoryAPIResponse } from "@/app/api/history/[ticker]/route";
+import { historyProvenance } from "@/lib/history/provenance";
 import type { TimelineEvent, NarrativeEra } from "@/lib/stockHistory";
 
-/* â”€â”€â”€ Quick picks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Quick picks ───────────────────────────────── */
 const QUICK_PICKS = ["RELIANCE","TCS","HDFCBANK","ICICIBANK","BHARTIARTL","HAL","IRFC","ADANIENT","INFY","SBIN"];
 
-/* â”€â”€â”€ Colour helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Colour helpers ────────────────────────────── */
 function scoreColor(s: number): string {
   if (s >= 75) return "var(--positive)";
   if (s >= 55) return "var(--gold)";
@@ -43,13 +44,13 @@ const CAT_LABEL: Record<string, string> = {
   FUNDRAISE: "FUNDRAISE", CONTROVERSY: "CONTROVERSY",
 };
 
-/* â”€â”€â”€ Format event date from year + month â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Format event date from year + month ──────── */
 function formatEventDate(event: TimelineEvent): string {
   if (event.month) return `${event.month} ${event.year}`;
   return String(event.year);
 }
 
-/* â”€â”€â”€ Sentiment chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Sentiment chart ──────────────────────────── */
 function SentimentChart({ data }: { data: { year: number; score: number; label: string }[] }) {
   if (!data?.length) return null;
   const W = 280, H = 90, PAD = 18;
@@ -87,7 +88,7 @@ function SentimentChart({ data }: { data: { year: number; score: number; label: 
       </svg>
       <div className="flex items-center justify-between mt-1">
         <span className="text-[8px] font-mono" style={{ color: "var(--th-text-faint)" }}>
-          Low: {minY} Â· Avg: {avg} Â· High: {maxY}
+          Low: {minY} · Avg: {avg} · High: {maxY}
         </span>
         <span className="text-[8px] font-mono font-bold" style={{ color: col }}>
           Current: {data[data.length - 1]?.score ?? avg}/100
@@ -97,7 +98,7 @@ function SentimentChart({ data }: { data: { year: number; score: number; label: 
   );
 }
 
-/* â”€â”€â”€ Narrative era dots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Narrative era dots ─────────────────────────── */
 function NarrativeSection({ eras }: { eras: NarrativeEra[] }) {
   if (!eras?.length) return null;
   return (
@@ -140,7 +141,7 @@ function NarrativeSection({ eras }: { eras: NarrativeEra[] }) {
   );
 }
 
-/* â”€â”€â”€ Event card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Event card ────────────────────────────────── */
 function EventCard({ event, index }: { event: TimelineEvent; index: number }) {
   const [expanded, setExpanded] = useState(index === 0);
   const sc       = SENT_COL[event.sentiment] ?? SENT_COL["NEUTRAL"];
@@ -269,12 +270,12 @@ function EventCard({ event, index }: { event: TimelineEvent; index: number }) {
   );
 }
 
-/* â”€â”€â”€ Phase legend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Phase legend ──────────────────────────────── */
 function PhaseLegend({ timeline }: { timeline: TimelineEvent[] }) {
   const phases: Record<string, number> = {};
   timeline.forEach(e => {
     const decade = Math.floor(e.year / 5) * 5;
-    const key = `${decade}â€“${decade + 4}`;
+    const key = `${decade}–${decade + 4}`;
     phases[key] = (phases[key] ?? 0) + 1;
   });
   const bullish  = timeline.filter(e => e.sentiment === "BULLISH").length;
@@ -305,7 +306,7 @@ function PhaseLegend({ timeline }: { timeline: TimelineEvent[] }) {
   );
 }
 
-/* â”€â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Loading ───────────────────────────────────── */
 const ARCH_MSGS = [
   "Accessing institutional memory archive...",
   "Fetching Yahoo Finance financial data...",
@@ -342,7 +343,7 @@ function LoadingState({ ticker }: { ticker: string }) {
               Building {ticker} Evolution Archive
             </div>
             <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
-              Institutional Memory Â· Real Company History
+              Institutional Memory · Real Company History
             </div>
           </div>
           <div className="ml-auto flex items-center gap-1.5">
@@ -372,7 +373,7 @@ function LoadingState({ ticker }: { ticker: string }) {
   );
 }
 
-/* â”€â”€â”€ Error state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Error state ───────────────────────────────── */
 function ErrorState({ error, ticker, onReset, onRetry }: {
   error: string; ticker: string; onReset: () => void; onRetry: () => void;
 }) {
@@ -387,7 +388,7 @@ function ErrorState({ error, ticker, onReset, onRetry }: {
           </div>
           <div>
             <div className="text-[13px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
-              Archive load failed â€” {ticker}
+              Archive load failed — {ticker}
             </div>
             <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-red-text-dim)" }}>
               Network or data error
@@ -415,10 +416,10 @@ function ErrorState({ error, ticker, onReset, onRetry }: {
   );
 }
 
-/* â”€â”€â”€ Full history view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Full history view ─────────────────────────── */
 function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset: () => void }) {
   const timeline = report.timeline ?? [];
-  const isKnown  = report._meta?.isKnownStock;
+  const prov     = historyProvenance(report._meta?.source);
   const avgSent  = report.sentimentChart?.length
     ? Math.round(report.sentimentChart.reduce((s, d) => s + d.score, 0) / report.sentimentChart.length)
     : 50;
@@ -438,16 +439,10 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
           </button>
           <span style={{ color: "var(--th-text-faint)" }}>/</span>
           <span className="text-[10px] font-mono" style={{ color: "var(--th-text-dim)" }}>{report.ticker}</span>
-          <span className="text-[8px] font-mono px-1.5 py-0.5 rounded ml-1"
-            style={{ color: "var(--positive)", background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.15)" }}>
-            LIVE Â· {new Date(report._meta?.generatedAt ?? Date.now()).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded ml-1" title={prov.detail}
+            style={{ color: prov.level === "caution" ? "var(--warning)" : "var(--th-text-muted)", border: "1px solid var(--th-border-normal)" }}>
+            {prov.label}
           </span>
-          {isKnown && (
-            <span className="text-[8px] font-mono px-1.5 py-0.5 rounded"
-              style={{ color: "var(--gold)", background: "var(--th-border-subtle)", border: "1px solid var(--th-border-normal)" }}>
-              DEEP ARCHIVE
-            </span>
-          )}
         </div>
         <button onClick={onReset}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono"
@@ -455,6 +450,12 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
           <Search size={10} /> New Search
         </button>
       </div>
+
+      {prov.level === "caution" && (
+        <p role="note" className="text-[12px] rounded-lg px-3 py-2" style={{ margin: 0, color: "var(--th-text-dim)", border: "1px solid var(--warning)" }}>
+          <strong>{prov.label}.</strong> {prov.detail} Prices and headlines on this page come from Yahoo Finance and news feeds.
+        </p>
+      )}
 
       {/* Stock header */}
       <div className="rounded-2xl p-5 relative overflow-hidden"
@@ -486,7 +487,7 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
             {report._meta?.currentPrice && (
               <div className="flex items-center gap-3 mt-1.5">
                 <span className="text-[11px] font-mono font-bold" style={{ color: "var(--th-text-primary)" }}>
-                  â‚¹{report._meta.currentPrice.toFixed(2)}
+                  ₹{report._meta.currentPrice.toFixed(2)}
                 </span>
                 {report._meta.priceChange != null && (
                   <span className="text-[10px] font-mono"
@@ -508,7 +509,7 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
               </span>
             </div>
             <div className="text-[8.5px] font-mono text-right" style={{ color: "var(--th-text-ultra-faint)" }}>
-              {timeline.length} timeline events Â· {report._meta?.newsCount ?? 0} articles
+              {timeline.length} timeline events · {report._meta?.newsCount ?? 0} articles
             </div>
           </div>
         </div>
@@ -526,7 +527,7 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
             </span>
             <div className="ml-auto flex items-center gap-2">
               <span className="text-[8px] font-mono" style={{ color: "var(--th-text-faint)" }}>
-                {timeline[0] ? `${timeline[0].year} â€“ ${timeline[timeline.length - 1]?.year ?? "Present"}` : ""}
+                {timeline[0] ? `${timeline[0].year} – ${timeline[timeline.length - 1]?.year ?? "Present"}` : ""}
               </span>
               <span className="text-[8px] font-mono" style={{ color: "var(--th-text-ultra-faint)" }}>Click to expand</span>
             </div>
@@ -658,15 +659,14 @@ function HistoryView({ report, onReset }: { report: HistoryAPIResponse; onReset:
 
       <div className="py-4 text-center">
         <p className="text-[9px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
-          MARKET KA BAADSHAH Company Intelligence Archive Â· {report._meta?.newsCount ?? 0} Articles Analyzed
-          Â· {isKnown ? "Institutional Deep Archive" : "Sector Playbook Engine"} Â· Not Investment Advice
+          EquityLens company history · {prov.label} · {report._meta?.newsCount ?? 0} recent headlines listed · Not investment advice
         </p>
       </div>
     </div>
   );
 }
 
-/* â”€â”€â”€ Query input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Query input ───────────────────────────────── */
 function QueryInput({ onSearch }: { onSearch: (t: string) => void }) {
   const [input, setInput] = useState("");
   const submit = () => { const t = input.trim().toUpperCase(); if (t) onSearch(t); };
@@ -674,7 +674,7 @@ function QueryInput({ onSearch }: { onSearch: (t: string) => void }) {
     <div className="max-w-4xl mx-auto px-4 py-16 text-center">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
         <div className="text-[9.5px] font-mono uppercase tracking-[0.3em] mb-4" style={{ color: "var(--th-text-faint)" }}>
-          â—ˆ Institutional Intelligence Archive Â· Company Evolution Engine
+          ◈ Institutional Intelligence Archive · Company Evolution Engine
         </div>
         <h1 className="font-bold mb-3 leading-tight"
           style={{ fontFamily: "var(--font-space-grotesk,sans-serif)", fontSize: "clamp(26px,5vw,50px)", color: "var(--th-text-primary)", letterSpacing: "-0.025em" }}>
@@ -685,7 +685,7 @@ function QueryInput({ onSearch }: { onSearch: (t: string) => void }) {
         </h1>
         <p className="text-[13px] mb-10" style={{ color: "var(--th-text-muted)" }}>
           Company milestones. Narrative evolution. Institutional cycles. Smart money history.
-          Every report is company-specific â€” RELIANCE is not TCS is not HAL.
+          Every report is company-specific — RELIANCE is not TCS is not HAL.
         </p>
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -735,7 +735,7 @@ function QueryInput({ onSearch }: { onSearch: (t: string) => void }) {
   );
 }
 
-/* â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Page ─────────────────────────────────────── */
 type State = "idle" | "loading" | "result" | "error";
 
 export default function HistoryPage() {
@@ -793,7 +793,7 @@ export default function HistoryPage() {
       <footer className="px-4 py-6 mt-8" style={{ borderTop: "1px solid var(--th-border-subtle)" }}>
         <div className="max-w-[1440px] mx-auto flex justify-between items-center">
           <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
-            MARKET KA BAADSHAH Company Intelligence Archive
+            EQUITYLENS Company Intelligence Archive
           </span>
           <span className="text-[8.5px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-faint)" }}>
             Not investment advice

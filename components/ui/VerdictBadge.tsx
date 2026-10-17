@@ -13,43 +13,43 @@ const VERDICT_CONFIG: Record<Verdict, {
 }> = {
   "STRONG BUY": {
     label: "STRONG BUY",
-    color: "#00FF9C",
-    bg:    "rgba(0,255,156,0.09)",
-    border:"rgba(0,255,156,0.28)",
-    glow:  "0 0 20px rgba(0,255,156,0.2)",
-    dotColor: "#00FF9C",
+    color: "var(--success)",
+    bg:    "var(--success-muted)",
+    border:"var(--success)",
+    glow:  "0 0 20px var(--success-muted)",
+    dotColor: "var(--success)",
   },
   BUY: {
     label: "BUY",
-    color: "#34D399",
-    bg:    "rgba(52,211,153,0.08)",
-    border:"rgba(52,211,153,0.22)",
-    glow:  "0 0 16px rgba(52,211,153,0.15)",
-    dotColor: "#34D399",
+    color: "var(--success)",
+    bg:    "var(--success-muted)",
+    border:"var(--success)",
+    glow:  "0 0 16px var(--success-muted)",
+    dotColor: "var(--success)",
   },
   HOLD: {
     label: "HOLD",
-    color: "#FFB800",
-    bg:    "rgba(255,184,0,0.08)",
-    border:"rgba(255,184,0,0.22)",
-    glow:  "0 0 16px rgba(255,184,0,0.15)",
-    dotColor: "#FFB800",
+    color: "var(--warning)",
+    bg:    "var(--warning-muted)",
+    border:"var(--warning)",
+    glow:  "0 0 16px var(--warning-muted)",
+    dotColor: "var(--warning)",
   },
   SELL: {
     label: "SELL",
-    color: "#FF7A00",
-    bg:    "rgba(255,122,0,0.08)",
-    border:"rgba(255,122,0,0.22)",
-    glow:  "0 0 16px rgba(255,122,0,0.15)",
-    dotColor: "#FF7A00",
+    color: "var(--danger)",
+    bg:    "var(--danger-muted)",
+    border:"var(--danger)",
+    glow:  "0 0 16px var(--danger-muted)",
+    dotColor: "var(--danger)",
   },
   "STRONG SELL": {
     label: "STRONG SELL",
-    color: "#FF4D4D",
-    bg:    "rgba(255,77,77,0.09)",
-    border:"rgba(255,77,77,0.28)",
-    glow:  "0 0 20px rgba(255,77,77,0.2)",
-    dotColor: "#FF4D4D",
+    color: "var(--danger)",
+    bg:    "var(--danger-muted)",
+    border:"var(--danger)",
+    glow:  "0 0 20px var(--danger-muted)",
+    dotColor: "var(--danger)",
   },
 };
 
@@ -70,9 +70,9 @@ export function VerdictBadge({
   if (!cfg) return null;
 
   const sizeStyles = {
-    sm: { padding: "2px 8px",  fontSize: "9px",  gap: "4px",  dotSize: 6  },
-    md: { padding: "4px 12px", fontSize: "11px", gap: "6px",  dotSize: 7  },
-    lg: { padding: "6px 16px", fontSize: "13px", gap: "8px",  dotSize: 8  },
+    sm: { padding: "3px 10px",  fontSize: "10px", gap: "5px",  dotSize: 6  },
+    md: { padding: "5px 13px",  fontSize: "12px", gap: "6px",  dotSize: 7  },
+    lg: { padding: "7px 18px",  fontSize: "15px", gap: "8px",  dotSize: 9  },
   }[size];
 
   return (
@@ -103,62 +103,79 @@ export function VerdictBadge({
   );
 }
 
-interface ConfidenceMeterProps {
-  confidence: number;
+interface SignalStrengthMeterProps {
+  /** 0-100 agreement of the rule-based indicator signals. */
+  signalStrength: number;
+  /** Calibrated probability 0-1, or null when no validated model exists. */
+  probability: number | null;
   verdict: Verdict;
 }
 
-export function ConfidenceMeter({ confidence, verdict }: ConfidenceMeterProps) {
+/**
+ * Shows how strongly the rule-based signals agree - explicitly NOT a probability of
+ * success. The probability row says "unavailable" until a calibrated model exists, so
+ * the interface never displays an invented confidence figure.
+ */
+export function SignalStrengthMeter({ signalStrength, probability, verdict }: SignalStrengthMeterProps) {
   const cfg = VERDICT_CONFIG[verdict];
+  const value = Math.max(0, Math.min(100, Math.round(signalStrength)));
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <div className="flex justify-between items-center">
         <span
-          className="text-[9.5px] font-mono font-semibold uppercase tracking-[0.10em]"
-          style={{ color: "var(--th-text-muted)" }}
+          title="How strongly the rule-based indicators agree with each other. It is not the probability that the call is right."
+          style={{
+            fontFamily: "monospace",
+            fontSize: "11px",
+            fontWeight: 400,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "var(--th-text-muted)",
+          }}
         >
-          AI Confidence
+          Signal strength
         </span>
         <span
-          className="text-[13px] font-mono font-bold"
-          style={{ color: cfg?.color ?? "var(--th-text-primary)" }}
+          style={{
+            fontFamily: "monospace",
+            fontSize: "15px",
+            fontWeight: 700,
+            color: cfg?.color ?? "var(--th-text-primary)",
+            letterSpacing: "-0.02em",
+          }}
         >
-          {confidence}%
+          {value}/100
         </span>
       </div>
 
       {/* Bar track */}
       <div
         className="w-full h-1.5 rounded-full overflow-hidden"
-        style={{ background: "rgba(255,255,255,0.05)" }}
+        style={{ background: "var(--border-muted)" }}
+        role="meter"
+        aria-label="Signal strength"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={value}
       >
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: `${confidence}%` }}
+          animate={{ width: `${value}%` }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           className="h-full rounded-full"
           style={{
-            background: `linear-gradient(90deg, ${cfg?.color}88, ${cfg?.color})`,
-            boxShadow: `0 0 8px ${cfg?.color}50`,
+            background: cfg?.color ?? "var(--primary)",
+            boxShadow: cfg?.glow,
           }}
         />
       </div>
 
-      {/* Segment dots */}
-      <div className="flex gap-0.5">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex-1 h-1 rounded-sm transition-all duration-300"
-            style={{
-              background: i < Math.round(confidence / 10)
-                ? cfg?.color ?? "#FFD700"
-                : "rgba(255,255,255,0.04)",
-            }}
-          />
-        ))}
-      </div>
+      <p className="text-[10px] font-mono leading-snug" style={{ color: "var(--th-text-faint)" }}>
+        {probability === null
+          ? "Confidence unavailable: indicator agreement is not a probability, and no validated model backs this call."
+          : `Model probability: ${Math.round(probability * 100)}%`}
+      </p>
     </div>
   );
 }

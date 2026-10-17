@@ -1,0 +1,17 @@
+{
+  "schema": "quant-agent-eval-summary/1",
+  "evaluatedAt": "2026-10-17",
+  "period": [
+    "2019-01-01",
+    "2026-10-12"
+  ],
+  "tickers": 47,
+  "formerTickers": 25,
+  "horizonDays": 20,
+  "meanRankIc": -0.0177,
+  "tStat": -0.87,
+  "formerMeanRankIc": 0.0378,
+  "bullMinusBearExcess20d": -0.0039,
+  "verdict": "NO_EDGE",
+  "criteria": "mean rank IC >= 0.02, t >= 2, positive on former members (pre-registered)"
+}

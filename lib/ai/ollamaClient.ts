@@ -1,10 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Ollama Local LLM Client
-   Server-side only. Calls http://localhost:11434 (Ollama REST API).
+   EquityLens — Ollama Local LLM Client
+   Server-side only. Opt-in: only active when OLLAMA_BASE_URL is set
+   (e.g. http://localhost:11434). When unset, no network probe is made.
    Supports Qwen 2.5, LLaMA 3.x, Mistral, Phi-3, DeepSeek-R1.
 ═══════════════════════════════════════════════════════════════ */
 
-const OLLAMA_BASE = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
+/** Read per call so tests and runtime config changes take effect. */
+function ollamaBase(): string | null {
+  return process.env.OLLAMA_BASE_URL?.trim() || null;
+}
 
 /*
  * IMPORTANT MODEL ORDERING:
@@ -34,10 +38,12 @@ let _fastModelCache: string | null = null;
 let _fastCacheTs = 0;
 
 async function listModels(): Promise<string[]> {
+  const base = ollamaBase();
+  if (!base) return []; // not configured: never probe localhost from a serverless host
   try {
     const ctrl = new AbortController();
     setTimeout(() => ctrl.abort(), 3_000);
-    const res = await fetch(`${OLLAMA_BASE}/api/tags`, { signal: ctrl.signal });
+    const res = await fetch(`${base}/api/tags`, { signal: ctrl.signal });
     if (!res.ok) return [];
     const data = await res.json() as { models?: Array<{ name: string }> };
     return (data.models ?? []).map(m => m.name);
@@ -90,7 +96,7 @@ export async function callOllama(
     const ctrl  = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
 
-    const res = await fetch(`${OLLAMA_BASE}/api/generate`, {
+    const res = await fetch(`${ollamaBase()}/api/generate`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -134,7 +140,7 @@ export async function callOllamaFast(
     const ctrl  = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
 
-    const res = await fetch(`${OLLAMA_BASE}/api/generate`, {
+    const res = await fetch(`${ollamaBase()}/api/generate`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -174,7 +180,7 @@ export async function* streamOllama(
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`${OLLAMA_BASE}/api/generate`, {
+    const res = await fetch(`${ollamaBase()}/api/generate`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

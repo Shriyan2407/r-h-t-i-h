@@ -1,17 +1,10 @@
 import { NextRequest } from "next/server";
-import { auth } from "@/lib/auth/auth";
+import { z } from "zod";
 import { prisma } from "@/lib/auth/prisma";
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "shriyanbohra24077@gmail.com";
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) return null;
-  return session;
-}
+import { requireAdmin } from "@/lib/auth/admin";
 
 // GET /api/admin/alerts — dashboard data
-export async function GET(req: NextRequest) {
+export async function GET() {
   if (!(await requireAdmin())) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -59,42 +52,43 @@ export async function GET(req: NextRequest) {
   });
 }
 
+const BULK_PREFS = [
+  "breakoutAlerts", "breakdownAlerts", "volumeAlerts", "aiBuySignals", "aiSellSignals",
+  "earningsAlerts", "marketSummary", "macroNews", "telegramEnabled",
+] as const;
+
+const postSchema = z.union([
+  z.object({ action: z.enum(["trigger_price", "trigger_news", "trigger_briefing"]) }).strict(),
+  z.object({ pref: z.enum(BULK_PREFS), value: z.boolean() }).strict(),
+]);
+
 // POST /api/admin/alerts — manual trigger or global pref update
 export async function POST(req: NextRequest) {
   if (!(await requireAdmin())) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  let body: any;
-  try { body = await req.json(); } catch { return Response.json({ error: "Invalid JSON" }, { status: 400 }); }
+  let raw: unknown;
+  try { raw = await req.json(); } catch { return Response.json({ error: "Invalid JSON" }, { status: 400 }); }
 
-  // Manual trigger: { action: "trigger_price" | "trigger_news" | "trigger_briefing" }
-  if (body.action === "trigger_price" || body.action === "trigger_news") {
-    const { processMarketAlerts } = await import("@/lib/services/alertEngine");
-    const result = await processMarketAlerts();
+  const parsed = postSchema.safeParse(raw);
+  if (!parsed.success) return Response.json({ error: "Unknown action" }, { status: 400 });
+  const body = parsed.data;
+
+  if ("action" in body) {
+    const engine = await import("@/lib/services/alertEngine");
+    if (body.action === "trigger_briefing") {
+      const result = await engine.generateAndSendDailyBriefing();
+      return Response.json({ ok: true, triggered: "briefing", result });
+    }
+    // trigger_price and trigger_news both run the same engine (it handles dedup internally).
+    const result = await engine.processMarketAlerts();
     return Response.json({ ok: true, triggered: body.action, result });
   }
 
-  if (body.action === "trigger_briefing") {
-    const { generateAndSendDailyBriefing } = await import("@/lib/services/alertEngine");
-    const result = await generateAndSendDailyBriefing();
-    return Response.json({ ok: true, triggered: "briefing", result });
-  }
-
   // Bulk preference update: { pref: "breakoutAlerts", value: true }
-  if (body.pref && typeof body.value === "boolean") {
-    const allowed = [
-      "breakoutAlerts", "breakdownAlerts", "volumeAlerts", "aiBuySignals", "aiSellSignals",
-      "earningsAlerts", "marketSummary", "macroNews", "telegramEnabled",
-    ];
-    if (!allowed.includes(body.pref)) {
-      return Response.json({ error: "Unknown preference" }, { status: 400 });
-    }
-    const updated = await prisma.alertPreference.updateMany({
-      data: { [body.pref]: body.value },
-    });
-    return Response.json({ ok: true, updated: updated.count });
-  }
-
-  return Response.json({ error: "Unknown action" }, { status: 400 });
+  const updated = await prisma.alertPreference.updateMany({
+    data: { [body.pref]: body.value },
+  });
+  return Response.json({ ok: true, updated: updated.count });
 }

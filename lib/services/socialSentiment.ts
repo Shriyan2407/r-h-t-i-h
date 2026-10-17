@@ -1,11 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Social Sentiment Intelligence
+   EquityLens — Social Sentiment Intelligence
    Sources: Reddit (public JSON API — no auth needed)
             StockTwits (free read access)
    All fetches are server-side (no CORS issues)
 ═══════════════════════════════════════════════════════════════ */
 
-import { cache, TTL } from "./cache";
+import { TTL } from "./cache";
+import { isUsable, sharedWrap } from "@/lib/cache/shared";
 
 export interface RedditPost {
   title:     string;
@@ -88,7 +89,7 @@ async function fetchRedditSubreddit(sub: string, ticker: string): Promise<any[]>
     const url = `https://www.reddit.com/r/${sub}/search.json?q=${encodeURIComponent(ticker)}&sort=new&limit=25&t=month&restrict_sr=true`;
     const res = await fetch(url, {
       headers: {
-        "User-Agent": "R.H.T.I.H-Intelligence-Bot/1.0 (Institutional stock research)",
+        "User-Agent": "EquityLens/1.0 (stock research)",
         "Accept":     "application/json",
       },
       signal: AbortSignal.timeout(6000),
@@ -107,7 +108,7 @@ async function fetchRedditGlobal(ticker: string): Promise<any[]> {
     const url   = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=20&t=month&type=link`;
     const res   = await fetch(url, {
       headers: {
-        "User-Agent": "R.H.T.I.H-Intelligence-Bot/1.0",
+        "User-Agent": "EquityLens/1.0",
         "Accept":     "application/json",
       },
       signal: AbortSignal.timeout(6000),
@@ -169,7 +170,7 @@ async function getStockTwits(ticker: string): Promise<StockTwit[]> {
       : `https://api.stocktwits.com/api/2/streams/ticker/${ticker}.json`;
 
     const res = await fetch(url, {
-      headers: { "User-Agent": "R.H.T.I.H/1.0" },
+      headers: { "User-Agent": "EquityLens/1.0" },
       signal:  AbortSignal.timeout(5000),
     });
     if (!res.ok) return [];
@@ -219,8 +220,7 @@ function extractThemes(posts: RedditPost[], twits: StockTwit[]): string[] {
 /* ── SENTIMENT AGGREGATOR ───────────────────────────────── */
 
 export async function getSocialSentiment(ticker: string): Promise<SentimentReport> {
-  const cacheKey = `sentiment:${ticker}`;
-  return cache.wrap(cacheKey, TTL.SENTIMENT, async () => {
+  return sharedWrap("sentiment", ticker, TTL.SENTIMENT, async () => {
     const [redditPosts, stockTwits] = await Promise.all([
       getRedditPosts(ticker),
       getStockTwits(ticker),
@@ -285,7 +285,7 @@ export async function getSocialSentiment(ticker: string): Promise<SentimentRepor
       topThemes,
       sentimentSummary,
     } satisfies SentimentReport;
-  });
+  }, isUsable);
 }
 
 function buildSentimentSummary(

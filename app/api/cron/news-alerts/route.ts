@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { checkBearer } from "@/lib/security/secrets";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -11,9 +12,10 @@ function isMarketHours(): boolean {
 }
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = checkBearer(req, process.env.CRON_SECRET);
+  if (!auth.ok) {
+    if (auth.status === 503) console.error("[cron/news-alerts] CRON_SECRET is not configured");
+    return Response.json({ error: auth.error }, { status: auth.status });
   }
 
   if (!isMarketHours()) {

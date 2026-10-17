@@ -14,7 +14,7 @@ import {
   Globe,
 } from "lucide-react";
 import type { AIAnalysis, Scenario } from "@/lib/types";
-import { VerdictBadge, ConfidenceMeter } from "@/components/ui/VerdictBadge";
+import { VerdictBadge, SignalStrengthMeter } from "@/components/ui/VerdictBadge";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,7 @@ function Section({
     >
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3.5 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-4 transition-colors"
         style={{ background: "transparent" }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-hover)"; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
@@ -52,8 +52,8 @@ function Section({
         <div className="flex items-center gap-2.5">
           <Icon size={13} style={{ color: accentColor ?? "var(--th-text-muted)" }} />
           <span
-            className="text-[11px] font-mono font-bold uppercase tracking-[0.12em]"
-            style={{ color: "var(--th-text-secondary)" }}
+            className="font-mono font-bold uppercase tracking-[0.12em]"
+            style={{ fontSize: "12px", color: "var(--th-text-secondary)" }}
           >
             {title}
           </span>
@@ -95,24 +95,26 @@ function ScenarioCard({ scenario }: { scenario: Scenario }) {
   return (
     <div className="rounded-xl p-4 flex flex-col gap-3" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-mono font-bold tracking-[0.12em]" style={{ color: c.text }}>{c.label}</span>
+        <span className="font-mono font-bold tracking-[0.12em]" style={{ fontSize: "11px", color: c.text }}>{c.label}</span>
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-mono font-medium" style={{ color: "var(--th-text-muted)" }}>Probability:</span>
-          <span className="text-[11px] font-mono font-bold" style={{ color: c.text }}>{scenario.probability}%</span>
+          <span className="font-mono" style={{ fontSize: "11px", fontWeight: 400, color: "var(--th-text-muted)" }}>Probability:</span>
+          <span className="font-mono font-bold" style={{ fontSize: "13px", color: c.text }}>{scenario.probability}%</span>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-muted)" }}>Target</div>
-          <div className="text-[15px] font-mono font-bold" style={{ color: c.text }}>₹{scenario.target_price.toFixed(0)}</div>
+          {/* Label subtle */}
+          <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-muted)" }}>Target</div>
+          {/* Number dominant */}
+          <div className="font-mono font-bold" style={{ fontSize: "20px", letterSpacing: "-0.03em", color: c.text }}>₹{scenario.target_price.toFixed(0)}</div>
         </div>
         <div>
-          <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-muted)" }}>Timeline</div>
-          <div className="text-[12px] font-mono font-semibold" style={{ color: "var(--th-text-secondary)" }}>{scenario.timeline}</div>
+          <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-muted)" }}>Timeline</div>
+          <div className="font-mono font-semibold" style={{ fontSize: "14px", color: "var(--th-text-secondary)" }}>{scenario.timeline}</div>
         </div>
         <div>
-          <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-muted)" }}>Stop Below</div>
-          <div className="text-[12px] font-mono font-semibold" style={{ color: "#FF4D4D" }}>₹{scenario.invalidation_level.toFixed(0)}</div>
+          <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-muted)" }}>Stop Below</div>
+          <div className="font-mono font-bold" style={{ fontSize: "14px", color: "var(--negative)" }}>₹{scenario.invalidation_level.toFixed(0)}</div>
         </div>
       </div>
       <div className="flex flex-col gap-1">
@@ -171,13 +173,13 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
         }}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
             <Brain size={14} style={{ color: "#38BDF8" }} />
-            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.14em]" style={{ color: "var(--th-text-muted)" }}>
+            <span className="font-mono font-bold uppercase tracking-[0.14em]" style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
               AI Final Verdict
             </span>
           </div>
-          <span className="text-[10px] font-mono font-medium" style={{ color: "var(--th-text-dim)" }}>
+          <span className="font-mono" style={{ fontSize: "11px", fontWeight: 400, color: "var(--th-text-dim)" }}>
             {new Date(analysis.generated_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
           </span>
         </div>
@@ -188,11 +190,11 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
           {analysis.verdict.risk_reward && <Badge variant="blue">R/R {analysis.verdict.risk_reward.toFixed(1)}x</Badge>}
         </div>
 
-        <ConfidenceMeter confidence={analysis.verdict.confidence} verdict={analysis.verdict.rating} />
+        <SignalStrengthMeter signalStrength={analysis.verdict.signal_strength} probability={analysis.verdict.probability} verdict={analysis.verdict.rating} />
 
         <p
-          className="text-[12.5px] font-medium leading-relaxed"
-          style={{ color: "var(--th-text-secondary)", borderTop: "1px solid var(--th-border-subtle)", paddingTop: "12px" }}
+          className="font-medium leading-relaxed"
+          style={{ fontSize: "14px", fontWeight: 400, color: "var(--th-text-secondary)", borderTop: "1px solid var(--th-border-subtle)", paddingTop: "14px" }}
         >
           {analysis.verdict.investment_thesis}
         </p>
@@ -200,23 +202,23 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
         {(analysis.verdict.entry_range || analysis.verdict.stop_loss) && (
           <div className="grid grid-cols-3 gap-2 text-center">
             {analysis.verdict.entry_range && (
-              <div className="p-2.5 rounded-lg" style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.22)" }}>
-                <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-dim)" }}>Entry Range</div>
-                <div className="text-[12px] font-mono font-bold" style={{ color: "#38BDF8" }}>
+              <div className="p-3 rounded-lg" style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.22)" }}>
+                <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-dim)" }}>Entry Range</div>
+                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "#38BDF8" }}>
                   ₹{analysis.verdict.entry_range[0].toFixed(0)}–{analysis.verdict.entry_range[1].toFixed(0)}
                 </div>
               </div>
             )}
             {analysis.verdict.stop_loss && (
-              <div className="p-2.5 rounded-lg" style={{ background: "rgba(255,77,77,0.06)", border: "1px solid rgba(255,77,77,0.22)" }}>
-                <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-dim)" }}>Stop Loss</div>
-                <div className="text-[12px] font-mono font-bold" style={{ color: "#FF4D4D" }}>₹{analysis.verdict.stop_loss.toFixed(0)}</div>
+              <div className="p-3 rounded-lg" style={{ background: "rgba(255,77,77,0.06)", border: "1px solid rgba(255,77,77,0.22)" }}>
+                <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-dim)" }}>Stop Loss</div>
+                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "var(--negative)" }}>₹{analysis.verdict.stop_loss.toFixed(0)}</div>
               </div>
             )}
             {analysis.verdict.target_1 && (
-              <div className="p-2.5 rounded-lg" style={{ background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.22)" }}>
-                <div className="text-[9px] font-mono font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--th-text-dim)" }}>Target 1 / 2</div>
-                <div className="text-[12px] font-mono font-bold" style={{ color: "#00FF9C" }}>
+              <div className="p-3 rounded-lg" style={{ background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.22)" }}>
+                <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-dim)" }}>Target 1 / 2</div>
+                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "var(--positive)" }}>
                   ₹{analysis.verdict.target_1.toFixed(0)}
                   {analysis.verdict.target_2 && ` / ₹${analysis.verdict.target_2.toFixed(0)}`}
                 </div>
@@ -283,20 +285,20 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
           <div className="grid grid-cols-2 gap-2">
             {analysis.macro.sector_tailwinds.length > 0 && (
               <div className="p-3 rounded-lg" style={{ background: "rgba(0,255,156,0.04)", border: "1px solid rgba(0,255,156,0.18)" }}>
-                <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "#00FF9C" }}>Tailwinds</div>
+                <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "var(--positive)" }}>Tailwinds</div>
                 {analysis.macro.sector_tailwinds.map((t, i) => (
                   <div key={i} className="flex gap-1.5 text-[11.5px] font-medium mb-1" style={{ color: "var(--th-text-tertiary)" }}>
-                    <span style={{ color: "#00FF9C" }}>·</span>{t}
+                    <span style={{ color: "var(--positive)" }}>·</span>{t}
                   </div>
                 ))}
               </div>
             )}
             {analysis.macro.sector_headwinds.length > 0 && (
               <div className="p-3 rounded-lg" style={{ background: "rgba(255,77,77,0.04)", border: "1px solid rgba(255,77,77,0.18)" }}>
-                <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "#FF4D4D" }}>Headwinds</div>
+                <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "var(--negative)" }}>Headwinds</div>
                 {analysis.macro.sector_headwinds.map((h, i) => (
                   <div key={i} className="flex gap-1.5 text-[11.5px] font-medium mb-1" style={{ color: "var(--th-text-tertiary)" }}>
-                    <span style={{ color: "#FF4D4D" }}>·</span>{h}
+                    <span style={{ color: "var(--negative)" }}>·</span>{h}
                   </div>
                 ))}
               </div>
@@ -335,22 +337,22 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
       <Section title="Risks & Catalysts" icon={AlertTriangle} accentColor="#FB923C">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5" style={{ color: "#FF4D4D" }}>
+            <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5" style={{ color: "var(--negative)" }}>
               <AlertTriangle size={9} /> Key Risks
             </div>
             {analysis.verdict.key_risks.map((r, i) => (
               <div key={i} className="flex gap-2 text-[12px] font-medium mb-2 leading-snug" style={{ color: "var(--th-text-tertiary)" }}>
-                <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: "#FF4D4D" }}>✕</span>{r}
+                <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: "var(--negative)" }}>✕</span>{r}
               </div>
             ))}
           </div>
           <div>
-            <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5" style={{ color: "#00FF9C" }}>
+            <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5" style={{ color: "var(--positive)" }}>
               <CheckCircle size={9} /> Key Catalysts
             </div>
             {analysis.verdict.key_catalysts.map((c, i) => (
               <div key={i} className="flex gap-2 text-[12px] font-medium mb-2 leading-snug" style={{ color: "var(--th-text-tertiary)" }}>
-                <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: "#00FF9C" }}>✓</span>{c}
+                <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: "var(--positive)" }}>✓</span>{c}
               </div>
             ))}
           </div>
@@ -359,8 +361,8 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
 
       {/* ── Disclaimer ── */}
       <div
-        className="text-[10.5px] font-mono font-medium p-3 rounded-lg leading-relaxed"
-        style={{ color: "var(--th-text-dim)", border: "1px solid var(--th-border-subtle)", background: "var(--th-bg-elevated)" }}
+        className="font-mono font-medium p-4 rounded-xl leading-relaxed"
+        style={{ fontSize: "11px", fontWeight: 400, color: "var(--th-text-dim)", border: "1px solid var(--th-border-subtle)", background: "var(--th-bg-elevated)" }}
       >
         ⚠ This analysis is AI-generated for informational purposes only. Not investment advice.
         Past performance does not guarantee future results. Conduct independent due diligence before investing.

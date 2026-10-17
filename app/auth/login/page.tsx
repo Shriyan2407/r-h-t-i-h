@@ -1,17 +1,21 @@
 import { Suspense } from "react";
 import { Activity, Shield, Zap, TrendingUp } from "lucide-react";
 import { LoginForm } from "./LoginForm";
+import { getLandingMarket, type LandingMarket } from "@/lib/services/landingMarket";
 
-const MARKET_STATS = [
-  { ticker: "NIFTY 50",  value: "23,847.60", change: "+1.23%", up: true  },
-  { ticker: "SENSEX",    value: "78,156.45", change: "+0.87%", up: true  },
-  { ticker: "BANK NIFTY",value: "51,892.30", change: "-0.41%", up: false },
-  { ticker: "RELIANCE",  value: "₹2,847.60", change: "+2.14%", up: true  },
-  { ticker: "TCS",       value: "₹4,156.45", change: "+0.67%", up: true  },
-  { ticker: "INFY",      value: "₹1,892.30", change: "-0.31%", up: false },
-];
+/** Real quotes only; see lib/services/landingMarket.ts. Empty when Yahoo is unreachable. */
+function toStats(market: LandingMarket | null) {
+  if (!market) return [];
+  const fmt = (n: number, dec = 2) => n.toLocaleString("en-IN", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
+  return [
+    ...market.indices.slice(0, 3).map(i => ({ ticker: i.label, value: fmt(i.value), change: pct(i.change), up: i.change >= 0 })),
+    ...market.quotes.slice(0, 3).map(q => ({ ticker: q.ticker, value: `₹${fmt(q.price)}`, change: pct(q.change), up: q.change >= 0 })),
+  ];
+}
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const marketStats = toStats(await getLandingMarket());
   return (
     <div className="min-h-screen flex" style={{ background: "#050505" }}>
 
@@ -56,15 +60,15 @@ export default function LoginPage() {
                 border: "1px solid rgba(255,215,0,0.22)",
               }}
             >
-              <Activity size={16} style={{ color: "#FFD700" }} />
+              <Activity size={16} style={{ color: "var(--gold)" }} />
             </div>
             <div className="flex flex-col leading-none">
               <span
                 className="font-bold text-[15px] tracking-wider"
                 style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}
               >
-                <span style={{ color: "#E8E8E8" }}>MARKET KA </span>
-                <span style={{ color: "#FFD700" }}>BAADSHAH</span>
+                <span style={{ color: "#E8E8E8" }}>EQUITY</span>
+                <span style={{ color: "var(--gold)" }}>LENS</span>
               </span>
               <span
                 className="text-[8px] font-mono uppercase tracking-[0.18em] mt-0.5"
@@ -79,9 +83,9 @@ export default function LoginPage() {
           <div className="mt-20 mb-auto">
             <div
               className="text-[10px] font-mono uppercase tracking-[0.28em] mb-5"
-              style={{ color: "rgba(255,215,0,0.55)" }}
+              style={{ color: "var(--gold-soft)" }}
             >
-              Institutional Grade · Multi-Agent AI
+              Research · Risk · Backtesting
             </div>
             <h1
               className="font-bold leading-[1.1] mb-5"
@@ -109,7 +113,7 @@ export default function LoginPage() {
               className="text-[13.5px] leading-relaxed max-w-[380px]"
               style={{ color: "rgba(255,255,255,0.38)" }}
             >
-              NSE/BSE real-time intelligence. Multi-agent technical analysis,
+              NSE/BSE prices (may be delayed), technical and fundamental analysis,
               fundamental research, macro signals. Decisive AI verdicts for every
               serious investor.
             </p>
@@ -118,7 +122,7 @@ export default function LoginPage() {
             <div className="flex flex-wrap gap-2 mt-7">
               {[
                 { icon: Shield,     label: "Bank-Grade Security" },
-                { icon: Zap,        label: "Real-Time Intelligence" },
+                { icon: Zap,        label: "Volatility forecasts" },
                 { icon: TrendingUp, label: "AI Equity Research" },
               ].map(({ icon: Icon, label }) => (
                 <div
@@ -129,7 +133,7 @@ export default function LoginPage() {
                     border: "1px solid rgba(255,215,0,0.10)",
                   }}
                 >
-                  <Icon size={9} style={{ color: "rgba(255,215,0,0.55)" }} />
+                  <Icon size={9} style={{ color: "var(--gold-soft)" }} />
                   <span
                     className="text-[9px] font-mono"
                     style={{ color: "rgba(255,255,255,0.35)" }}
@@ -141,7 +145,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Live market strip */}
+          {/* Market snapshot - real data only; omitted entirely when unavailable */}
+          {marketStats.length > 0 && (
           <div className="mt-auto">
             <div
               className="flex items-center gap-2 mb-3"
@@ -149,11 +154,11 @@ export default function LoginPage() {
             >
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#00FF9C" }} />
               <span className="text-[8.5px] font-mono uppercase tracking-[0.20em]">
-                Live Market
+                Market snapshot · may be delayed
               </span>
             </div>
             <div className="grid grid-cols-2 gap-1.5">
-              {MARKET_STATS.map((item) => (
+              {marketStats.map((item) => (
                 <div
                   key={item.ticker}
                   className="flex items-center justify-between px-3 py-2 rounded-lg"
@@ -164,7 +169,7 @@ export default function LoginPage() {
                 >
                   <span
                     className="text-[10px] font-mono font-semibold"
-                    style={{ color: "rgba(255,215,0,0.7)" }}
+                    style={{ color: "var(--gold-soft)" }}
                   >
                     {item.ticker}
                   </span>
@@ -186,6 +191,7 @@ export default function LoginPage() {
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
 

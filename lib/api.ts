@@ -5,25 +5,16 @@ import type {
   TechnicalIndicators,
   FundamentalData,
   AIAnalysis,
-  MarketBreadth,
   ChartInterval,
   NewsItem,
-  MacroIntelligence,
 } from "./types";
-import {
-  generateMockSearchResult,
-  generateMockTechnicalIndicators,
-  generateMockFundamentals,
-  generateMockNews,
-  generateMockAIAnalysis,
-  generateMockMarketBreadth,
-  generateMockTrendingStocks,
-} from "./mockData";
 
 /* ═══════════════════════════════════════════════════════════════
-   R.H.T.I.H — Unified API Client
+   EquityLens — Unified API Client
    ALL data is fetched from internal Next.js routes.
-   No Python backend required. Graceful fallback to mock data.
+   Failures PROPAGATE to the caller so the UI can show a real error state.
+   Generated sample data is used only in explicit demo mode (see config/demo.ts),
+   which can never be enabled in a production build.
 ═══════════════════════════════════════════════════════════════ */
 
 /** Call an internal Next.js API route — always relative, no CORS. */
@@ -57,16 +48,43 @@ async function internal<T>(path: string, init?: RequestInit, timeoutMs = 30_000)
   }
 }
 
+type MockModule = typeof import("./mockData");
+
+/**
+ * Run a real request. On failure: in demo mode (development only) return sample data;
+ * everywhere else rethrow, so a failed request is never disguised as live data.
+ */
+async function orDemo<T>(
+  label: string,
+  real: () => Promise<T>,
+  demo: (mock: MockModule) => T | Promise<T>,
+): Promise<T> {
+  try {
+    return await real();
+  } catch (err) {
+    // The environment check is written out INLINE (not via the DEMO_MODE constant in
+    // config/demo.ts) and the demo path lives INSIDE the `if`, on purpose. The bundler
+    // replaces process.env.* with literals at build time and prunes an `if` whose
+    // condition is constant-false - taking the dynamic import of mockData with it - so
+    // in a production build the sample-data module is not shipped at all. (A flag
+    // imported from another module, or code placed after a `throw`, is NOT pruned.)
+    if (process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      console.warn(`[API][demo] ${label} failed, using sample data:`, (err as Error).message);
+      return demo(await import("./mockData"));
+    }
+    throw err;
+  }
+}
+
 // ─── Search ──────────────────────────────────────────────────────────────────
 
 export async function searchStocks(query: string): Promise<SearchResult[]> {
   if (!query.trim()) return [];
-  try {
-    return await internal<SearchResult[]>(`/api/search?q=${encodeURIComponent(query)}`, undefined, 10_000);
-  } catch (e) {
-    console.warn("[API] Search failed, using mock:", (e as Error).message);
-    return generateMockSearchResult(query);
-  }
+  return orDemo(
+    "search",
+    () => internal<SearchResult[]>(`/api/search?q=${encodeURIComponent(query)}`, undefined, 10_000),
+    (mock) => mock.generateMockSearchResult(query),
+  );
 }
 
 // ─── Quote ───────────────────────────────────────────────────────────────────
@@ -96,27 +114,29 @@ export async function getChartData(ticker: string, interval: ChartInterval): Pro
 // ─── Technical Indicators ────────────────────────────────────────────────────
 
 export async function getTechnicalIndicators(ticker: string): Promise<TechnicalIndicators> {
-  try {
-    return await internal<TechnicalIndicators>(`/api/technicals/${ticker}`, undefined, 25_000);
-  } catch (e) {
-    console.warn(`[API] Technicals failed for ${ticker}:`, (e as Error).message);
-    let price = 1500;
-    try { price = (await getStockQuote(ticker)).current_price; } catch { /* ignore */ }
-    return generateMockTechnicalIndicators(ticker, price);
-  }
+  return orDemo(
+    `technicals ${ticker}`,
+    () => internal<TechnicalIndicators>(`/api/technicals/${ticker}`, undefined, 25_000),
+    async (mock) => {
+      let price = 1500;
+      try { price = (await getStockQuote(ticker)).current_price; } catch { /* demo only */ }
+      return mock.generateMockTechnicalIndicators(ticker, price);
+    },
+  );
 }
 
 // ─── Fundamentals ────────────────────────────────────────────────────────────
 
 export async function getFundamentals(ticker: string): Promise<FundamentalData> {
-  try {
-    return await internal<FundamentalData>(`/api/fundamentals/${ticker}`, undefined, 20_000);
-  } catch (e) {
-    console.warn(`[API] Fundamentals failed for ${ticker}:`, (e as Error).message);
-    let pe: number | null = null;
-    try { pe = (await getStockQuote(ticker)).pe_ratio; } catch { /* ignore */ }
-    return generateMockFundamentals(ticker, pe);
-  }
+  return orDemo(
+    `fundamentals ${ticker}`,
+    () => internal<FundamentalData>(`/api/fundamentals/${ticker}`, undefined, 20_000),
+    async (mock) => {
+      let pe: number | null = null;
+      try { pe = (await getStockQuote(ticker)).pe_ratio; } catch { /* demo only */ }
+      return mock.generateMockFundamentals(ticker, pe);
+    },
+  );
 }
 
 // ─── News ─────────────────────────────────────────────────────────────────────
@@ -149,103 +169,31 @@ function adaptNews(ticker: string, items: RssNewsItem[]): NewsItem[] {
 }
 
 export async function getNews(ticker: string): Promise<NewsItem[]> {
-  try {
-    const data = await internal<{ items: RssNewsItem[] }>(
-      `/api/news/${ticker}`,
-      undefined,
-      15_000,
-    );
-    return adaptNews(ticker, data.items ?? []);
-  } catch (e) {
-    console.warn(`[API] News failed for ${ticker}:`, (e as Error).message);
-    return generateMockNews(ticker);
-  }
+  return orDemo(
+    `news ${ticker}`,
+    async () => {
+      const data = await internal<{ items: RssNewsItem[] }>(`/api/news/${ticker}`, undefined, 15_000);
+      return adaptNews(ticker, data.items ?? []);
+    },
+    (mock) => mock.generateMockNews(ticker),
+  );
 }
 
 // ─── AI Analysis ─────────────────────────────────────────────────────────────
 
 export async function getAIAnalysis(ticker: string): Promise<AIAnalysis> {
-  try {
-    return await internal<AIAnalysis>(
-      `/api/ai-analysis/${ticker}`,
-      { cache: "no-store" },
-      60_000,
-    );
-  } catch (e) {
-    console.warn(`[API] AI analysis failed for ${ticker}:`, (e as Error).message);
-    let price = 1500;
-    let name  = ticker;
-    try {
-      const q = await getStockQuote(ticker);
-      price = q.current_price;
-      name  = q.company_name;
-    } catch { /* ignore */ }
-    return generateMockAIAnalysis(ticker, price, name);
-  }
-}
-
-export async function getMacroIntelligence(): Promise<MacroIntelligence> {
-  try {
-    return await internal<MacroIntelligence>("/api/macro", undefined, 20_000);
-  } catch (e) {
-    console.warn("[API] Macro intelligence failed:", (e as Error).message);
-    // Return minimal fallback so UI doesn't break
-    return {
-      fetched_at: new Date().toISOString(),
-      regime: { type: "NEUTRAL", label: "Neutral", description: "Macro data unavailable — check connection", confidence: 50 },
-      pressure_score: 50,
-      rbi_stance: "NEUTRAL",
-      indices: { nifty50: null, nifty_bank: null, india_vix: null },
-      currency: { usd_inr: null },
-      commodities: { crude_brent: null, gold: null },
-      global: { sp500: null, us_10y: null },
-      sector_rotation: [],
-      macro_signals: [],
-      risk_factors: ["Macro data fetch failed — retrying"],
-    } as unknown as MacroIntelligence;
-  }
-}
-
-export async function triggerAIAnalysis(ticker: string): Promise<{ job_id: string }> {
-  try {
-    return { job_id: `job_${ticker.toUpperCase()}_${Date.now()}` };
-  } catch {
-    return { job_id: `job_mock_${ticker.toUpperCase()}_${Date.now()}` };
-  }
-}
-
-export async function getAnalysisStatus(
-  jobId: string,
-): Promise<{ status: "pending" | "running" | "completed" | "failed"; result?: AIAnalysis }> {
-  const parts  = jobId.split("_");
-  const ticker = parts[1] ?? "RELIANCE";
-  let price = 1500;
-  let name  = ticker;
-  try {
-    const q = await getStockQuote(ticker);
-    price = q.current_price;
-    name  = q.company_name;
-  } catch { /* ignore */ }
-  return { status: "completed", result: generateMockAIAnalysis(ticker, price, name) };
-}
-
-// ─── Market Breadth ──────────────────────────────────────────────────────────
-
-export async function getMarketBreadth(): Promise<MarketBreadth> {
-  try {
-    return await internal<MarketBreadth>("/api/market/overview", undefined, 12_000);
-  } catch (e) {
-    console.warn("[API] Market overview failed:", (e as Error).message);
-    return generateMockMarketBreadth();
-  }
-}
-
-// ─── Trending ─────────────────────────────────────────────────────────────────
-
-export async function getTrendingStocks(): Promise<SearchResult[]> {
-  try {
-    return await internal<SearchResult[]>("/api/market/trending", undefined, 10_000);
-  } catch {
-    return generateMockTrendingStocks();
-  }
+  return orDemo(
+    `ai-analysis ${ticker}`,
+    () => internal<AIAnalysis>(`/api/ai-analysis/${ticker}`, { cache: "no-store" }, 60_000),
+    async (mock) => {
+      let price = 1500;
+      let name  = ticker;
+      try {
+        const q = await getStockQuote(ticker);
+        price = q.current_price;
+        name  = q.company_name;
+      } catch { /* demo only */ }
+      return mock.generateMockAIAnalysis(ticker, price, name);
+    },
+  );
 }
