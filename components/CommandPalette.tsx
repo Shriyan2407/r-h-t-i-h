@@ -8,6 +8,7 @@ export const PAGES = [
   { href: "/", label: "Markets", keywords: "indices nifty sensex landing" },
   { href: "/ai", label: "How the intelligence works", keywords: "ai models layers" },
   { href: "/ai/analyze", label: "Analyze a stock", keywords: "report" },
+  { href: "/team", label: "The investment team", keywords: "agents members strategist quant fundamental risk contrarian cio how it works" },
   { href: "/research#committee", label: "Investment committee", keywords: "agents committee cio analyse should i buy decision memo" },
   { href: "/research#move", label: "Why is a stock moving?", keywords: "research explain move news today" },
   { href: "/models", label: "Model evidence", keywords: "ml validation rejected registry" },

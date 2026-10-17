@@ -15,6 +15,10 @@ const run = async (path: string, loggedIn: boolean) => {
 };
 
 describe("middleware route access", () => {
+  it("the investment team page is reachable without a session", async () => {
+    expect(await run("/team", false)).toBe(true);
+  });
+
   const publicApis = ["/api/auth/session", "/api/auth/callback/google", "/api/telegram/webhook", "/api/cron/market-alerts", "/api/health"];
   it.each(publicApis)("%s is reachable without a session (it does its own authentication)", async (path) => {
     expect(await run(path, false)).toBe(true);

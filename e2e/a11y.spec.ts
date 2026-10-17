@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 /** WCAG 2.1 AA (axe) on the public pages, in both themes. The theme is set the way the app reads it on boot. */
-const PAGES = ["/", "/auth/login", "/auth/signup", "/auth/forgot-password"];
+const PAGES = ["/", "/team", "/auth/login", "/auth/signup", "/auth/forgot-password"];
 
 for (const theme of ["dark", "light"] as const) {
   test.describe(`accessibility (${theme} theme)`, () => {

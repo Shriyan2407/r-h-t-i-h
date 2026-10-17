@@ -1,15 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Users } from "lucide-react";
+import { AGENT_PROFILES } from "@/lib/agents/profiles";
 
-const AGENTS = [
-  { n: "01", name: "Strategist", body: "Reads the market regime and macro backdrop: is this a calm market or a stressed one?" },
-  { n: "02", name: "Quant", body: "Trend, momentum, volatility and beta from price history, plus a validated volatility forecast." },
-  { n: "03", name: "Fundamental", body: "Growth, profitability, balance sheet and valuation from reported figures." },
-  { n: "04", name: "Intelligence", body: "Recent dated headlines and catalysts, each with its source and link." },
-  { n: "05", name: "Risk", body: "Drawdowns, worst-day losses and replays of the 2020 crash and 2022 sell-off. Never bullish." },
-  { n: "06", name: "Contrarian", body: "Tries to break the thesis: stretched valuation, ignored risks, weak evidence." },
-  { n: "07", name: "CIO", body: "Weighs everything, explains disagreements and makes the call, or says there is not enough data." },
-];
+const AGENTS = AGENT_PROFILES.map((a) => ({ n: a.number, id: a.id, name: a.name, body: a.summary }));
 
 const QUESTIONS = ["Should I buy Reliance?", "Is Infosys overvalued?", "Should I hold my portfolio in a recession?"];
 
@@ -44,12 +37,12 @@ export function InvestorCommitteeSection() {
           {AGENTS.map((a) => (
             <li
               key={a.n}
-              className="rounded-xl p-4"
+              className="rounded-xl p-4 relative"
               style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border-subtle)" }}
             >
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-[11px] font-mono" style={{ color: "var(--gold)" }}>{a.n}</span>
-                <span className="text-[14px] font-semibold" style={{ color: "var(--th-text-primary)" }}>{a.name}</span>
+                <Link href={`/team#${a.id}`} className="text-[14px] font-semibold after:absolute after:inset-0 focus-visible:outline focus-visible:outline-2" style={{ color: "var(--th-text-primary)" }}>{a.name}</Link>
               </div>
               <p className="text-[12.5px] leading-relaxed m-0" style={{ color: "var(--th-text-muted)" }}>{a.body}</p>
             </li>
@@ -74,6 +67,13 @@ export function InvestorCommitteeSection() {
               style={{ background: "linear-gradient(135deg, #FFD700 0%, #C9A227 50%, #FFB800 100%)", color: "#050505" }}
             >
               Ask the committee <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+            <Link
+              href="/team"
+              className="inline-flex items-center gap-2 mt-4 ml-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold focus-visible:outline focus-visible:outline-2"
+              style={{ border: "1px solid var(--th-border-card)", color: "var(--th-text-primary)" }}
+            >
+              Meet the team
             </Link>
           </div>
           <div className="rounded-xl p-4 text-[12.5px] leading-relaxed" style={{ border: "1px solid var(--th-border-subtle)", color: "var(--th-text-muted)" }}>

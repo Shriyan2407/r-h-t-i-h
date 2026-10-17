@@ -1,7 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 
 // These are the ONLY pages accessible without authentication
-const PUBLIC_PAGES = ["/", "/auth/login", "/auth/signup", "/auth/forgot-password", "/auth/reset-password", "/auth/verify-email", "/auth/error"];
+const PUBLIC_PAGES = ["/", "/team", "/auth/login", "/auth/signup", "/auth/forgot-password", "/auth/reset-password", "/auth/verify-email", "/auth/error"];
 
 export const authConfig: NextAuthConfig = {
   pages: {

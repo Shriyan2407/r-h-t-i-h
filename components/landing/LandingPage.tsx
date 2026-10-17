@@ -1086,19 +1086,26 @@ function LandingHeader() {
         </span>
       </div>
 
-      {/* Auth nav */}
+      {/* Auth nav. The header bar is dark in both themes, so its text colours are fixed rather than theme tokens. */}
       <div className="flex items-center gap-2">
+        <Link
+          href="/team"
+          className="px-3 py-1.5 font-mono font-semibold text-[11px] uppercase tracking-wider"
+          style={{ color: "#D8D8D8" }}
+        >
+          Team
+        </Link>
         <Link
           href="/auth/login"
           className="px-4 py-1.5 rounded-lg font-mono font-semibold text-[11px] uppercase tracking-wider transition-all duration-200"
-          style={{ color: "var(--th-text-secondary)", border: "1px solid var(--th-border-normal)" }}
+          style={{ color: "#D8D8D8", border: "1px solid rgba(255,255,255,0.18)" }}
           onMouseEnter={e => {
             (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--th-border-accent)";
             (e.currentTarget as HTMLAnchorElement).style.color = "var(--gold)";
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLAnchorElement).style.borderColor = "var(--th-border-normal)";
-            (e.currentTarget as HTMLAnchorElement).style.color = "var(--th-text-secondary)";
+            (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.18)";
+            (e.currentTarget as HTMLAnchorElement).style.color = "#D8D8D8";
           }}
         >
           Sign In

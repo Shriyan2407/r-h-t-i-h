@@ -42,11 +42,41 @@ test("the investment committee API fails closed without a session", async ({ req
 });
 
 test("public pages fit the viewport without horizontal scrolling", async ({ page }) => {
-  for (const path of ["/", "/auth/login", "/auth/signup", "/auth/forgot-password"]) {
+  for (const path of ["/", "/team", "/auth/login", "/auth/signup", "/auth/forgot-password"]) {
     await page.goto(path);
     await page.waitForLoadState("networkidle").catch(() => {});
+    const { overflow, culprits } = await page.evaluate(() => {
+      const vw = document.documentElement.clientWidth;
+      // Elements sticking out past the viewport that are not inside a scroll container.
+      const culprits = [...document.querySelectorAll("body *")].filter((el) => {
+        if (el.getBoundingClientRect().right <= vw + 1) return false;
+        for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) if (getComputedStyle(p).overflowX !== "visible") return false;
+        return true;
+      }).slice(0, 3).map((el) => `<${el.tagName.toLowerCase()} class="${String(el.className).slice(0, 60)}"> ${(el.textContent ?? "").trim().slice(0, 30)}`);
+      return { overflow: document.documentElement.scrollWidth - vw, culprits };
+    });
+    expect(overflow, `${path} overflows by ${overflow}px: ${culprits.join(" | ")}`).toBeLessThanOrEqual(1);
+  }
+});
+
+test("the investment team page is public and explains every member", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Meet the team" }).click();
+  await expect(page).toHaveURL(/\/team$/);
+  await expect(page.getByRole("heading", { name: "The investment team", level: 1 })).toBeVisible();
+  for (const name of ["Strategist", "Quant", "Fundamental", "Intelligence", "Risk", "Contrarian", "CIO"]) {
+    await expect(page.getByRole("heading", { name, level: 3, exact: true })).toBeVisible();
+  }
+  await expect(page.getByRole("heading", { name: "How it works" })).toHaveCount(7);
+  await expect(page.getByText(/NVIDIA is not covered/)).toBeVisible();
+});
+
+test("the app navigation bar fits common laptop and tablet widths", async ({ page }) => {
+  for (const width of [768, 1024, 1280, 1366, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/team");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    expect(overflow, `${path} overflows by ${overflow}px`).toBeLessThanOrEqual(1);
+    expect(overflow, `/team at ${width}px overflows by ${overflow}px`).toBeLessThanOrEqual(1);
   }
 });
 
