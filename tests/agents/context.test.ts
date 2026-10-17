@@ -3,7 +3,7 @@ import { ResearchContext } from "@/lib/agents/context";
 import { parseIntent } from "@/lib/agents/intent";
 import { loaders, trendBars } from "./fixtures";
 
-const ctx = (q: string, l = loaders(), timeoutMs = 1000) => new ResearchContext(parseIntent(q), l, { requestId: "t", now: new Date("2026-10-17T00:00:00Z"), timeoutMs });
+const ctx = (q: string, l = loaders(), timeoutMs = 1000) => new ResearchContext(parseIntent(q), l, { requestId: "t", now: new Date("2026-10-17T00:00:00Z"), timeoutMs, retryDelayMs: 1 });
 
 describe("research context", () => {
   it("fetches each dataset once and shares it between agents", async () => {
@@ -27,6 +27,18 @@ describe("research context", () => {
     expect(m).toMatchObject({ status: "timeout", value: null });
     expect(c.datasets().map((d) => d.status).sort()).toEqual(["empty", "error", "timeout"]);
     expect(c.datasets().some((d) => "value" in d)).toBe(false);
+  });
+
+  it("retries a provider error once, but not a timeout or an empty answer", async () => {
+    let n = 0;
+    const flaky = vi.fn(async () => { if (++n === 1) throw new Error("ECONNRESET"); return trendBars(10); });
+    const c = new ResearchContext(parseIntent("Should I buy TCS?"), loaders({ marketBars: flaky, news: vi.fn(async () => []) }), { requestId: "t", retryDelayMs: 1 });
+    const d = await c.index();
+    expect(d).toMatchObject({ status: "ok", attempts: 2 });
+    const empty = await c.news("TCS");
+    expect(empty).toMatchObject({ status: "empty", attempts: 1 });
+    const down = new ResearchContext(parseIntent("Should I buy TCS?"), loaders({ fundamentals: async () => { throw new Error("500"); } }), { requestId: "t", retryDelayMs: 1 });
+    expect(await down.fundamentals("TCS")).toMatchObject({ status: "error", attempts: 2, error: "500" });
   });
 
   it("resolves the subject from the intent", async () => {

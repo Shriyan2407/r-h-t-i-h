@@ -47,6 +47,8 @@ export interface Dataset<T> {
   /** Timestamp of the data itself (last bar, newest headline), or null when the provider gives none. */
   asOf: string | null;
   latencyMs: number;
+  /** Provider calls made: 2 means the first call threw and was retried once. */
+  attempts: number;
   error?: string;
 }
 
@@ -60,8 +62,11 @@ export type Subject =
 export interface ContextOptions {
   requestId: string;
   now?: Date;
-  /** Per-dataset fetch timeout. */
+  /** Per-dataset fetch timeout, covering retries. */
   timeoutMs?: number;
+  /** Retries after a provider error (not after a timeout or an empty answer). Default 1. */
+  retries?: number;
+  retryDelayMs?: number;
 }
 
 const SOURCES = {
@@ -78,6 +83,8 @@ export class ResearchContext {
   /** Set by the orchestrator so the CIO knows which agents were planned and whether the question was blocked. */
   plan: Pick<ExecutionPlan, "agents" | "blocked"> | null = null;
   private readonly timeoutMs: number;
+  private readonly retries: number;
+  private readonly retryDelayMs: number;
   private readonly cache = new Map<string, Promise<Dataset<unknown>>>();
   private readonly done: DatasetSummary[] = [];
 
@@ -85,6 +92,8 @@ export class ResearchContext {
     this.requestId = opts.requestId;
     this.now = opts.now ?? new Date();
     this.timeoutMs = opts.timeoutMs ?? 12_000;
+    this.retries = opts.retries ?? 1;
+    this.retryDelayMs = opts.retryDelayMs ?? 250;
   }
 
   private load<T>(name: string, source: string, fn: () => Promise<T | null>, asOf: (v: T) => string | null, isEmpty: (v: T) => boolean = () => false): Promise<Dataset<T>> {
@@ -92,17 +101,28 @@ export class ResearchContext {
     if (hit) return hit as Promise<Dataset<T>>;
     const t0 = Date.now();
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let attempts = 0;
+    const call = async (left: number): Promise<T | null> => {
+      attempts++;
+      try {
+        return await fn();
+      } catch (err) {
+        if (left <= 0) throw err;
+        await new Promise((r) => setTimeout(r, this.retryDelayMs));
+        return call(left - 1);
+      }
+    };
     const timeout = new Promise<"timeout">((resolve) => { timer = setTimeout(() => resolve("timeout"), this.timeoutMs); });
-    const p = Promise.race([fn(), timeout])
+    const p = Promise.race([call(this.retries), timeout])
       .then((v): Dataset<T> => {
-        if (v === "timeout") return { name, status: "timeout", value: null, source, asOf: null, latencyMs: Date.now() - t0, error: `no response within ${this.timeoutMs} ms` };
-        if (v === null || v === undefined || isEmpty(v)) return { name, status: "empty", value: null, source, asOf: null, latencyMs: Date.now() - t0 };
-        return { name, status: "ok", value: v, source, asOf: asOf(v), latencyMs: Date.now() - t0 };
+        if (v === "timeout") return { name, status: "timeout", value: null, source, asOf: null, latencyMs: Date.now() - t0, attempts, error: `no response within ${this.timeoutMs} ms` };
+        if (v === null || v === undefined || isEmpty(v)) return { name, status: "empty", value: null, source, asOf: null, latencyMs: Date.now() - t0, attempts };
+        return { name, status: "ok", value: v, source, asOf: asOf(v), latencyMs: Date.now() - t0, attempts };
       })
-      .catch((err: unknown): Dataset<T> => ({ name, status: "error", value: null, source, asOf: null, latencyMs: Date.now() - t0, error: err instanceof Error ? err.message : String(err) }))
+      .catch((err: unknown): Dataset<T> => ({ name, status: "error", value: null, source, asOf: null, latencyMs: Date.now() - t0, attempts, error: err instanceof Error ? err.message : String(err) }))
       .then((d) => {
         clearTimeout(timer);
-        this.done.push({ name: d.name, status: d.status, source: d.source, asOf: d.asOf, latencyMs: d.latencyMs, ...(d.error ? { error: d.error } : {}) });
+        this.done.push({ name: d.name, status: d.status, source: d.source, asOf: d.asOf, latencyMs: d.latencyMs, attempts: d.attempts, ...(d.error ? { error: d.error } : {}) });
         return d;
       });
     this.cache.set(name, p as Promise<Dataset<unknown>>);
