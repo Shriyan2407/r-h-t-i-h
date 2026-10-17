@@ -17,6 +17,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "ml:download": "tsx ml/download.ts",
     "ml:dataset": "tsx ml/build-dataset.ts",
+    "ml:eval-quant": "tsx ml/evaluate-quant-agent.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
