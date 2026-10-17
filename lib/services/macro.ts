@@ -191,12 +191,17 @@ function computePressureScore(data: Record<string, any>): number {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
-function computeRbiStance(data: Record<string, any>): "HAWKISH" | "NEUTRAL" | "DOVISH" {
-  const vix = data.indiaVix?.price ?? 15;
-  const usdInr = data.usdInr?.price ?? 83;
-  const us10y  = data.us10y?.price ?? 4.3;
+/**
+ * Market-implied rate pressure from USD/INR, US 10Y and India VIX. This is NOT the RBI's announced stance (no
+ * policy-rate feed is wired in); it is labelled as market-implied wherever it is shown. Missing inputs give UNKNOWN
+ * rather than a default value.
+ */
+export function computeRbiStance(data: Record<string, any>): "HAWKISH" | "NEUTRAL" | "DOVISH" | "UNKNOWN" {
+  const vix = data.indiaVix?.price;
+  const usdInr = data.usdInr?.price;
+  const us10y  = data.us10y?.price;
+  if (vix == null || usdInr == null || us10y == null) return "UNKNOWN";
 
-  // Simplified RBI stance inference from market data
   if (usdInr > 86 || us10y > 5) return "HAWKISH";
   if (vix < 13 && usdInr < 83 && us10y < 4.0) return "DOVISH";
   return "NEUTRAL";
@@ -233,19 +238,19 @@ export async function buildMacroIntelligence() {
   const rbiStance  = computeRbiStance(data);
   const sectors    = buildSectorRotation(data);
 
-  const vix        = data.indiaVix?.price ?? 14;
+  const vix        = data.indiaVix?.price ?? null;
   const macroSignals: string[] = [];
   if (data.nifty50?.change_1w > 2)   macroSignals.push(`NIFTY up ${data.nifty50.change_1w.toFixed(1)}% weekly — positive breadth`);
   if (data.nifty50?.change_1w < -2)  macroSignals.push(`NIFTY down ${Math.abs(data.nifty50.change_1w).toFixed(1)}% weekly — correction underway`);
-  if (vix > 20)                       macroSignals.push(`India VIX elevated at ${vix.toFixed(1)} — options pricing in higher risk`);
-  if (vix < 13)                       macroSignals.push(`India VIX subdued at ${vix.toFixed(1)} — low volatility regime`);
+  if (vix != null && vix > 20)        macroSignals.push(`India VIX elevated at ${vix.toFixed(1)} — options pricing in higher risk`);
+  if (vix != null && vix < 13)        macroSignals.push(`India VIX subdued at ${vix.toFixed(1)} — low volatility regime`);
   if (data.usdInr?.price > 85)        macroSignals.push(`Rupee under pressure at ₹${data.usdInr.price.toFixed(1)} — FII outflow risk`);
   if (data.brentCrude?.price > 90)    macroSignals.push(`Brent Crude at $${data.brentCrude.price.toFixed(0)} — input cost pressure for oil-sensitive sectors`);
   if (data.brentCrude?.price < 70)    macroSignals.push(`Brent Crude at $${data.brentCrude.price.toFixed(0)} — fiscal relief for OMCs and downstream`);
   if (sectors.length > 0)             macroSignals.push(`Sector rotation: ${sectors[0].sector} leads (+${sectors[0].performance_1w.toFixed(1)}% 1W)`);
 
   const riskFactors: string[] = [];
-  if (vix > 20)                         riskFactors.push("Elevated VIX signals short-term volatility");
+  if (vix != null && vix > 20)          riskFactors.push("Elevated VIX signals short-term volatility");
   if (data.usdInr?.price > 85)          riskFactors.push("Rupee depreciation pressuring FII flows");
   if (data.brentCrude?.price > 90)      riskFactors.push("Oil price spike — CAD and inflation risk");
   if (data.sp500?.change_1m < -4)       riskFactors.push("Global equity weakness contagion risk");

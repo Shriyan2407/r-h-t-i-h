@@ -292,7 +292,8 @@ export interface MacroIntelligence {
     confidence:   number;
   };
   pressure_score: number;
-  rbi_stance:     "HAWKISH" | "NEUTRAL" | "DOVISH";
+  /** Market-implied rate pressure, not the RBI's announced stance. */
+  rbi_stance:     "HAWKISH" | "NEUTRAL" | "DOVISH" | "UNKNOWN";
   indices: {
     nifty50?:    MacroIndex | null;
     nifty_bank?: MacroIndex | null;

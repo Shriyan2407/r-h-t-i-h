@@ -27,7 +27,7 @@ interface MacroData {
     inputs:      number;
   };
   pressure_score: number;
-  rbi_stance:    "HAWKISH" | "NEUTRAL" | "DOVISH";
+  rbi_stance:    "HAWKISH" | "NEUTRAL" | "DOVISH" | "UNKNOWN";
   indices: {
     nifty50?:   IndexData;
     nifty_bank?: IndexData;
@@ -119,9 +119,9 @@ function IndexCard({ data, label }: { data?: IndexData; label: string }) {
 
 function RbiStanceBadge({ stance }: { stance: string }) {
   const cfg = {
-    HAWKISH: { color: "#ff4466", label: "Hawkish (Rate-Hold/Hike bias)" },
-    DOVISH:  { color: "#00ff88", label: "Dovish (Rate-Cut bias)" },
-    NEUTRAL: { color: "#ffcc00", label: "Neutral (Data-Dependent)" },
+    HAWKISH: { color: "#ff4466", label: "Tightening pressure" },
+    DOVISH:  { color: "#00ff88", label: "Easing pressure" },
+    NEUTRAL: { color: "#ffcc00", label: "Neutral" },
   }[stance] ?? { color: "#8b949e", label: "Unknown" };
   return (
     <div className="flex items-center gap-2">
@@ -276,8 +276,9 @@ export function MacroPanel({ ticker }: { ticker?: string }) {
 
       {/* RBI Stance */}
       <div className="p-3 bg-[#0d1117] border border-[#30363d] rounded-xl flex flex-col gap-2">
-        <div className="text-[9px] font-mono uppercase tracking-widest text-[#484f58]">RBI Policy Stance</div>
+        <div className="text-[9px] font-mono uppercase tracking-widest text-[#484f58]">Rate pressure (market-implied)</div>
         <RbiStanceBadge stance={data.rbi_stance} />
+        <div className="text-[10px] text-[#8b949e]">Inferred from USD/INR, US 10Y and India VIX. Not the RBI&apos;s announced policy stance.</div>
       </div>
 
       {/* Sector Rotation */}

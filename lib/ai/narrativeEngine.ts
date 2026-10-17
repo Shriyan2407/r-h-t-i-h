@@ -200,20 +200,24 @@ function macroSummary(sector_: string, macro: any): string {
 }
 
 function macroRbi(sector_: string, macro: any): string {
-  const usdInr = macro?.currency?.usd_inr?.price ?? 83;
-  const rbiStance_ = macro?.rbi_stance ?? "NEUTRAL";
+  const usdInrRaw: number | null = macro?.currency?.usd_inr?.price ?? null;
+  const usdInr = usdInrRaw ?? NaN;
+  const rbiStance_ = macro?.rbi_stance ?? "UNKNOWN";
+  // Market-implied only: no RBI policy-rate feed is connected, so never state what the RBI has done.
   const base = rbiStance_ === "DOVISH"
-    ? "RBI is in an easing phase, with repo rate cuts supporting borrowing costs"
+    ? "Market-implied rate pressure points to easing (a soft rupee/yield backdrop), not a confirmed RBI decision"
     : rbiStance_ === "HAWKISH"
-    ? "RBI maintains a hawkish stance, keeping rates elevated to control inflation"
-    : "RBI remains in data-dependent mode, pausing on rates while monitoring inflation and growth";
+    ? "Market-implied rate pressure points to tightening (weak rupee or high US yields), not a confirmed RBI decision"
+    : rbiStance_ === "UNKNOWN"
+    ? "Rate pressure could not be assessed because currency or yield data was unavailable"
+    : "Market-implied rate pressure is neutral";
 
   const sectorImpact: Record<string, string> = {
-    Banking: rbiStance_ === "DOVISH" ? "Rate cuts will compress NIMs short-term but boost credit growth and asset quality. Positive medium-term." : "Higher-for-longer rates are a NIM tailwind but weigh on loan growth outlook.",
-    IT: "RBI policy has limited direct impact; rupee stability (currently ~₹" + usdInr.toFixed(0) + "/$) is the primary forex sensitivity.",
+    Banking: rbiStance_ === "DOVISH" ? "Easing would compress NIMs short-term but support credit growth." : "Higher-for-longer rates are a NIM tailwind but weigh on loan growth outlook.",
+    IT: "RBI policy has limited direct impact; rupee stability" + (usdInrRaw != null ? " (currently ~₹" + usdInr.toFixed(0) + "/$)" : "") + " is the primary forex sensitivity.",
     Energy: "Fuel pricing policy and forex stability matter more than rate direction for this sector.",
-    Pharma: "Rate environment indirectly affects working capital costs; USD/INR (₹" + usdInr.toFixed(0) + ") is more critical.",
-    "Real Estate": rbiStance_ === "DOVISH" ? "Rate cuts stimulate housing demand and lower developer financing costs — sector positive." : "Elevated rates dampen affordability and project economics.",
+    Pharma: "Rate environment indirectly affects working capital costs; USD/INR" + (usdInrRaw != null ? " (₹" + usdInr.toFixed(0) + ")" : "") + " is more critical.",
+    "Real Estate": rbiStance_ === "DOVISH" ? "Easier rates would support housing demand and developer financing." : "Elevated rates dampen affordability and project economics.",
   };
 
   return `${base}. ${sectorImpact[sector_] ?? "Moderate rate sensitivity; balance sheet strength is the primary buffer."}`;
