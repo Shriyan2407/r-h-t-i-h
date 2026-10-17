@@ -82,7 +82,10 @@ export interface TechnicalSignal {
 
 export interface FundamentalData {
   // Valuation
+  /** Trailing twelve-month P/E only. */
   pe_ratio: number | null;
+  /** Forward P/E from analyst estimates; kept separate so the two are never confused. */
+  forward_pe: number | null;
   pb_ratio: number | null;
   ps_ratio: number | null;
   ev_ebitda: number | null;

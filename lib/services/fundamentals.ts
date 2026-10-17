@@ -44,7 +44,8 @@ export async function fetchFundamentals(ticker: string): Promise<FundamentalData
 
   return {
     // Valuation
-    pe_ratio:    num(sd.trailingPE)                          ?? num(ks.forwardPE),
+    pe_ratio:    num(sd.trailingPE),
+    forward_pe:  num(ks.forwardPE ?? sd.forwardPE),
     pb_ratio:    num(ks.priceToBook),
     ps_ratio:    num(ks.priceToSalesTrailing12Months),
     ev_ebitda:   num(ks.enterpriseToEbitda),

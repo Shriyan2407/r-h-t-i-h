@@ -223,6 +223,7 @@ export function generateMockFundamentals(
 
   return {
     pe_ratio: pe,
+    forward_pe: null,
     pb_ratio: isBank ? 2.5 + (seed % 4) / 2 : 4.5 + (seed % 8) / 2,
     ps_ratio: isBank ? null : 3.8 + (seed % 5),
     ev_ebitda: isBank ? null : 12.4 + (seed % 10),

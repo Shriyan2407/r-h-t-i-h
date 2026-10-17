@@ -241,7 +241,7 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
   const lo52  = safeNum(quote?.fiftyTwoWeekLow)    ?? NaN;
 
   // Always compute deterministic quant scores
-  const emptyFund: FundamentalData = { pe_ratio: null, pb_ratio: null, ps_ratio: null, ev_ebitda: null, sector_pe: null, roe: null, roce: null, roa: null, net_margin: null, operating_margin: null, gross_margin: null, revenue_growth_yoy: null, profit_growth_yoy: null, eps_growth_3yr: null, debt_to_equity: null, current_ratio: null, quick_ratio: null, interest_coverage: null, free_cash_flow: null, promoter_holding: null, fii_holding: null, dii_holding: null, pledged_shares: null, asset_turnover: null, inventory_turnover: null, receivables_turnover: null };
+  const emptyFund: FundamentalData = { pe_ratio: null, forward_pe: null, pb_ratio: null, ps_ratio: null, ev_ebitda: null, sector_pe: null, roe: null, roce: null, roa: null, net_margin: null, operating_margin: null, gross_margin: null, revenue_growth_yoy: null, profit_growth_yoy: null, eps_growth_3yr: null, debt_to_equity: null, current_ratio: null, quick_ratio: null, interest_coverage: null, free_cash_flow: null, promoter_holding: null, fii_holding: null, dii_holding: null, pledged_shares: null, asset_turnover: null, inventory_turnover: null, receivables_turnover: null };
   const hasTech = techData !== null;
   const hasFund = fundData !== null;
   const quantScore = hasTech && price > 0
