@@ -14,7 +14,12 @@ for (const theme of ["dark", "light"] as const) {
         await page.goto(path);
         await page.waitForLoadState("networkidle").catch(() => {});
         const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
-        const summary = r.violations.map((v) => `${v.id} (${v.nodes.length}): ${v.nodes.slice(0, 3).map((n) => n.html.slice(0, 80)).join(" | ")}`);
+        // Include measured colours for contrast failures so CI logs show why, not just where.
+        const detail = (n: { html: string; any: Array<{ data?: unknown }> }) => {
+          const d = n.any[0]?.data as { fgColor?: string; bgColor?: string; contrastRatio?: number } | undefined;
+          return `${n.html.slice(0, 80)}${d?.fgColor ? ` [${d.fgColor} on ${d.bgColor}, ${d.contrastRatio}:1]` : ""}`;
+        };
+        const summary = r.violations.map((v) => `${v.id} (${v.nodes.length}): ${v.nodes.slice(0, 3).map(detail).join(" | ")}`);
         expect(summary).toEqual([]);
       });
     }
