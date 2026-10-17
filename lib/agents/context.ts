@@ -9,6 +9,7 @@ import type { Bar } from "@/lib/backtest/types";
 import type { FundamentalData } from "@/lib/types";
 import type { NewsItem } from "@/lib/services/newsAggregator";
 import type { buildMacroIntelligence } from "@/lib/services/macro";
+import type { ExecutionPlan } from "./router";
 import type { Intent } from "./schema";
 
 export type MacroSnapshot = Awaited<ReturnType<typeof buildMacroIntelligence>>;
@@ -74,6 +75,8 @@ const SOURCES = {
 export class ResearchContext {
   readonly requestId: string;
   readonly now: Date;
+  /** Set by the orchestrator so the CIO knows which agents were planned and whether the question was blocked. */
+  plan: Pick<ExecutionPlan, "agents" | "blocked"> | null = null;
   private readonly timeoutMs: number;
   private readonly cache = new Map<string, Promise<Dataset<unknown>>>();
   private readonly done: DatasetSummary[] = [];
