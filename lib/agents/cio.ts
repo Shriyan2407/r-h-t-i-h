@@ -18,6 +18,7 @@ import type { ContrarianDetails, ThesisVerdict } from "./contrarian";
 import { viewScore } from "./contrarian";
 import { evidenceQuality } from "./evidence";
 import { buildMemo, type InvestmentMemo } from "./memo";
+import { RULE_EVALUATION } from "./quant";
 import type { ExecutionPlan } from "./router";
 import { AGENT_NAMES, type AgentId, type AgentResult, type Decision, type IntentType } from "./schema";
 
@@ -72,6 +73,13 @@ export function agentQuality(r: AgentResult, now: Date): number {
   return r.confidence * reliability * fresh;
 }
 
+/** Signals without a measured out-of-sample edge count half. Reversed automatically if a re-run passes its test. */
+export const UNPROVEN_SIGNAL_MULTIPLIER = 0.5;
+
+export function evidenceMultiplier(agent: AgentId): number {
+  return agent === "quant" && !RULE_EVALUATION.measuredEdge ? UNPROVEN_SIGNAL_MULTIPLIER : 1;
+}
+
 export function horizonMultiplier(agent: AgentId, horizon: string): number {
   if (horizon === "long") return agent === "fundamental" ? 1.5 : agent === "quant" || agent === "intelligence" ? 0.6 : 1;
   if (horizon === "short") return agent === "quant" || agent === "intelligence" ? 1.5 : agent === "fundamental" ? 0.6 : 1;
@@ -107,7 +115,7 @@ export function decide(input: CommitteeInput): Omit<CioDetails, "memo"> {
   const weights: AgentWeight[] = results
     .filter((r) => roles[r.agent] !== undefined)
     .map((r) => {
-      const roleWeight = (roles[r.agent] ?? 0) * horizonMultiplier(r.agent, horizon);
+      const roleWeight = (roles[r.agent] ?? 0) * horizonMultiplier(r.agent, horizon) * evidenceMultiplier(r.agent);
       const quality = agentQuality(r, now);
       return { agent: r.agent, roleWeight, quality, effectiveWeight: roleWeight * quality, view: r.view };
     });
@@ -149,6 +157,9 @@ export function decide(input: CommitteeInput): Omit<CioDetails, "memo"> {
 
   let decision = scoreToDecision(score, held);
   const overrides: string[] = [];
+  if (usable.some((w) => w.agent === "quant") && evidenceMultiplier("quant") < 1) {
+    overrides.push(`The Quantitative Analyst counts half: its rule score showed no edge in a point-in-time test (rank IC ${RULE_EVALUATION.meanRankIc.toFixed(3)}).`);
+  }
   const riskLevel = results.find((r) => r.agent === "risk" && r.status !== "failed")?.metrics.riskLevel;
   if (riskLevel === "extreme" && rank(decision) > rank("WATCH")) { decision = capAt(decision, "WATCH"); overrides.push("Risk is EXTREME: the decision is capped at WATCH."); }
   if (riskLevel === "high" && rank(decision) > rank("ACCUMULATE")) { decision = capAt(decision, "ACCUMULATE"); overrides.push("Risk is HIGH: the decision is capped at ACCUMULATE (build gradually)."); }

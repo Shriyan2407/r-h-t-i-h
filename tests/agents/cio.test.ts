@@ -119,3 +119,19 @@ describe("CIO agent memo", () => {
     expect(JSON.stringify(memo)).not.toMatch(/probability of (?:success|gain) is|\d+% (?:chance|probability)/i);
   });
 });
+
+describe("CIO and the quant rule score's measured record", () => {
+  it("counts the quant agent at half weight while its rule score has no measured edge, and says so", async () => {
+    const { evidenceMultiplier } = await import("@/lib/agents/cio");
+    const { RULE_EVALUATION } = await import("@/lib/agents/quant");
+    expect(RULE_EVALUATION.measuredEdge).toBe(false);
+    expect(evidenceMultiplier("quant")).toBe(0.5);
+    expect(evidenceMultiplier("fundamental")).toBe(1);
+    const d = decide(input([res("quant", "bullish"), res("fundamental", "bearish")]));
+    const q = d.weights.find((w) => w.agent === "quant")!;
+    const f = d.weights.find((w) => w.agent === "fundamental")!;
+    expect(q.roleWeight).toBeCloseTo(0.125, 12);
+    expect(f.roleWeight).toBeCloseTo(0.3, 12);
+    expect(d.overrides.join(" ")).toMatch(/Quantitative Analyst counts half/);
+  });
+});
