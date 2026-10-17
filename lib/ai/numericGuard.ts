@@ -27,7 +27,10 @@ function normalize(n: string): string {
   return Number.isFinite(v) ? String(Math.abs(v)) : n;
 }
 
-export function allowedNumbers(evidence: readonly Evidence[]): Set<string> {
+/** Only the id and the displayed text of each item matter to the guard. */
+export type GuardEvidence = Pick<Evidence, "id" | "display">;
+
+export function allowedNumbers(evidence: readonly GuardEvidence[]): Set<string> {
   const s = new Set(STRUCTURAL);
   for (const e of evidence) for (const m of e.display.matchAll(NUMBER)) s.add(normalize(m[0]));
   return s;
@@ -38,7 +41,7 @@ export interface GuardResult {
   problems: string[];
 }
 
-export function checkExplanation(text: string, evidence: readonly Evidence[]): GuardResult {
+export function checkExplanation(text: string, evidence: readonly GuardEvidence[]): GuardResult {
   const problems: string[] = [];
   const ids = new Set(evidence.map((e) => e.id));
   // Strip citations before scanning numbers so "E3" is not read as the number 3.

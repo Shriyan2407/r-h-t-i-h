@@ -19,6 +19,7 @@ import { fundamentalAgent } from "./fundamental";
 import { intelligenceAgent } from "./intelligence";
 import { parseIntent } from "./intent";
 import type { InvestmentMemo } from "./memo";
+import { rewriteThesis, type NarrativeOutcome } from "./narrative";
 import { quantAgent } from "./quant";
 import { riskAgent } from "./risk";
 import { planExecution, type ExecutionPlan } from "./router";
@@ -55,6 +56,7 @@ export interface CommitteeResult {
   datasets: DatasetSummary[];
   trace: { totalMs: number; agents: Array<{ agent: AgentId; wave: number; status: AgentResult["status"]; latencyMs: number; error?: string }> };
   integrity: { ok: boolean; problems: string[] };
+  narrative: NarrativeOutcome;
 }
 
 export interface CommitteeOptions {
@@ -63,6 +65,8 @@ export interface CommitteeOptions {
   onEvent?: (e: CommitteeEvent) => void;
   agentTimeoutMs?: number;
   datasetTimeoutMs?: number;
+  /** "llm" asks Claude to reword the executive thesis behind the numeric and decision guards. Default "template". */
+  narrative?: "template" | "llm";
 }
 
 const CITE = /\[([A-Z]\d+)\]/g;
@@ -113,6 +117,12 @@ export async function runCommittee(query: string, loaders: DataLoaders, opts: Co
   if (!cio || cio.status === "failed" || !cio.details) throw new Error(`CIO failed: ${cio?.error ?? "no result"}`);
   const { memo, ...decision } = cio.details as CioDetails;
   const evidence = results.flatMap((r) => r.evidence);
+  let narrative: NarrativeOutcome = { source: "template" };
+  if (opts.narrative === "llm" && !plan.blocked) {
+    const rw = await rewriteThesis(memo, decision, results, evidence, opts.requestId);
+    memo.executiveThesis = rw.thesis;
+    narrative = rw.outcome;
+  }
   const integrity = checkIntegrity(results, memo, evidence);
   if (!integrity.ok) {
     incr("committee.integrity_failed");
@@ -140,6 +150,7 @@ export async function runCommittee(query: string, loaders: DataLoaders, opts: Co
     datasets: ctx.datasets(),
     trace: { totalMs, agents: trace },
     integrity,
+    narrative,
   };
   emit({ type: "result", result });
   return result;

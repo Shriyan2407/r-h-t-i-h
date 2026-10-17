@@ -14,11 +14,12 @@ export const maxDuration = 60;
 const bodySchema = z.object({
   query: z.string().trim().min(3, "Ask a question of at least 3 characters").max(MAX_QUERY_LENGTH),
   stream: z.boolean().optional().default(false),
+  narrative: z.enum(["template", "llm"]).optional().default("template"),
 });
 
 /**
  * POST /api/agents/committee — run the seven-agent investment committee on a question.
- * Body: { query: string, stream?: boolean }. With stream=true the response is NDJSON: one CommitteeEvent per line
+ * Body: { query: string, stream?: boolean, narrative?: "template" | "llm" }. With stream=true the response is NDJSON: one CommitteeEvent per line
  * as agents actually start and finish, ending with a "result" (or "error") event.
  */
 export async function POST(req: Request) {
@@ -40,11 +41,11 @@ export async function POST(req: Request) {
     return rows.length ? rows : null;
   };
   const loaders = productionLoaders(holdings);
-  const { query, stream } = parsed.data;
+  const { query, stream, narrative } = parsed.data;
 
   if (!stream) {
     try {
-      const result = await runCommittee(query, loaders, { requestId });
+      const result = await runCommittee(query, loaders, { requestId, narrative });
       return NextResponse.json(result, { headers });
     } catch (err) {
       reportError("agents.committee.failed", err, { requestId });
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
     async start(controller) {
       const send = (e: CommitteeEvent) => controller.enqueue(encoder.encode(`${JSON.stringify(e)}\n`));
       try {
-        await runCommittee(query, loaders, { requestId, onEvent: send });
+        await runCommittee(query, loaders, { requestId, narrative, onEvent: send });
       } catch (err) {
         reportError("agents.committee.failed", err, { requestId });
         send({ type: "error", requestId, message: "The committee could not complete this request." });
