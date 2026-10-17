@@ -73,3 +73,15 @@ describe("quant agent", () => {
     expect([3, 1, 0, -1, -3].map(viewFromScore)).toEqual(["bullish", "lean_bullish", "neutral", "lean_bearish", "bearish"]);
   });
 });
+
+describe("quant rule score as a pure function", () => {
+  it("equals the sum of the signals the agent reports, so the evaluated score is the one that runs", async () => {
+    const { ruleScore } = await import("@/lib/agents/quant");
+    const { technicalSnapshot } = await import("@/lib/agents/analytics");
+    for (const drift of [0.0015, 0, -0.0015]) {
+      const bars = trendBars(800, { drift, wobble: 0.006 });
+      const r = await run("Should I buy TCS?", { stockBars: async (t) => ({ symbol: `${t}.NS`, bars }) });
+      expect(r.metrics.ruleScore).toBeCloseTo(ruleScore(technicalSnapshot(bars)!), 12);
+    }
+  });
+});

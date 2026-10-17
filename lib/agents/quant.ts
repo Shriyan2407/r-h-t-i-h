@@ -63,34 +63,57 @@ const median = (xs: number[]) => {
   return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
 };
 
+export type RuleName = "trend" | "momentum_6m" | "momentum_12_1" | "macd" | "range_52w" | "rsi";
+
+/**
+ * The six published rules as pure points, null where the snapshot lacks the input. Used by the agent and, unchanged,
+ * by the historical evaluation (ml/evaluate-quant-agent.ts), so what is evaluated is exactly what runs.
+ */
+export function ruleScores(s: TechnicalSnapshot): Record<RuleName, number | null> {
+  return {
+    trend: s.priceVsSma200 === null ? null : s.trend === "uptrend" ? 1 : s.trend === "downtrend" ? -1 : 0,
+    momentum_6m: s.ret6m === null ? null : s.ret6m > QUANT_RULES.momentum6m ? 1 : s.ret6m < -QUANT_RULES.momentum6m ? -1 : 0,
+    momentum_12_1: s.ret12m1m === null ? null : s.ret12m1m > QUANT_RULES.momentum12m1m ? 1 : s.ret12m1m < -QUANT_RULES.momentum12m1m ? -1 : 0,
+    macd: s.macdHist === null ? null : s.macdHist > 0 ? 0.5 : s.macdHist < 0 ? -0.5 : 0,
+    range_52w: s.fromHigh52 === null ? null : s.fromHigh52 > QUANT_RULES.nearHigh ? 0.5 : s.fromHigh52 < QUANT_RULES.farFromHigh ? -0.5 : 0,
+    rsi: s.rsi14 === null ? null : s.rsi14 > QUANT_RULES.overbought ? -0.5 : 0,
+  };
+}
+
+/** Sum of the available rule points. */
+export function ruleScore(s: TechnicalSnapshot): number {
+  return Object.values(ruleScores(s)).reduce<number>((a, x) => a + (x ?? 0), 0);
+}
+
 function scoreSignals(s: TechnicalSnapshot, ev: EvidenceLog, src: string): QuantSignal[] {
   const out: QuantSignal[] = [];
+  const sc = ruleScores(s);
   const add = (name: string, label: string, value: number, display: string, score: number, reading: string) =>
     out.push({ name, reading, score, evidenceId: ev.add({ kind: "derived_indicator", label, value, display, source: src, asOf: s.asOf }) });
 
   if (s.priceVsSma200 !== null) {
-    const score = s.trend === "uptrend" ? 1 : s.trend === "downtrend" ? -1 : 0;
+    const score = sc.trend!;
     add("trend", "Price vs 200-day average", s.priceVsSma200, fmtPct(s.priceVsSma200, 1, true), score,
       s.trend === "uptrend" ? "above a rising 200-day average" : s.trend === "downtrend" ? "below a falling 200-day average" : "trend signals disagree");
   }
   if (s.ret6m !== null) {
-    const score = s.ret6m > QUANT_RULES.momentum6m ? 1 : s.ret6m < -QUANT_RULES.momentum6m ? -1 : 0;
+    const score = sc.momentum_6m!;
     add("momentum_6m", "6-month return", s.ret6m, fmtPct(s.ret6m, 1, true), score, score > 0 ? "strong 6-month momentum" : score < 0 ? "weak 6-month momentum" : "flat 6-month momentum");
   }
   if (s.ret12m1m !== null) {
-    const score = s.ret12m1m > QUANT_RULES.momentum12m1m ? 1 : s.ret12m1m < -QUANT_RULES.momentum12m1m ? -1 : 0;
+    const score = sc.momentum_12_1!;
     add("momentum_12_1", "12-month return excluding last month", s.ret12m1m, fmtPct(s.ret12m1m, 1, true), score, score > 0 ? "positive 12-1 momentum" : score < 0 ? "negative 12-1 momentum" : "neutral 12-1 momentum");
   }
   if (s.macdHist !== null) {
-    const score = s.macdHist > 0 ? 0.5 : s.macdHist < 0 ? -0.5 : 0;
+    const score = sc.macd!;
     add("macd", "MACD histogram (12,26,9)", s.macdHist, fmtNum(s.macdHist), score, s.macdHist > 0 ? "MACD above its signal line" : "MACD below its signal line");
   }
   if (s.fromHigh52 !== null) {
-    const score = s.fromHigh52 > QUANT_RULES.nearHigh ? 0.5 : s.fromHigh52 < QUANT_RULES.farFromHigh ? -0.5 : 0;
+    const score = sc.range_52w!;
     add("range_52w", "Distance from 52-week high", s.fromHigh52, fmtPct(s.fromHigh52, 1, true), score, score > 0 ? "near its 52-week high" : score < 0 ? "far below its 52-week high" : "mid-range");
   }
   if (s.rsi14 !== null) {
-    const score = s.rsi14 > QUANT_RULES.overbought ? -0.5 : 0;
+    const score = sc.rsi!;
     add("rsi", "RSI (14)", s.rsi14, fmtNum(s.rsi14, 1), score,
       s.rsi14 > QUANT_RULES.overbought ? "overbought; short-term pullback risk" : s.rsi14 < QUANT_RULES.oversold ? "oversold" : "neither overbought nor oversold");
   }
