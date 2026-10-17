@@ -121,14 +121,14 @@ export function Navbar() {
               <span style={{ color: "var(--gold)" }}>LENS</span>
             </span>
             <span className="text-[7.5px] font-mono uppercase tracking-[0.18em] mt-0.5"
-              style={{ color: "var(--text-dim)" }}>
+              style={{ color: "var(--th-text-muted)" }}>
               Equity Intelligence
             </span>
           </div>
         </Link>
 
         {/* ── Center Nav ── */}
-        <div className="hidden md:flex items-center gap-0.5">
+        <div className="hidden min-[1440px]:flex items-center gap-0.5">
           {navLinks.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || (href !== "/" && pathname.startsWith(href));
             return (
@@ -192,7 +192,6 @@ export function Navbar() {
           {/* Search button */}
           <button
             onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
-            aria-label="Open command palette: search stocks and pages (Ctrl+K)"
             aria-keyshortcuts="Control+K Meta+K"
             className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all duration-200"
             style={{
@@ -214,8 +213,8 @@ export function Navbar() {
             }}
           >
             <Search size={11} />
-            <span className="hidden lg:inline">Search stocks</span>
-            <kbd className="px-1.5 py-0.5 rounded text-[9px]"
+            <span className="sr-only lg:not-sr-only">Search stocks</span>
+            <kbd aria-hidden="true" className="px-1.5 py-0.5 rounded text-[9px]"
               style={{
                 background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.04)",
                 border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.07)",
@@ -353,7 +352,7 @@ export function Navbar() {
               /* ── Not logged in: Sign In button ── */
               <Link
                 href="/auth/login"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono transition-all duration-200"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-mono whitespace-nowrap transition-all duration-200"
                 style={{
                   background: "linear-gradient(135deg, rgba(198,162,42,0.18), rgba(232,195,69,0.12))",
                   border: "1px solid var(--gold-border-soft)",
@@ -373,11 +372,14 @@ export function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-1.5 transition-colors"
+            className="min-[1440px]:hidden p-1.5 transition-colors"
             style={{ color: "var(--text-muted)" }}
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+            aria-controls="navbar-menu"
           >
-            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+            {mobileOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -390,7 +392,8 @@ export function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="md:hidden overflow-hidden px-4 py-3 flex flex-col gap-1"
+            id="navbar-menu"
+            className="min-[1440px]:hidden overflow-hidden px-4 py-3 flex flex-col gap-1"
             style={{
               background: isLight ? "rgba(244,240,232,0.99)" : "rgba(5,5,5,0.98)",
               borderTop: "1px solid var(--gold-border)",

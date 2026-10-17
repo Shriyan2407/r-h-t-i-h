@@ -19,7 +19,7 @@ export function ThemeToggle() {
       }}
       whileHover={{ scale: 1.04 }}
       whileTap={{ scale: 0.95 }}
-      aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
+      aria-label={isLight ? "Day theme: switch to dark mode" : "Night theme: switch to light mode"}
     >
       {/* Glow fill on hover */}
       <motion.div
