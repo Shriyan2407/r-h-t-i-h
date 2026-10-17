@@ -135,10 +135,12 @@ export function SignupForm() {
 
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10.5px] font-mono uppercase tracking-widest" style={labelStyle}>
+            <label htmlFor="signup-name" className="text-[10.5px] font-mono uppercase tracking-widest" style={labelStyle}>
               Full Name
             </label>
             <input
+              id="signup-name"
+              aria-invalid={!!errors.name}
               {...register("name")}
               type="text"
               placeholder="Arjun Sharma"
@@ -155,10 +157,12 @@ export function SignupForm() {
 
           {/* Email */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10.5px] font-mono uppercase tracking-widest" style={labelStyle}>
+            <label htmlFor="signup-email" className="text-[10.5px] font-mono uppercase tracking-widest" style={labelStyle}>
               Email
             </label>
             <input
+              id="signup-email"
+              aria-invalid={!!errors.email}
               {...register("email")}
               type="email"
               placeholder="analyst@firm.com"
@@ -175,11 +179,13 @@ export function SignupForm() {
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10.5px] font-mono uppercase tracking-widest" style={labelStyle}>
+            <label htmlFor="signup-password" className="text-[10.5px] font-mono uppercase tracking-widest" style={labelStyle}>
               Password
             </label>
             <div className="relative">
               <input
+                id="signup-password"
+                aria-invalid={!!errors.password}
                 {...register("password", {
                   onChange: e => setPassword(e.target.value),
                 })}
@@ -193,7 +199,7 @@ export function SignupForm() {
                     ? "rgba(255,77,77,0.45)" : isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.09)";
                 }}
               />
-              <button type="button" onClick={() => setShowPass(!showPass)} tabIndex={-1}
+              <button type="button" onClick={() => setShowPass(!showPass)} aria-label={showPass ? "Hide password" : "Show password"} aria-pressed={showPass}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
                 style={{ color: "var(--th-text-muted)" }}>
                 {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -225,11 +231,13 @@ export function SignupForm() {
 
           {/* Confirm password */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10.5px] font-mono uppercase tracking-widest" style={labelStyle}>
+            <label htmlFor="signup-confirm" className="text-[10.5px] font-mono uppercase tracking-widest" style={labelStyle}>
               Confirm Password
             </label>
             <div className="relative">
               <input
+                id="signup-confirm"
+              aria-invalid={!!errors.confirm}
               {...register("confirm")}
                 type={showConfirm ? "text" : "password"}
                 placeholder="••••••••"
@@ -241,7 +249,7 @@ export function SignupForm() {
                     ? "rgba(255,77,77,0.45)" : isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.09)";
                 }}
               />
-              <button type="button" onClick={() => setShowConfirm(!showConfirm)} tabIndex={-1}
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)} aria-label={showConfirm ? "Hide confirmed password" : "Show confirmed password"} aria-pressed={showConfirm}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
                 style={{ color: "var(--th-text-muted)" }}>
                 {showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
