@@ -63,7 +63,7 @@ guesses.
 | | Agent | Looks at | Never does |
 |---|---|---|---|
 | 01 | **Strategist** | Market regime (NIFTY vs 200-day average, India VIX) and what historically followed it; India VIX, USD/INR, US 10Y, Brent, S&P 500; the sector's week | Invent policy rates, CPI or GDP (no feed: reported unavailable); go beyond a "lean" view, because regimes describe risk, not returns |
-| 02 | **Quant** | Six published rules (trend, 6- and 12-1-month momentum, MACD, 52-week position, RSI), beta and correlation, the validated volatility model | Report a direction probability: none passed validation. Signal, probability, confidence and historical reliability are separate fields |
+| 02 | **Quant** | Six published rules (trend, 6- and 12-1-month momentum, MACD, 52-week position, RSI), beta and correlation, the validated volatility model | Report a direction probability: none passed validation. Its own rule score was tested point-in-time and showed no edge, which every result cites and the CIO weighs at half |
 | 03 | **Fundamental** | Growth, profitability, balance sheet, valuation, PEG, scored against fixed thresholds | Estimate ROCE, FCF yield, moat or management quality (no data: `DATA_UNAVAILABLE`); score debt/equity for banks |
 | 04 | **Intelligence** | Dated, sourced headlines with publisher reliability and catalyst type | Call a headline the cause of a move, call anything "breaking", or follow instructions planted in a headline |
 | 05 | **Risk** | Volatility, drawdown, 95% VaR and CVaR, Sharpe/Sortino, liquidity, real replays of the 2020 crash and 2022 sell-off, position ceilings | Be bullish. It is the committee's brake, and it caps the decision |
@@ -203,7 +203,9 @@ The full list with comments is in `.env.example`.
 
 Not built yet, and not claimed anywhere in the product:
 
-- **Validate the committee**: backtest its decisions point-in-time, with costs, before any decision label is trusted.
+- **Validate the committee**: the quant agent's rule score has been tested point-in-time and showed no edge
+  (20-day rank IC -0.018), so it counts half in the CIO's weighting. The fundamental and news agents cannot be tested
+  until point-in-time data exists; until then no decision label has a measured edge.
 - Point-in-time fundamentals and an events calendar, so fundamental and catalyst signals can be tested historically.
 - Policy-rate, CPI and flow data feeds for the strategist.
 - An enforced (nonce-based) Content Security Policy and an audit log.

@@ -105,6 +105,34 @@ Beats persistence on 25 of 25 stocks. Survivorship in raw returns: share of posi
 
 <!-- END GENERATED -->
 
+## Investment committee: the quant agent's rule score
+
+The committee's only signal that can be tested historically is the quant agent's rule score (six published rules,
+[AGENTS.md](AGENTS.md)): it uses prices alone. `ml/evaluate-quant-agent.ts` runs exactly the agent's `ruleScore` on
+bars truncated at each date. The test was fixed before the first run:
+
+| | |
+|---|---|
+| Target | forward 20-trading-day return of the adjusted close |
+| Sampling | every 20th NIFTY session from 2019-01-01 (non-overlapping windows) |
+| Metric | cross-sectional Spearman rank IC per date, averaged; t = mean / (sd / sqrt(dates)) |
+| Pass | mean IC >= 0.02 and t >= 2 on the 47 current members, and mean IC > 0 on the 25 former members |
+
+| Universe | Horizon | Mean rank IC | t | Result |
+|---|---|---|---|---|
+| 47 current members | 20 days | -0.018 | -0.87 | **No edge** |
+| 47 current members | 5 days (every 5 sessions) | -0.002 | -0.17 | No edge |
+| 25 former members | 20 days | +0.038 | | Opposite sign to current members |
+
+By the view the score maps to, 20-day excess returns over the same date's cross-section were: bullish -0.01%,
+lean bullish -0.38%, neutral +0.09%, lean bearish +0.47%, bearish +0.07%. Bullish-view names did not beat bearish-view
+names (-0.39%). Verdict: **NO_EDGE**. Consequences in the product: every quant result cites this record, the contrarian
+uses it against directional theses, and the CIO counts the quant agent at half weight until a re-run passes
+(`npm run ml:eval-quant`; full output in `ml/artifacts/reports/quant_agent.json`).
+
+The full committee cannot be tested this way: fundamentals and news have no point-in-time history in the data source,
+so their current values cannot be used for past dates without leaking the future.
+
 ## What these numbers do not show
 
 - Performance on stocks outside the 47 current Nifty 50 constituents (survivorship bias: stocks that left the index are absent).

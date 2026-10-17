@@ -31,9 +31,10 @@ Read this before relying on any output. Each limitation is either measured or a 
 ## Investment committee
 
 11. **Committee decisions are rule-based summaries, not forecasts.** The agents' thresholds and the CIO's weights are
-    published judgement calls ([AGENTS.md](AGENTS.md)). They have **not** been validated against subsequent returns: no
-    backtest of committee decisions exists yet, so BUY/SELL labels carry no measured edge. Conviction measures agreement
-    of the evidence, not the chance of profit.
+    published judgement calls ([AGENTS.md](AGENTS.md)). The only component that can be tested historically, the quant
+    agent's rule score, was tested point-in-time and showed **no edge** (20-day rank IC -0.018, t -0.87). The full
+    committee cannot be backtested because fundamentals and news have no point-in-time history, so BUY/SELL labels carry
+    no measured edge. Conviction measures agreement of the evidence, not the chance of profit.
 12. **Coverage is NSE/BSE equities.** Other assets (US stocks, crypto) are refused with INSUFFICIENT DATA rather than
     analysed from guesses.
 13. **Several inputs a human analyst would use are unavailable** and are listed as `DATA_UNAVAILABLE` in every memo:

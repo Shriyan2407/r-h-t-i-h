@@ -55,7 +55,7 @@ Reported **separately** and never merged:
 | Signal | The rule score and view above |
 | Probability | Always unavailable: no direction model passed validation ([MODEL_EVALUATION.md](MODEL_EVALUATION.md)) |
 | Confidence | Coverage of: price history, 200 days for the trend, the index (for beta), the volatility forecast. Halved when the latest bar is more than 4 days old. |
-| Historical reliability | The registered volatility model's walk-forward and holdout validation; plus a descriptive, **in-sample** study of how often 20-day windows rose when price was above its 200-day average (labelled as such, never called accuracy) |
+| Historical reliability | The registered volatility model's walk-forward and holdout validation; the **point-in-time evaluation of the rule score itself** (20-day rank IC -0.018, t -0.87 on 47 stocks since 2019: no measured edge, [MODEL_EVALUATION.md](MODEL_EVALUATION.md)), cited in every quant result; and a descriptive, **in-sample** study of how often 20-day windows rose when price was above its 200-day average (labelled as such, never called accuracy) |
 
 Also: beta and correlation to the NIFTY 50 over one year, realised volatility, the volume ratio (5 days vs the prior
 60), and the `volatility-ridge` 5-day forecast with its 80% range. For portfolios it reports trend breadth (share of
@@ -143,7 +143,7 @@ Runs after the analysts. The emerging thesis is the confidence-weighted mean of 
 |---|---|
 | Analysts point in opposite directions | 2 |
 | One / two or more agents had no usable data | 1 / 2 |
-| No validated direction model (directional theses only) | 1 |
+| No validated direction model; cites the quant rule score's failed point-in-time test when available (directional theses only) | 1 |
 | The trend statistic is in-sample on a surviving company (survivorship and look-back bias) | 1 |
 
 Survival score = 100 - 10 × total severity. ≥ 65 **THESIS SURVIVES**, ≥ 35 **THESIS WEAKENED**, otherwise
@@ -169,6 +169,8 @@ No LLM. The decision follows published rules:
    | Portfolio review / construction | risk 0.35, quant 0.25, fundamental 0.25, strategist 0.15 |
 
    A long horizon multiplies fundamental by 1.5 and quant/intelligence by 0.6; a short horizon the reverse.
+   A signal without a measured out-of-sample edge counts half: today that is the quant agent, whose rule score failed
+   its pre-registered test. The memo says so, and a passing re-run restores full weight automatically.
 3. **Disagreements.** Every pair with opposite views is listed with the side that carried more effective weight.
 4. **Mapping** (weighted score from -2 to +2): ≥ 1.5 STRONG BUY, ≥ 1.0 BUY, ≥ 0.5 ACCUMULATE, > -0.5 HOLD,
    > -1.0 REDUCE (held) or WATCH (not held), otherwise SELL (held) or AVOID (not held).
