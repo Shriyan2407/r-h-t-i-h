@@ -57,34 +57,34 @@ interface AlertItem {
 // ── Alert type metadata ───────────────────────────────────────────────────────
 
 const ALERT_TYPES = [
-  { key: "breakoutAlerts",  label: "Breakout Alerts",   desc: "52-week high breakouts",    icon: TrendingUp,  color: "#00FF9C", tier: "free"  },
+  { key: "breakoutAlerts",  label: "Breakout Alerts",   desc: "52-week high breakouts",    icon: TrendingUp,  color: "var(--positive)", tier: "free"  },
   { key: "breakdownAlerts", label: "Breakdown Alerts",  desc: "52-week low breakdowns",    icon: TrendingDown,color: "#FF4D6A", tier: "free"  },
-  { key: "aiBuySignals",    label: "Momentum Up",        desc: "Sharp rises on heavy volume",icon: Brain,       color: "#FFD700", tier: "pro"   },
+  { key: "aiBuySignals",    label: "Momentum Up",        desc: "Sharp rises on heavy volume",icon: Brain,       color: "var(--gold)", tier: "pro"   },
   { key: "aiSellSignals",   label: "Momentum Down",      desc: "Sharp falls on heavy volume",icon: Target,      color: "#FF8C00", tier: "pro"   },
   { key: "volumeAlerts",    label: "Volume Spikes",     desc: "3x+ above-average volume",  icon: BarChart2,   color: "#4FC3F7", tier: "pro"   },
   { key: "slHitAlerts",     label: "Stop Loss Hit",     desc: "Price hits your SL level",  icon: Shield,      color: "#FF4D6A", tier: "free"  },
-  { key: "targetAlerts",    label: "Target Hit",        desc: "Price hits your target",    icon: Star,        color: "#00FF9C", tier: "free"  },
+  { key: "targetAlerts",    label: "Target Hit",        desc: "Price hits your target",    icon: Star,        color: "var(--positive)", tier: "free"  },
   { key: "earningsAlerts",  label: "Earnings Alerts",   desc: "Quarterly results alerts",  icon: Zap,         color: "#CE93D8", tier: "pro"   },
-  { key: "marketSummary",   label: "Daily Briefing",    desc: "9:15 AM IST market summary",icon: Globe,       color: "#FFD700", tier: "free"  },
+  { key: "marketSummary",   label: "Daily Briefing",    desc: "9:15 AM IST market summary",icon: Globe,       color: "var(--gold)", tier: "free"  },
   { key: "macroNews",       label: "Macro News",        desc: "RBI, FII, macro events",    icon: AlertCircle, color: "#4FC3F7", tier: "elite" },
 ];
 
 const TYPE_ICON: Record<string, { icon: any; color: string }> = {
-  breakout:     { icon: TrendingUp,  color: "#00FF9C" },
+  breakout:     { icon: TrendingUp,  color: "var(--positive)" },
   breakdown:    { icon: TrendingDown,color: "#FF4D6A" },
   volume:       { icon: BarChart2,   color: "#4FC3F7" },
-  ai_buy:       { icon: Brain,       color: "#FFD700" },
+  ai_buy:       { icon: Brain,       color: "var(--gold)" },
   ai_sell:      { icon: Target,      color: "#FF8C00" },
   sl_hit:       { icon: Shield,      color: "#FF4D6A" },
-  target_hit:   { icon: Star,        color: "#00FF9C" },
+  target_hit:   { icon: Star,        color: "var(--positive)" },
   earnings:     { icon: Zap,         color: "#CE93D8" },
-  market_summary:{ icon: Globe,      color: "#FFD700" },
+  market_summary:{ icon: Globe,      color: "var(--gold)" },
   macro:        { icon: AlertCircle, color: "#4FC3F7" },
 };
 
 const TIER_CONFIG = {
   free:  { label: "FREE",  color: "#888",    bg: "rgba(136,136,136,0.1)"  },
-  pro:   { label: "PRO",   color: "#FFD700", bg: "rgba(255,215,0,0.12)"   },
+  pro:   { label: "PRO",   color: "var(--gold)", bg: "rgba(255,215,0,0.12)"   },
   elite: { label: "ELITE", color: "#CE93D8", bg: "rgba(206,147,216,0.12)" },
 };
 

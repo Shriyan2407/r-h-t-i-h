@@ -42,7 +42,7 @@ export default function SignupPage() {
                 border: "1px solid rgba(255,215,0,0.22)",
               }}
             >
-              <Activity size={16} style={{ color: "#FFD700" }} />
+              <Activity size={16} style={{ color: "var(--gold)" }} />
             </div>
             <div>
               <span
@@ -50,7 +50,7 @@ export default function SignupPage() {
                 style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}
               >
                 <span style={{ color: "#E8E8E8" }}>EQUITY</span>
-                <span style={{ color: "#FFD700" }}>LENS</span>
+                <span style={{ color: "var(--gold)" }}>LENS</span>
               </span>
               <div className="text-[8px] font-mono uppercase tracking-[0.18em] mt-0.5"
                 style={{ color: "rgba(255,255,255,0.25)" }}>
@@ -62,7 +62,7 @@ export default function SignupPage() {
           <div className="mt-20 mb-auto">
             <div
               className="text-[10px] font-mono uppercase tracking-[0.28em] mb-5"
-              style={{ color: "rgba(255,215,0,0.55)" }}
+              style={{ color: "var(--gold-soft)" }}
             >
               Join the platform
             </div>
@@ -113,7 +113,7 @@ export default function SignupPage() {
                   className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ background: "rgba(0,255,156,0.12)", border: "1px solid rgba(0,255,156,0.25)" }}
                 >
-                  <span style={{ color: "#00FF9C", fontSize: "9px" }}>✓</span>
+                  <span style={{ color: "var(--positive)", fontSize: "9px" }}>✓</span>
                 </div>
                 <span
                   className="text-[12px] font-mono"

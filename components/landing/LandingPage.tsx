@@ -1026,7 +1026,7 @@ function IntelFeedBar({ market }: { market: LandingMarket | null }) {
       <div className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex items-center gap-1.5 pr-2"
         style={{ borderRight: "1px solid rgba(255,215,0,0.08)" }}>
         <div className="w-1.5 h-1.5 rounded-full animate-live-dot" style={{ background: "#00FF9C" }} />
-        <span className="text-[7.5px] font-mono font-bold uppercase tracking-[0.2em]" style={{ color: "#00FF9C" }}>
+        <span className="text-[7.5px] font-mono font-bold uppercase tracking-[0.2em]" style={{ color: "var(--positive)" }}>
           MARKET
         </span>
       </div>
@@ -1034,8 +1034,8 @@ function IntelFeedBar({ market }: { market: LandingMarket | null }) {
         {doubled.map((item, i) => (
           <div key={i} className="inline-flex items-center gap-2 px-4 h-full"
             style={{ borderRight: "1px solid rgba(255,215,0,0.06)" }}>
-            <span className="text-[8.5px] font-mono font-bold" style={{ color: "rgba(255,215,0,0.65)" }}>{item.label}</span>
-            <span className="text-[9px] font-mono font-bold" style={{ color: item.change >= 0 ? "#00FF9C" : "#FF4D4D" }}>
+            <span className="text-[8.5px] font-mono font-bold" style={{ color: "var(--gold-soft)" }}>{item.label}</span>
+            <span className="text-[9px] font-mono font-bold" style={{ color: item.change >= 0 ? "var(--positive)" : "var(--negative)" }}>
               {item.change >= 0 ? "+" : ""}{item.change.toFixed(2)}%
             </span>
           </div>
@@ -1069,7 +1069,7 @@ function LandingHeader() {
             border: "1px solid rgba(255,215,0,0.22)",
           }}
         >
-          <Activity size={13} style={{ color: "#FFD700" }} />
+          <Activity size={13} style={{ color: "var(--gold)" }} />
         </div>
         <span
           className="font-bold text-[13px] tracking-wider hidden sm:block"

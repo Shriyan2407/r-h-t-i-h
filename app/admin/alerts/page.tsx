@@ -40,7 +40,7 @@ interface DashData {
 // ── Alert type config ─────────────────────────────────────────────────────────
 
 const ALERT_TYPES = [
-  { pref: "breakoutAlerts",  label: "Breakout Alerts",   icon: TrendingUp,  color: "#00FF9C" },
+  { pref: "breakoutAlerts",  label: "Breakout Alerts",   icon: TrendingUp,  color: "var(--positive)" },
   { pref: "breakdownAlerts", label: "Breakdown Alerts",  icon: TrendingDown, color: "#FF4444" },
   { pref: "volumeAlerts",    label: "Volume Spikes",      icon: BarChart2,   color: "#FFAA00" },
   { pref: "aiBuySignals",    label: "Momentum Up",        icon: Brain,       color: "#00CFFF" },
@@ -141,7 +141,7 @@ export default function AdminAlertsPage() {
   if (status === "loading" || loading) {
     return (
       <div style={{ minHeight: "100vh", background: "#080C14", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: "#00FF9C", fontSize: 14 }}>Loading admin panel…</div>
+        <div style={{ color: "var(--positive)", fontSize: 14 }}>Loading admin panel…</div>
       </div>
     );
   }
@@ -167,7 +167,7 @@ export default function AdminAlertsPage() {
 
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: "#00FF9C", marginBottom: 4 }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "var(--positive)", marginBottom: 4 }}>
           ⚡ Alert Engine Admin
         </div>
         <div style={{ fontSize: 12, color: "#64748B" }}>
@@ -179,7 +179,7 @@ export default function AdminAlertsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 28 }}>
         {[
           { label: "Telegram Users", value: data.telegramUsers.length, icon: Users, color: "#38BDF8" },
-          { label: "Total Alerts Sent", value: totalAlerts, icon: Bell, color: "#00FF9C" },
+          { label: "Total Alerts Sent", value: totalAlerts, icon: Bell, color: "var(--positive)" },
           { label: "Alert Types", value: data.alertCounts.length, icon: Activity, color: "#A78BFA" },
         ].map(s => (
           <div key={s.label} style={{ background: "#0D1621", border: "1px solid #1E293B", borderRadius: 10, padding: "16px 20px" }}>
@@ -196,7 +196,7 @@ export default function AdminAlertsPage() {
           <div style={{ fontSize: 13, fontWeight: 600, color: "#94A3B8", marginBottom: 14 }}>MANUAL TRIGGERS</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {[
-              { action: "trigger_price",    label: "Scan Price Alerts",   icon: Zap,      color: "#00FF9C" },
+              { action: "trigger_price",    label: "Scan Price Alerts",   icon: Zap,      color: "var(--positive)" },
               { action: "trigger_news",     label: "Scan News Alerts",    icon: Newspaper, color: "#FB923C" },
               { action: "trigger_briefing", label: "Send Daily Briefing", icon: Send,      color: "#38BDF8" },
             ].map(t => {
@@ -280,7 +280,7 @@ export default function AdminAlertsPage() {
                     style={{
                       background: "transparent", border: "1px solid #00FF9C33",
                       borderRadius: 4, padding: "3px 8px", cursor: "pointer",
-                      color: "#00FF9C", fontSize: 11, fontFamily: "monospace",
+                      color: "var(--positive)", fontSize: 11, fontFamily: "monospace",
                     }}
                   >ON</button>
                   <button
@@ -322,7 +322,7 @@ export default function AdminAlertsPage() {
                   </div>
                   <div style={{ fontSize: 11, color: "#475569" }}>{u.email}</div>
                 </div>
-                <CheckCircle size={12} style={{ color: "#00FF9C" }} />
+                <CheckCircle size={12} style={{ color: "var(--positive)" }} />
               </div>
             ))}
           </div>
@@ -346,7 +346,7 @@ export default function AdminAlertsPage() {
                   <Icon size={11} style={{ color: "#64748B", marginTop: 2, flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 11, color: "#CBD5E1", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {a.ticker ? <span style={{ color: "#00FF9C", marginRight: 6 }}>{a.ticker}</span> : null}
+                      {a.ticker ? <span style={{ color: "var(--positive)", marginRight: 6 }}>{a.ticker}</span> : null}
                       {a.title}
                     </div>
                     <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>

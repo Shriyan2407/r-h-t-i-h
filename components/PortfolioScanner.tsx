@@ -76,8 +76,8 @@ const OCR_STEPS = [
 ];
 
 const SOURCE_META: Record<ExtractionSource, { label: string; badge: string; color: string }> = {
-  ocr:  { label: "Tesseract OCR · Local · No API calls",        badge: "OCR",   color: "#FFD700" },
-  csv:  { label: "Direct CSV parse · No API calls",             badge: "CSV",   color: "#00FF9C" },
+  ocr:  { label: "Tesseract OCR · Local · No API calls",        badge: "OCR",   color: "var(--gold)" },
+  csv:  { label: "Direct CSV parse · No API calls",             badge: "CSV",   color: "var(--positive)" },
   xlsx: { label: "Direct Excel parse · No API calls",           badge: "Excel", color: "#00C853" },
   pdf:  { label: "PDF table extraction · No API calls",         badge: "PDF",   color: "#7B9BFF" },
 };
@@ -178,8 +178,8 @@ function UploadZone({
   const displayErr = error ?? fileErr;
 
   const FORMAT_GROUPS = [
-    { formats: ["JPG", "PNG", "WEBP"],          label: "Screenshots",    color: "#FFD700" },
-    { formats: ["CSV", "XLSX", "XLS"],          label: "Spreadsheets",   color: "#00FF9C" },
+    { formats: ["JPG", "PNG", "WEBP"],          label: "Screenshots",    color: "var(--gold)" },
+    { formats: ["CSV", "XLSX", "XLS"],          label: "Spreadsheets",   color: "var(--positive)" },
     { formats: ["PDF"],                          label: "Statements",     color: "#7B9BFF" },
   ];
 
@@ -210,7 +210,7 @@ function UploadZone({
 
         <div className="p-2.5 rounded-full mb-3" style={{ background: dragging ? "var(--primary-muted)" : "var(--muted)", border: `1px solid ${dragging ? "var(--border-accent)" : "var(--border-muted)"}` }}>
           {dragging
-            ? <Scan size={28} style={{ color: "#FFD700" }} />
+            ? <Scan size={28} style={{ color: "var(--gold)" }} />
             : <Upload size={28} style={{ color: "var(--th-text-faint)" }} />
           }
         </div>
@@ -268,8 +268,8 @@ function UploadZone({
           className="flex items-start gap-2.5 px-4 py-3 rounded-xl"
           style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.22)" }}
         >
-          <AlertCircle size={13} style={{ color: "#FF4D4D", flexShrink: 0, marginTop: 1 }} />
-          <span className="text-[11px] font-mono" style={{ color: "#FF4D4D" }}>{displayErr}</span>
+          <AlertCircle size={13} style={{ color: "var(--negative)", flexShrink: 0, marginTop: 1 }} />
+          <span className="text-[11px] font-mono" style={{ color: "var(--negative)" }}>{displayErr}</span>
         </motion.div>
       )}
 
@@ -382,7 +382,7 @@ function ScanningPhase({
             className="w-14 h-14 rounded-2xl flex items-center justify-center"
             style={{ background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)", boxShadow: "0 0 24px rgba(255,215,0,0.10)" }}
           >
-            <Cpu size={22} style={{ color: "#FFD700", animation: "spin 3.5s linear infinite" }} />
+            <Cpu size={22} style={{ color: "var(--gold)", animation: "spin 3.5s linear infinite" }} />
           </div>
           <div
             className="absolute -top-1 -right-1 w-3 h-3 rounded-full"
@@ -519,8 +519,8 @@ function ReviewPhase({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
             style={{ background: "rgba(255,215,0,0.09)", border: "1px solid rgba(255,215,0,0.22)" }}
           >
-            <Check size={11} style={{ color: "#FFD700" }} />
-            <span className="text-[11px] font-mono font-bold" style={{ color: "#FFD700" }}>
+            <Check size={11} style={{ color: "var(--gold)" }} />
+            <span className="text-[11px] font-mono font-bold" style={{ color: "var(--gold)" }}>
               {holdings.length} holdings detected
             </span>
           </div>
@@ -958,7 +958,7 @@ export function PortfolioScanner({ onClose, onImport }: PortfolioScannerProps) {
               className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: "rgba(255,215,0,0.10)", border: "1px solid rgba(255,215,0,0.28)" }}
             >
-              <Scan size={16} style={{ color: "#FFD700" }} />
+              <Scan size={16} style={{ color: "var(--gold)" }} />
             </div>
             <div>
               <h2
@@ -1083,12 +1083,12 @@ export function PortfolioScanner({ onClose, onImport }: PortfolioScannerProps) {
                         className="text-left px-4 py-3 rounded-xl max-w-sm w-full"
                         style={{ background: "rgba(255,215,0,0.05)", border: "1px solid rgba(255,215,0,0.14)" }}
                       >
-                        <p className="text-[9.5px] font-mono font-bold uppercase tracking-wider mb-2" style={{ color: "rgba(255,215,0,0.5)" }}>
+                        <p className="text-[9.5px] font-mono font-bold uppercase tracking-wider mb-2" style={{ color: "var(--gold-soft)" }}>
                           Better results with
                         </p>
                         {["Export CSV from broker app instead","Full-screen screenshot with all holdings visible","Light mode screenshot at 100% zoom"].map(tip => (
                           <p key={tip} className="text-[10px] font-mono mb-1 flex items-start gap-1.5" style={{ color: "var(--th-text-faint)" }}>
-                            <span style={{ color: "#FFD700" }}>›</span> {tip}
+                            <span style={{ color: "var(--gold)" }}>›</span> {tip}
                           </p>
                         ))}
                       </div>
@@ -1104,7 +1104,7 @@ export function PortfolioScanner({ onClose, onImport }: PortfolioScannerProps) {
                         </p>
                         {["Symbol / Ticker / Stock","Qty / Quantity / Units","Avg Price / Avg Cost (optional)"].map(col => (
                           <p key={col} className="text-[10px] font-mono mb-1 flex items-start gap-1.5" style={{ color: "var(--th-text-faint)" }}>
-                            <span style={{ color: "#00FF9C" }}>›</span> {col}
+                            <span style={{ color: "var(--positive)" }}>›</span> {col}
                           </p>
                         ))}
                       </div>

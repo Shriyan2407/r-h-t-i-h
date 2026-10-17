@@ -77,18 +77,18 @@ export function SignupForm() {
     transition: "border-color 0.15s",
   } as React.CSSProperties);
 
-  const labelStyle = { color: isLight ? "#9A8060" : "#3A3A3A" };
+  const labelStyle = { color: "var(--th-text-muted)" };
 
   return (
     <div className="w-full max-w-[420px]">
 
       {/* Mobile logo */}
       <div className="flex lg:hidden items-center justify-center gap-2 mb-7">
-        <Activity size={18} style={{ color: "#FFD700" }} />
+        <Activity size={18} style={{ color: "var(--gold)" }} />
         <span className="font-bold text-[15px] tracking-wider"
           style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
           <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>EQUITY</span>
-          <span style={{ color: "#FFD700" }}>LENS</span>
+          <span style={{ color: "var(--gold)" }}>LENS</span>
         </span>
       </div>
 
@@ -113,7 +113,7 @@ export function SignupForm() {
           >
             Create account
           </h2>
-          <p className="text-[13px]" style={{ color: isLight ? "#7A6A50" : "#5A5A5A" }}>
+          <p className="text-[13px]" style={{ color: "var(--th-text-muted)" }}>
             Free access · No credit card required
           </p>
         </div>
@@ -124,7 +124,7 @@ export function SignupForm() {
             style={{
               background: "rgba(255,77,77,0.08)",
               border: "1px solid rgba(255,77,77,0.22)",
-              color: "#FF4D4D",
+              color: "var(--negative)",
             }}
           >
             ⚠ {error}
@@ -150,7 +150,7 @@ export function SignupForm() {
                   ? "rgba(255,77,77,0.45)" : isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.09)";
               }}
             />
-            {errors.name && <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{errors.name.message}</span>}
+            {errors.name && <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{errors.name.message}</span>}
           </div>
 
           {/* Email */}
@@ -170,7 +170,7 @@ export function SignupForm() {
                   ? "rgba(255,77,77,0.45)" : isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.09)";
               }}
             />
-            {errors.email && <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{errors.email.message}</span>}
+            {errors.email && <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{errors.email.message}</span>}
           </div>
 
           {/* Password */}
@@ -195,7 +195,7 @@ export function SignupForm() {
               />
               <button type="button" onClick={() => setShowPass(!showPass)} tabIndex={-1}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
-                style={{ color: isLight ? "#9A9A9A" : "#4A4A4A" }}>
+                style={{ color: "var(--th-text-muted)" }}>
                 {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
@@ -220,7 +220,7 @@ export function SignupForm() {
                 </span>
               </div>
             )}
-            {errors.password && <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{errors.password.message}</span>}
+            {errors.password && <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{errors.password.message}</span>}
           </div>
 
           {/* Confirm password */}
@@ -230,7 +230,7 @@ export function SignupForm() {
             </label>
             <div className="relative">
               <input
-                {...register("confirm")}
+              {...register("confirm")}
                 type={showConfirm ? "text" : "password"}
                 placeholder="••••••••"
                 autoComplete="new-password"
@@ -243,11 +243,11 @@ export function SignupForm() {
               />
               <button type="button" onClick={() => setShowConfirm(!showConfirm)} tabIndex={-1}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
-                style={{ color: isLight ? "#9A9A9A" : "#4A4A4A" }}>
+                style={{ color: "var(--th-text-muted)" }}>
                 {showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
-            {errors.confirm && <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{errors.confirm.message}</span>}
+            {errors.confirm && <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{errors.confirm.message}</span>}
           </div>
 
           {/* Submit */}
@@ -273,7 +273,7 @@ export function SignupForm() {
             <>
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px" style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.05)" }} />
-                <span className="text-[9.5px] font-mono" style={{ color: isLight ? "#BBAA90" : "#2A2A2A" }}>or</span>
+                <span className="text-[9.5px] font-mono" style={{ color: "var(--th-text-muted)" }}>or</span>
                 <div className="flex-1 h-px" style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.05)" }} />
               </div>
 
@@ -302,11 +302,11 @@ export function SignupForm() {
         </form>
 
         <div className="mt-5 text-center">
-          <span className="text-[12px]" style={{ color: isLight ? "#9A9A9A" : "#3A3A3A" }}>
+          <span className="text-[12px]" style={{ color: "var(--th-text-muted)" }}>
             Already have an account?{" "}
           </span>
           <Link href="/auth/login" className="text-[12px] font-semibold hover:opacity-80 transition-opacity"
-            style={{ color: "#FFD700" }}>
+            style={{ color: "var(--gold)" }}>
             Sign in
           </Link>
         </div>

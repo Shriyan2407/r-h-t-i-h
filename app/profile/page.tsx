@@ -145,7 +145,7 @@ export default function ProfilePage() {
             style={{
               background: "linear-gradient(135deg, rgba(255,215,0,0.18), rgba(201,162,39,0.08))",
               border: "1px solid rgba(255,215,0,0.28)",
-              color: "#FFD700",
+              color: "var(--gold)",
               fontFamily: "var(--font-space-grotesk, sans-serif)",
             }}
           >
@@ -169,7 +169,7 @@ export default function ProfilePage() {
           {/* Profile Section */}
           <div className="rounded-xl overflow-hidden" style={{ background: cardBg, border: `1px solid ${cardBd}` }}>
             <div className="flex items-center gap-2 px-5 py-4" style={{ borderBottom: `1px solid ${cardBd}` }}>
-              <User size={13} style={{ color: "#FFD700" }} />
+              <User size={13} style={{ color: "var(--gold)" }} />
               <span className="text-[11px] font-mono uppercase tracking-widest" style={{ color: label }}>
                 Profile Information
               </span>
@@ -197,7 +197,7 @@ export default function ProfilePage() {
                       onBlur={e => { (e.target as HTMLInputElement).style.borderColor = profileForm.formState.errors.name ? "rgba(255,77,77,0.45)" : isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.09)"; }}
                     />
                     {profileForm.formState.errors.name && (
-                      <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>
+                      <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>
                         {profileForm.formState.errors.name.message}
                       </span>
                     )}
@@ -270,7 +270,7 @@ export default function ProfilePage() {
                     </button>
                   </div>
                   {passwordForm.formState.errors.currentPassword && (
-                    <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{passwordForm.formState.errors.currentPassword.message}</span>
+                    <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{passwordForm.formState.errors.currentPassword.message}</span>
                   )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -292,7 +292,7 @@ export default function ProfilePage() {
                       </button>
                     </div>
                     {passwordForm.formState.errors.newPassword && (
-                      <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{passwordForm.formState.errors.newPassword.message}</span>
+                      <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{passwordForm.formState.errors.newPassword.message}</span>
                     )}
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -306,7 +306,7 @@ export default function ProfilePage() {
                       onBlur={e => { (e.target as HTMLInputElement).style.borderColor = passwordForm.formState.errors.confirmPassword ? "rgba(255,77,77,0.45)" : isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.09)"; }}
                     />
                     {passwordForm.formState.errors.confirmPassword && (
-                      <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>{passwordForm.formState.errors.confirmPassword.message}</span>
+                      <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>{passwordForm.formState.errors.confirmPassword.message}</span>
                     )}
                   </div>
                 </div>
@@ -351,8 +351,8 @@ export default function ProfilePage() {
           <div className="rounded-xl overflow-hidden"
             style={{ background: cardBg, border: "1px solid rgba(255,77,77,0.15)" }}>
             <div className="flex items-center gap-2 px-5 py-4" style={{ borderBottom: "1px solid rgba(255,77,77,0.10)" }}>
-              <Trash2 size={13} style={{ color: "#FF4D4D" }} />
-              <span className="text-[11px] font-mono uppercase tracking-widest" style={{ color: "#FF4D4D" }}>Danger Zone</span>
+              <Trash2 size={13} style={{ color: "var(--negative)" }} />
+              <span className="text-[11px] font-mono uppercase tracking-widest" style={{ color: "var(--negative)" }}>Danger Zone</span>
             </div>
             <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
@@ -396,7 +396,7 @@ export default function ProfilePage() {
                   style={{
                     background: deleteConfirm ? "rgba(255,77,77,0.10)" : "transparent",
                     border: `1px solid ${deleteConfirm ? "rgba(255,77,77,0.30)" : "rgba(255,77,77,0.18)"}`,
-                    color: "#FF4D4D",
+                    color: "var(--negative)",
                     cursor: "pointer",
                   }}
                 >
@@ -413,7 +413,7 @@ export default function ProfilePage() {
                   </button>
                 )}
                 {deleteError && (
-                  <span role="alert" className="text-[11px] font-mono" style={{ color: "#FF4D4D" }}>{deleteError}</span>
+                  <span role="alert" className="text-[11px] font-mono" style={{ color: "var(--negative)" }}>{deleteError}</span>
                 )}
               </div>
             </div>

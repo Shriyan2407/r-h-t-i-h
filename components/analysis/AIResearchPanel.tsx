@@ -114,7 +114,7 @@ function ScenarioCard({ scenario }: { scenario: Scenario }) {
         </div>
         <div>
           <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-muted)" }}>Stop Below</div>
-          <div className="font-mono font-bold" style={{ fontSize: "14px", color: "#FF4D4D" }}>₹{scenario.invalidation_level.toFixed(0)}</div>
+          <div className="font-mono font-bold" style={{ fontSize: "14px", color: "var(--negative)" }}>₹{scenario.invalidation_level.toFixed(0)}</div>
         </div>
       </div>
       <div className="flex flex-col gap-1">
@@ -212,13 +212,13 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
             {analysis.verdict.stop_loss && (
               <div className="p-3 rounded-lg" style={{ background: "rgba(255,77,77,0.06)", border: "1px solid rgba(255,77,77,0.22)" }}>
                 <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-dim)" }}>Stop Loss</div>
-                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "#FF4D4D" }}>₹{analysis.verdict.stop_loss.toFixed(0)}</div>
+                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "var(--negative)" }}>₹{analysis.verdict.stop_loss.toFixed(0)}</div>
               </div>
             )}
             {analysis.verdict.target_1 && (
               <div className="p-3 rounded-lg" style={{ background: "rgba(0,255,156,0.06)", border: "1px solid rgba(0,255,156,0.22)" }}>
                 <div className="font-mono uppercase tracking-widest mb-1.5" style={{ fontSize: "9px", fontWeight: 400, color: "var(--th-text-dim)" }}>Target 1 / 2</div>
-                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "#00FF9C" }}>
+                <div className="font-mono font-bold" style={{ fontSize: "14px", letterSpacing: "-0.02em", color: "var(--positive)" }}>
                   ₹{analysis.verdict.target_1.toFixed(0)}
                   {analysis.verdict.target_2 && ` / ₹${analysis.verdict.target_2.toFixed(0)}`}
                 </div>
@@ -285,20 +285,20 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
           <div className="grid grid-cols-2 gap-2">
             {analysis.macro.sector_tailwinds.length > 0 && (
               <div className="p-3 rounded-lg" style={{ background: "rgba(0,255,156,0.04)", border: "1px solid rgba(0,255,156,0.18)" }}>
-                <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "#00FF9C" }}>Tailwinds</div>
+                <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "var(--positive)" }}>Tailwinds</div>
                 {analysis.macro.sector_tailwinds.map((t, i) => (
                   <div key={i} className="flex gap-1.5 text-[11.5px] font-medium mb-1" style={{ color: "var(--th-text-tertiary)" }}>
-                    <span style={{ color: "#00FF9C" }}>·</span>{t}
+                    <span style={{ color: "var(--positive)" }}>·</span>{t}
                   </div>
                 ))}
               </div>
             )}
             {analysis.macro.sector_headwinds.length > 0 && (
               <div className="p-3 rounded-lg" style={{ background: "rgba(255,77,77,0.04)", border: "1px solid rgba(255,77,77,0.18)" }}>
-                <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "#FF4D4D" }}>Headwinds</div>
+                <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2" style={{ color: "var(--negative)" }}>Headwinds</div>
                 {analysis.macro.sector_headwinds.map((h, i) => (
                   <div key={i} className="flex gap-1.5 text-[11.5px] font-medium mb-1" style={{ color: "var(--th-text-tertiary)" }}>
-                    <span style={{ color: "#FF4D4D" }}>·</span>{h}
+                    <span style={{ color: "var(--negative)" }}>·</span>{h}
                   </div>
                 ))}
               </div>
@@ -337,22 +337,22 @@ export function AIResearchPanel({ analysis }: AIResearchPanelProps) {
       <Section title="Risks & Catalysts" icon={AlertTriangle} accentColor="#FB923C">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5" style={{ color: "#FF4D4D" }}>
+            <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5" style={{ color: "var(--negative)" }}>
               <AlertTriangle size={9} /> Key Risks
             </div>
             {analysis.verdict.key_risks.map((r, i) => (
               <div key={i} className="flex gap-2 text-[12px] font-medium mb-2 leading-snug" style={{ color: "var(--th-text-tertiary)" }}>
-                <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: "#FF4D4D" }}>✕</span>{r}
+                <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: "var(--negative)" }}>✕</span>{r}
               </div>
             ))}
           </div>
           <div>
-            <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5" style={{ color: "#00FF9C" }}>
+            <div className="text-[9px] font-mono font-bold uppercase tracking-widest mb-2.5 flex items-center gap-1.5" style={{ color: "var(--positive)" }}>
               <CheckCircle size={9} /> Key Catalysts
             </div>
             {analysis.verdict.key_catalysts.map((c, i) => (
               <div key={i} className="flex gap-2 text-[12px] font-medium mb-2 leading-snug" style={{ color: "var(--th-text-tertiary)" }}>
-                <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: "#00FF9C" }}>✓</span>{c}
+                <span className="font-bold flex-shrink-0 mt-0.5" style={{ color: "var(--positive)" }}>✓</span>{c}
               </div>
             ))}
           </div>

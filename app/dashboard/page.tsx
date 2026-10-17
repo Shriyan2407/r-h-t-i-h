@@ -161,9 +161,9 @@ export default function DashboardPage() {
         {/* ── Stats Strip ── */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { label: "Watchlist",   value: watchlist.length,               icon: Star,   color: "#FFD700", href: "/watchlist" },
+            { label: "Watchlist",   value: watchlist.length,               icon: Star,   color: "var(--gold)", href: "/watchlist" },
             { label: "AI Reports",  value: profile?._count.aiHistory ?? 0, icon: Brain,  color: "#38BDF8", href: "/history"   },
-            { label: "Searches",    value: profile?._count.searches  ?? 0, icon: Search, color: "#00FF9C", href: "/"          },
+            { label: "Searches",    value: profile?._count.searches  ?? 0, icon: Search, color: "var(--positive)", href: "/"          },
           ].map(({ label, value, icon: Icon, color, href }, i) => (
             <motion.div
               key={label}
@@ -256,7 +256,7 @@ export default function DashboardPage() {
                   {watchlist.length > 0 && (
                     <span
                       className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full"
-                      style={{ background: "rgba(255,215,0,0.09)", color: "#FFD700", border: "1px solid rgba(255,215,0,0.22)" }}
+                      style={{ background: "rgba(255,215,0,0.09)", color: "var(--gold)", border: "1px solid rgba(255,215,0,0.22)" }}
                     >
                       {watchlist.length}
                     </span>
@@ -605,7 +605,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="text-[12px] font-bold" style={{ color: "var(--gold)" }}>Run AI Analysis</div>
-                  <div className="text-[9.5px] font-mono" style={{ color: "rgba(255,215,0,0.55)" }}>Rule-based scores · optional AI narrative</div>
+                  <div className="text-[9.5px] font-mono" style={{ color: "var(--gold-soft)" }}>Rule-based scores · optional AI narrative</div>
                 </div>
               </div>
               <div className="relative flex items-center gap-1.5 text-[10px] font-mono font-bold"

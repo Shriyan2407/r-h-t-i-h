@@ -418,7 +418,7 @@ export default function StockPage({ params }: { params: Promise<{ ticker: string
                   <span
                     className="ml-auto text-[9px] font-mono uppercase px-1.5 py-0.5 rounded"
                     style={{
-                      color: "#FFD700",
+                      color: "var(--gold)",
                       background: "rgba(255,215,0,0.12)",
                       border: "1px solid rgba(255,215,0,0.30)",
                     }}

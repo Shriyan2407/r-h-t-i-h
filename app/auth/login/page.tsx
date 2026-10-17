@@ -60,7 +60,7 @@ export default async function LoginPage() {
                 border: "1px solid rgba(255,215,0,0.22)",
               }}
             >
-              <Activity size={16} style={{ color: "#FFD700" }} />
+              <Activity size={16} style={{ color: "var(--gold)" }} />
             </div>
             <div className="flex flex-col leading-none">
               <span
@@ -68,7 +68,7 @@ export default async function LoginPage() {
                 style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}
               >
                 <span style={{ color: "#E8E8E8" }}>EQUITY</span>
-                <span style={{ color: "#FFD700" }}>LENS</span>
+                <span style={{ color: "var(--gold)" }}>LENS</span>
               </span>
               <span
                 className="text-[8px] font-mono uppercase tracking-[0.18em] mt-0.5"
@@ -83,7 +83,7 @@ export default async function LoginPage() {
           <div className="mt-20 mb-auto">
             <div
               className="text-[10px] font-mono uppercase tracking-[0.28em] mb-5"
-              style={{ color: "rgba(255,215,0,0.55)" }}
+              style={{ color: "var(--gold-soft)" }}
             >
               Research · Risk · Backtesting
             </div>
@@ -133,7 +133,7 @@ export default async function LoginPage() {
                     border: "1px solid rgba(255,215,0,0.10)",
                   }}
                 >
-                  <Icon size={9} style={{ color: "rgba(255,215,0,0.55)" }} />
+                  <Icon size={9} style={{ color: "var(--gold-soft)" }} />
                   <span
                     className="text-[9px] font-mono"
                     style={{ color: "rgba(255,255,255,0.35)" }}
@@ -169,7 +169,7 @@ export default async function LoginPage() {
                 >
                   <span
                     className="text-[10px] font-mono font-semibold"
-                    style={{ color: "rgba(255,215,0,0.7)" }}
+                    style={{ color: "var(--gold-soft)" }}
                   >
                     {item.ticker}
                   </span>

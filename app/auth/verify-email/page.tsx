@@ -115,7 +115,7 @@ function VerifyContent() {
   if (status === "verifying") {
     return (
       <div className="text-center" role="status" aria-live="polite">
-        {icon(<Loader2 size={22} className="animate-spin" style={{ color: "#FFD700" }} />, "neutral")}
+        {icon(<Loader2 size={22} className="animate-spin" style={{ color: "var(--gold)" }} />, "neutral")}
         <h2 className="font-bold mb-2" style={{ fontSize: "20px", color: textP }}>Verifying your email…</h2>
       </div>
     );
@@ -124,7 +124,7 @@ function VerifyContent() {
   if (status === "success") {
     return (
       <div className="text-center" role="status" aria-live="polite">
-        {icon(<CheckCircle2 size={22} style={{ color: "#00FF9C" }} />, "ok")}
+        {icon(<CheckCircle2 size={22} style={{ color: "var(--positive)" }} />, "ok")}
         <h2 className="font-bold mb-2" style={{ fontSize: "20px", color: textP }}>Email verified</h2>
         <p className="text-[13px] mb-7" style={{ color: textM }}>Your account is active. You can sign in now.</p>
         <Link
@@ -141,7 +141,7 @@ function VerifyContent() {
   if (status === "error") {
     return (
       <div className="text-center" role="alert">
-        {icon(<AlertCircle size={22} style={{ color: "#FF4D4D" }} />, "bad")}
+        {icon(<AlertCircle size={22} style={{ color: "var(--negative)" }} />, "bad")}
         <h2 className="font-bold mb-2" style={{ fontSize: "20px", color: textP }}>Link not valid</h2>
         <p className="text-[13px]" style={{ color: textM }}>{message}</p>
         {resendForm}
@@ -151,7 +151,7 @@ function VerifyContent() {
 
   return (
     <div className="text-center">
-      {icon(<MailCheck size={22} style={{ color: "#FFD700" }} />, "neutral")}
+      {icon(<MailCheck size={22} style={{ color: "var(--gold)" }} />, "neutral")}
       <h2 className="font-bold mb-2" style={{ fontSize: "20px", color: textP }}>
         {sent ? "Check your inbox" : "Verify your email"}
       </h2>
@@ -175,10 +175,10 @@ export default function VerifyEmailPage() {
     <div className="min-h-screen flex items-center justify-center p-6" style={{ background: isLight ? "#F8F4EC" : "#050505" }}>
       <div className="w-full max-w-[400px]">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <Activity size={18} style={{ color: "#FFD700" }} />
+          <Activity size={18} style={{ color: "var(--gold)" }} />
           <span className="font-bold text-[15px] tracking-wider" style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
             <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>EQUITY</span>
-            <span style={{ color: "#FFD700" }}>LENS</span>
+            <span style={{ color: "var(--gold)" }}>LENS</span>
           </span>
         </div>
         <div

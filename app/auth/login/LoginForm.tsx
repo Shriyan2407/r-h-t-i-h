@@ -106,13 +106,13 @@ export function LoginForm() {
       <div
         className="flex lg:hidden items-center justify-center gap-2 mb-8"
       >
-        <Activity size={18} style={{ color: "#FFD700" }} />
+        <Activity size={18} style={{ color: "var(--gold)" }} />
         <span
           className="font-bold text-[15px] tracking-wider"
           style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}
         >
           <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>EQUITY</span>
-          <span style={{ color: "#FFD700" }}>LENS</span>
+          <span style={{ color: "var(--gold)" }}>LENS</span>
         </span>
       </div>
 
@@ -144,7 +144,7 @@ export function LoginForm() {
           </h2>
           <p
             className="text-[13px]"
-            style={{ color: isLight ? "#7A6A50" : "#5A5A5A" }}
+            style={{ color: "var(--th-text-muted)" }}
           >
             Sign in to your intelligence account
           </p>
@@ -167,7 +167,7 @@ export function LoginForm() {
             style={{
               background: "rgba(255,77,77,0.08)",
               border: "1px solid rgba(255,77,77,0.22)",
-              color: "#FF4D4D",
+              color: "var(--negative)",
             }}
           >
             <span className="flex-shrink-0">⚠</span>
@@ -217,7 +217,7 @@ export function LoginForm() {
               }}
             />
             {errors.email && (
-              <span id="login-email-error" role="alert" className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>
+              <span id="login-email-error" role="alert" className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>
                 {errors.email.message}
               </span>
             )}
@@ -236,7 +236,7 @@ export function LoginForm() {
               <Link
                 href="/auth/forgot-password"
                 className="text-[11px] font-mono transition-opacity hover:opacity-80"
-                style={{ color: "#FFD700" }}
+                style={{ color: "var(--gold)" }}
               >
                 Forgot?
               </Link>
@@ -265,14 +265,14 @@ export function LoginForm() {
                 aria-label={showPass ? "Hide password" : "Show password"}
                 aria-pressed={showPass}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
-                style={{ color: isLight ? "#9A9A9A" : "#4A4A4A" }}
+                style={{ color: "var(--th-text-muted)" }}
                 tabIndex={-1}
               >
                 {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
             {errors.password && (
-              <span className="text-[10px] font-mono" style={{ color: "#FF4D4D" }}>
+              <span className="text-[10px] font-mono" style={{ color: "var(--negative)" }}>
                 {errors.password.message}
               </span>
             )}
@@ -308,7 +308,7 @@ export function LoginForm() {
                 />
                 <span
                   className="text-[9.5px] font-mono"
-                  style={{ color: isLight ? "#BBAA90" : "#2A2A2A" }}
+                  style={{ color: "var(--th-text-muted)" }}
                 >
                   or continue with
                 </span>
@@ -358,14 +358,14 @@ export function LoginForm() {
         <div className="mt-6 text-center">
           <span
             className="text-[12px]"
-            style={{ color: isLight ? "#9A9A9A" : "#3A3A3A" }}
+            style={{ color: "var(--th-text-muted)" }}
           >
             Don&apos;t have an account?{" "}
           </span>
           <Link
             href="/auth/signup"
             className="text-[12px] font-semibold transition-opacity hover:opacity-80"
-            style={{ color: "#FFD700" }}
+            style={{ color: "var(--gold)" }}
           >
             Create account
           </Link>

@@ -32,13 +32,13 @@ function ErrorContent() {
     <div className="text-center">
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
         style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.22)" }}>
-        <AlertCircle size={22} style={{ color: "#FF4D4D" }} />
+        <AlertCircle size={22} style={{ color: "var(--negative)" }} />
       </div>
       <h2 className="font-bold mb-2"
         style={{ fontFamily: "var(--font-space-grotesk, sans-serif)", fontSize: "20px", color: textP }}>
         Authentication Error
       </h2>
-      <p className="text-[13px] mb-1 font-mono" style={{ color: "#FF4D4D" }}>
+      <p className="text-[13px] mb-1 font-mono" style={{ color: "var(--negative)" }}>
         {errorCode}
       </p>
       <p className="text-[13px] mb-7 max-w-[280px] mx-auto" style={{ color: textM }}>
@@ -80,11 +80,11 @@ export default function AuthErrorPage() {
       style={{ background: isLight ? "#F8F4EC" : "#050505" }}>
       <div className="w-full max-w-[400px]">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <Activity size={18} style={{ color: "#FFD700" }} />
+          <Activity size={18} style={{ color: "var(--gold)" }} />
           <span className="font-bold text-[15px] tracking-wider"
             style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
             <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>EQUITY</span>
-            <span style={{ color: "#FFD700" }}>LENS</span>
+            <span style={{ color: "var(--gold)" }}>LENS</span>
           </span>
         </div>
         <div className="rounded-2xl p-8"

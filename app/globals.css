@@ -53,6 +53,7 @@
 
   /* ── Legacy Gold System ── */
   --gold:               #FFD700;
+  --gold-soft:          rgba(255,215,0,0.6); /* de-emphasised gold text */
   --gold-luxury:        #C9A227;
   --gold-glow:          #FFB800;
   --gold-dim:           rgba(255,215,0,0.06);
@@ -104,9 +105,9 @@
   --th-text-secondary:     var(--card-foreground);
   --th-text-tertiary:      #BEBEBE;
   --th-text-muted:         var(--muted-foreground);
-  --th-text-dim:           #787878;
-  --th-text-faint:         #636363;
-  --th-text-ultra-faint:   #505050;
+  --th-text-dim:           #9A9A9A; /* >= 4.5:1 on all dark surfaces (WCAG AA) */
+  --th-text-faint:         #8C8C8C;
+  --th-text-ultra-faint:   #858585;
 
   --th-gold:               var(--primary);
   --th-gold-bg:            var(--primary-muted);
@@ -157,20 +158,20 @@
   --card-foreground:  #111111;
   
   --muted:            #F0F0EE;
-  --muted-foreground: #666666;
+  --muted-foreground: #5E5E5E; /* light: >= 4.5:1 on cream surfaces */
 
   /* ── Borders ── */
   --border:           rgba(0, 0, 0, 0.10);
   --border-muted:     rgba(0, 0, 0, 0.05);
 
   /* ── Primary / Secondary ── */
-  --primary:          #967520; /* Institutional gold */
+  --primary:          #85661A; /* Institutional gold (darkened from #967520 to reach 4.5:1 on the cream surfaces) */
   --primary-muted:    rgba(150, 117, 32, 0.10);
   --secondary:        #0369A1;
   --secondary-muted:  rgba(3, 105, 161, 0.10);
 
   /* ── Status Colors ── */
-  --success:          #05853D; /* High contrast green */
+  --success:          #047A38; /* High contrast green */
   --success-muted:    rgba(5, 133, 61, 0.10);
   --warning:          #A36B00;
   --warning-muted:    rgba(163, 107, 0, 0.10);
@@ -189,6 +190,7 @@
 
   /* ── Legacy Gold System ── */
   --gold:               var(--primary);
+  --gold-soft:          var(--primary);
   --gold-luxury:        #8A6B1A;
   --gold-glow:          #C9A227;
   --gold-dim:           var(--primary-muted);
@@ -240,9 +242,9 @@
   --th-text-secondary:    var(--card-foreground);
   --th-text-tertiary:     #4A4238;
   --th-text-muted:        var(--muted-foreground);
-  --th-text-dim:          #8A8278;
-  --th-text-faint:        #9A9288;
-  --th-text-ultra-faint:  #B5ADA4;
+  --th-text-dim:          #5E5850;
+  --th-text-faint:        #625C55;
+  --th-text-ultra-faint:  #67615A;
 
   --th-gold:               var(--primary);
   --th-gold-bg:            var(--primary-muted);
