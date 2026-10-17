@@ -30,7 +30,11 @@ describe("quant agent", () => {
     expect(r.metrics.predictionProbability).toBeNull();
     expect(d.probability.available).toBe(false);
     expect(d.probability.reason).toMatch(/No direction model passed validation/);
-    expect(d.historicalReliability.directionalAccuracy.available).toBe(false);
+    // The rule score carries its measured out-of-sample record.
+    expect(d.historicalReliability.ruleEvaluation.verdict).toBe("NO_EDGE");
+    expect(d.historicalReliability.ruleEvaluation.measuredEdge).toBe(false);
+    expect(r.claims.map((c) => c.text).join(" ")).toMatch(/showed no edge over future returns/);
+    expect(r.evidence.some((e) => /^Quant rule score: out-of-sample/.test(e.label) && e.kind === "model_validation")).toBe(true);
   });
 
   it("uses the registered volatility model and reports its validation separately", async () => {

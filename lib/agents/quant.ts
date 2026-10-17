@@ -15,6 +15,7 @@ import { coverageConfidence, noDataOutput, type AgentOutput, type InvestmentAgen
 import { betaAndCorrelation, technicalSnapshot, trendRuleStudy, type TechnicalSnapshot } from "./analytics";
 import type { ResearchContext } from "./context";
 import { STALE_MARKET_DAYS, ageDays, fmtNum, fmtPct, type EvidenceLog } from "./evidence";
+import quantEvaluation from "./quantEvaluation.json";
 import type { Claim, View } from "./schema";
 
 export interface QuantSignal {
@@ -34,9 +35,28 @@ export interface QuantDetails {
   historicalReliability: {
     volatilityModel: { interval80Coverage: number; r2VsNaive: number; foldsBeatingPersist: number; folds: number; holdoutPristine: boolean } | null;
     trendRule: ReturnType<typeof trendRuleStudy>;
-    directionalAccuracy: { available: false; reason: string };
+    /** Point-in-time evaluation of this rule score (ml/evaluate-quant-agent.ts). */
+    ruleEvaluation: RuleEvaluation;
   };
   breadth?: { tickers: number; uptrend: number; downtrend: number; medianRet6m: number | null; perTicker: Array<{ ticker: string; trend: string; ret6m: number | null }> };
+}
+
+export type RuleEvaluation = typeof quantEvaluation & { measuredEdge: boolean };
+
+/** The measured out-of-sample record of the rule score; `measuredEdge` is false unless it passed its pre-registered test. */
+export const RULE_EVALUATION: RuleEvaluation = { ...quantEvaluation, measuredEdge: quantEvaluation.verdict === "EDGE" };
+
+/** Registers the rule score's out-of-sample record as evidence, so every quant result carries it. */
+function citeRuleEvaluation(ev: EvidenceLog): string {
+  const e = RULE_EVALUATION;
+  return ev.add({
+    kind: "model_validation",
+    label: `Quant rule score: out-of-sample ${e.horizonDays}-day rank IC, ${e.period[0]} to ${e.period[1]}, ${e.tickers} stocks`,
+    value: e.meanRankIc,
+    display: `${e.meanRankIc.toFixed(3)} (t ${e.tStat.toFixed(2)}): ${e.measuredEdge ? "measured edge" : "no measured edge"}`,
+    source: "ml/evaluate-quant-agent.ts (pre-registered: IC >= 0.02, t >= 2, positive on former members)",
+    asOf: e.evaluatedAt,
+  });
 }
 
 /** Rule thresholds, published in docs/AGENTS.md. */
@@ -182,6 +202,14 @@ async function analyzeAsset(ctx: ResearchContext, ticker: string, ev: EvidenceLo
   }));
   if (forecastIds.length) claims.push({ text: `The validated volatility model expects daily moves of about ${fmtPct((volatilityForecast as { dailyVol: number }).dailyVol, 2)} [${forecastIds[0]}]; it does not forecast direction.`, evidenceIds: forecastIds.slice(0, 1), direction: "neutral" });
   if (bc) claims.push({ text: `Beta to the NIFTY 50 is ${fmtNum(bc.beta)} [${betaIds[0]}].`, evidenceIds: [betaIds[0]], direction: "neutral" });
+  const evalId = citeRuleEvaluation(ev);
+  claims.push({
+    text: RULE_EVALUATION.measuredEdge
+      ? `In a point-in-time test this rule score had a measured edge [${evalId}].`
+      : `In a point-in-time test this rule score showed no edge over future returns [${evalId}]; treat the signals above as a description of the chart, not a forecast.`,
+    evidenceIds: [evalId],
+    direction: "neutral",
+  });
 
   const risks: string[] = [];
   if (volatilityForecast.available && (volatilityForecast.percentileVsOwnYear ?? 0) >= 80) risks.push("Forecast volatility is in the top fifth of this stock's past year.");
@@ -191,7 +219,7 @@ async function analyzeAsset(ctx: ResearchContext, ticker: string, ev: EvidenceLo
 
   return {
     status: missing.length ? "partial" : "success",
-    conclusion: `Rule score ${ruleScore.toFixed(1)} → ${view.replace("_", " ")}. Trend: ${snap.trend}. No validated model forecasts direction, so there is no up/down probability.`,
+    conclusion: `Rule score ${ruleScore.toFixed(1)} → ${view.replace("_", " ")}. Trend: ${snap.trend}. ${RULE_EVALUATION.measuredEdge ? "The rule score passed its out-of-sample test." : "The rule score showed no edge out of sample, and no model forecasts direction, so there is no up/down probability."}`,
     view,
     confidence,
     claims,
@@ -216,7 +244,7 @@ async function analyzeAsset(ctx: ResearchContext, ticker: string, ev: EvidenceLo
       historicalReliability: {
         volatilityModel,
         trendRule: study,
-        directionalAccuracy: { available: false, reason: "The rule score has not been validated out of sample, so no accuracy figure is claimed for it." },
+        ruleEvaluation: RULE_EVALUATION,
       },
     },
   };
@@ -264,7 +292,7 @@ async function analyzeBasket(ctx: ResearchContext, tickers: string[], ev: Eviden
       signals: [],
       probability: { available: false, reason: DIRECTION_UNAVAILABLE_REASON },
       volatilityForecast: { available: false, reason: "Portfolio-level volatility is forecast by the risk agent." },
-      historicalReliability: { volatilityModel: null, trendRule: null, directionalAccuracy: { available: false, reason: "Breadth rules are not validated out of sample." } },
+      historicalReliability: { volatilityModel: null, trendRule: null, ruleEvaluation: RULE_EVALUATION },
       breadth: { tickers: per.length, uptrend: up, downtrend: down, medianRet6m: med, perTicker: per },
     },
   };

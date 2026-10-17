@@ -79,3 +79,13 @@ describe("contrarian agent", () => {
     expect([100, 65, 64, 35, 34, 0].map(verdictFor)).toEqual(["THESIS SURVIVES", "THESIS SURVIVES", "THESIS WEAKENED", "THESIS WEAKENED", "THESIS INVALIDATED", "THESIS INVALIDATED"]);
   });
 });
+
+describe("contrarian and the measured rule-score record", () => {
+  it("cites the quant rule score's failed out-of-sample test when attacking a directional thesis", async () => {
+    const evalItem: AgentEvidence = { id: "Q9", kind: "model_validation", label: "Quant rule score: out-of-sample 20-day rank IC, 2019-01-01 to 2026-10-12, 47 stocks", value: -0.018, display: "-0.018 (t -0.87): no measured edge", source: "ml/evaluate-quant-agent.ts", asOf: "2026-10-17", reliability: 0.9 };
+    const r = await run([res("quant", "bullish", { evidence: [evalItem] }), res("fundamental", "bullish")]);
+    const attack = (r.details as ContrarianDetails).thesisAttacks.find((a) => /point-in-time test/.test(a.attack));
+    expect(attack).toBeTruthy();
+    expect(r.evidence.find((e) => e.id === attack!.evidenceIds[0])?.label).toMatch(/\(Q9\)$/);
+  });
+});

@@ -117,8 +117,13 @@ function commonAttacks(prior: readonly AgentResult[], ref: Ref, add: (a: string,
   // Fragile evidence.
   const failed = prior.filter((r) => r.status === "failed" || r.view === "no_view").map((r) => AGENT_NAMES[r.agent]);
   if (failed.length) add(`Part of the committee had no usable data (${failed.join(", ")}); the thesis rests on incomplete evidence.`, failed.length >= 2 ? 2 : 1, []);
-  // No validated directional model.
-  if (direction !== "no_edge") add("No model in this system has shown out-of-sample skill at predicting price direction; the case rests on rules and historical description, not a validated forecast.", 1, [ref.cite("quant", /Holdout share/)]);
+  // No validated directional model; when the quant rule score's own test is on record, cite it.
+  if (direction !== "no_edge") {
+    const evalId = ref.cite("quant", /^Quant rule score: out-of-sample/);
+    const noEdge = ref.get("quant")?.evidence.some((e) => /^Quant rule score: out-of-sample/.test(e.label) && /no measured edge/.test(e.display));
+    if (evalId && noEdge) add("The quant rule score showed no edge over future returns in a point-in-time test, and no model in this system predicts direction; the price signals here describe the chart rather than forecast it.", 1, [evalId]);
+    else add("No model in this system has shown out-of-sample skill at predicting price direction; the case rests on rules and historical description, not a validated forecast.", 1, [ref.cite("quant", /Holdout share/)]);
+  }
   // Survivorship and in-sample statistics.
   if (ref.get("quant")?.evidence.some((e) => /in-sample/.test(e.label))) add("The trend-rule statistic is in-sample on a company that survived to today, so it flatters the rule (survivorship and look-back bias).", 1, [ref.cite("quant", /in-sample/)]);
 }
