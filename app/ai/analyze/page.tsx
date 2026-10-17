@@ -189,10 +189,11 @@ function ErrorState({ error, ticker, onReset, onRetry }: {
 
 function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onReset:()=>void }) {
   const vc  = SENT_COL[(report.currentSentiment as Verdict)] ?? SENT_COL["NEUTRAL"];
-  const sc  = report.scores ?? { technical:50,fundamental:50,momentum:50,institutional:50,riskReward:50,smartMoney:50,volatility:50,ltInvestment:50,swingTrade:50 };
-  const overall = Math.round((sc.technical+sc.fundamental+sc.momentum+sc.institutional+sc.riskReward+sc.smartMoney)/6);
+  // Scores are computed by fixed rules on the server. When they are missing, say so; never draw placeholder 50s.
+  const sc  = report.scores ?? null;
+  const overall = sc ? Math.round((sc.technical+sc.fundamental+sc.momentum+sc.institutional+sc.riskReward+sc.smartMoney)/6) : null;
 
-  const SCORE_BARS = [
+  const SCORE_BARS = !sc ? [] : [
     {label:"Technical Structure",     score:sc.technical,     delay:0.05},
     {label:"Fundamental Strength",    score:sc.fundamental,   delay:0.10},
     {label:"Momentum Quality",        score:sc.momentum,      delay:0.15},
@@ -223,7 +224,7 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
             <>
               <span className="text-[8px] font-mono px-1.5 py-0.5 rounded ml-1"
                 style={{color:"var(--positive)",background:"rgba(0,255,156,0.06)",border:"1px solid rgba(0,255,156,0.15)"}}>
-                LIVE · {new Date(report._meta.generatedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}
+                GENERATED · {new Date(report._meta.generatedAt).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"})}
               </span>
               {report._meta.model && (
                 <span className="text-[8px] font-mono px-1.5 py-0.5 rounded ml-1"
@@ -263,7 +264,7 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
             </h1>
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-[11px]" style={{color:"var(--th-text-dim)"}}>{report.sector}</span>
-              <span className="text-[10px] font-mono" style={{color:scoreColor(overall)}}>◈ {report.trendState}</span>
+              <span className="text-[10px] font-mono" style={{color:overall === null ? "var(--th-text-muted)" : scoreColor(overall)}}>◈ {report.trendState}</span>
             </div>
             <p className="text-[11px] mt-1.5 italic max-w-xl" style={{color:"var(--th-text-faint)"}}>&ldquo;{report.oneLiner}&rdquo;</p>
           </div>
@@ -286,10 +287,16 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
         <div className="md:col-span-2 rounded-2xl p-5 flex flex-col items-center justify-center"
           style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
           <div className="text-[9px] font-mono uppercase tracking-[0.2em] mb-3" style={{color:"var(--th-text-faint)"}}>Overall Rule-Based Score</div>
-          <ScoreArc score={overall} size={130}/>
-          <div className="mt-3 text-[11px] font-mono text-center" style={{color:`${scoreColor(overall)}80`}}>
-            {overall>=75?"High":overall>=62?"Above Average":overall>=50?"Average Profile":"Below Average — Caution"}
-          </div>
+          {overall === null ? (
+            <p className="text-[12px] text-center" style={{color:"var(--th-text-muted)"}}>Scores unavailable for this report.</p>
+          ) : (
+            <>
+              <ScoreArc score={overall} size={130}/>
+              <div className="mt-3 text-[11px] font-mono text-center" style={{color:scoreColor(overall)}}>
+                {overall>=75?"High":overall>=62?"Above Average":overall>=50?"Average Profile":"Below Average — Caution"}
+              </div>
+            </>
+          )}
         </div>
         <div className="md:col-span-3 rounded-2xl p-5"
           style={{background:"var(--th-bg-elevated)",border:"1px solid var(--th-border-normal)"}}>
@@ -298,6 +305,11 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
             <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Score Breakdown</span>
           </div>
           {SCORE_BARS.map(b=><ScoreBar key={b.label} {...b}/>)}
+          <p className="text-[11px] mt-3" style={{color:"var(--th-text-muted)", lineHeight:1.5}}>
+            Fixed indicator rules, computed on the server; an AI never sets these numbers. Tested against later returns they
+            showed no predictive value (<Link href="/models" style={{color:"var(--gold)"}}>model evidence</Link>). For a cited,
+            multi-agent view, ask the <Link href="/research#committee" style={{color:"var(--gold)"}}>investment committee</Link>.
+          </p>
         </div>
       </div>
 
@@ -335,10 +347,12 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
           <div className="flex items-center gap-2 mb-4">
             <Activity size={11} style={{color:"var(--gold)"}}/>
             <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Technical Analysis</span>
-            <div className="ml-auto px-2 py-0.5 rounded text-[8px] font-mono"
-              style={{color:scoreColor(sc.technical),background:`${scoreColor(sc.technical)}10`,border:`1px solid ${scoreColor(sc.technical)}25`}}>
-              {sc.technical}/100
-            </div>
+            {sc && (
+              <div className="ml-auto px-2 py-0.5 rounded text-[8px] font-mono"
+                style={{color:scoreColor(sc.technical),background:`${scoreColor(sc.technical)}10`,border:`1px solid ${scoreColor(sc.technical)}25`}}>
+                {sc.technical}/100
+              </div>
+            )}
           </div>
           {(report.techAnalysis ?? "").split("\n\n").map((para,i)=>(
             <p key={i} className="text-[11.5px] leading-relaxed mb-3" style={{color:i===0?"#9A9A9A":"var(--th-text-dim)"}}>{para}</p>
@@ -348,10 +362,12 @@ function AnalysisDisplay({ report, onReset }: { report:IntelligenceReport; onRes
           <div className="flex items-center gap-2 mb-4">
             <BarChart2 size={11} style={{color:"var(--gold)"}}/>
             <span className="text-[9px] font-mono uppercase tracking-[0.18em]" style={{color:"var(--th-text-faint)"}}>Graph Intelligence</span>
-            <div className="ml-auto px-2 py-0.5 rounded text-[8px] font-mono"
-              style={{color:scoreColor(sc.momentum),background:`${scoreColor(sc.momentum)}10`,border:`1px solid ${scoreColor(sc.momentum)}25`}}>
-              Momentum: {sc.momentum}/100
-            </div>
+            {sc && (
+              <div className="ml-auto px-2 py-0.5 rounded text-[8px] font-mono"
+                style={{color:scoreColor(sc.momentum),background:`${scoreColor(sc.momentum)}10`,border:`1px solid ${scoreColor(sc.momentum)}25`}}>
+                Momentum: {sc.momentum}/100
+              </div>
+            )}
           </div>
           {(report.graphAnalysis ?? "").split("\n\n").map((para,i)=>(
             <p key={i} className="text-[11.5px] leading-relaxed mb-3" style={{color:i===0?"#9A9A9A":"var(--th-text-dim)"}}>{para}</p>
