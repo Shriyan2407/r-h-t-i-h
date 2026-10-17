@@ -19,7 +19,7 @@ test("login form fields are reachable by their labels", async ({ page }) => {
 });
 
 test("protected pages redirect to login with a callback", async ({ page }) => {
-  for (const path of ["/dashboard", "/backtest", "/models", "/portfolio"]) {
+  for (const path of ["/dashboard", "/backtest", "/models", "/portfolio", "/research"]) {
     await page.goto(path);
     await expect(page).toHaveURL(new RegExp(`/auth/login\\?callbackUrl=${encodeURIComponent(path).replace(/%2F/g, "(%2F|/)")}`));
   }
@@ -30,6 +30,21 @@ test("protected APIs return 401 JSON without a session", async ({ request }) => 
     const res = await request.get(path);
     expect(res.status(), path).toBe(401);
     expect((await res.json()).code).toBe("UNAUTHENTICATED");
+  }
+});
+
+test("the investment committee API fails closed without a session", async ({ request }) => {
+  const res = await request.post("/api/agents/committee", { data: { query: "Should I buy TCS?" } });
+  expect(res.status()).toBe(401);
+  expect((await res.json()).code).toBe("UNAUTHENTICATED");
+});
+
+test("public pages fit the viewport without horizontal scrolling", async ({ page }) => {
+  for (const path of ["/", "/auth/login", "/auth/signup", "/auth/forgot-password"]) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle").catch(() => {});
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow, `${path} overflows by ${overflow}px`).toBeLessThanOrEqual(1);
   }
 });
 

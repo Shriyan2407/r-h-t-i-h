@@ -63,6 +63,31 @@ test("portfolio risk analysis runs on the saved holdings", async ({ page }) => {
   await expect(page.getByText("COVID crash (Feb-Mar 2020)", { exact: true })).toBeVisible();
 });
 
+test("the investment committee convenes, shows real agent progress and a cited memo", async ({ page }) => {
+  await login(page);
+  await page.goto("/research");
+  await page.getByLabel("Ask the investment committee").fill("Should I buy Reliance?");
+  await page.getByRole("button", { name: "Convene committee" }).click();
+  const activity = page.getByRole("region", { name: "Orchestrator" });
+  await expect(activity.getByText("Quantitative Analyst")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "RELIANCE", level: 2 })).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText("evidence agreement, not a probability")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What would change our mind" })).toBeVisible();
+  // Citations resolve to evidence rows on the page.
+  const first = page.locator('a[href^="#ev-"]').first();
+  const target = (await first.getAttribute("href"))!;
+  await expect(page.locator(target)).toHaveCount(1);
+});
+
+test("the committee refuses to analyse a stock outside its coverage", async ({ page }) => {
+  await login(page);
+  await page.goto("/research");
+  await page.getByLabel("Ask the investment committee").fill("Should I buy NVIDIA right now?");
+  await page.getByRole("button", { name: "Convene committee" }).click();
+  await expect(page.getByText("INSUFFICIENT DATA").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/NSE\/BSE-listed Indian equities only/).first()).toBeVisible();
+});
+
 test("research explains why a stock is moving with cited evidence", async ({ page }) => {
   await login(page);
   await page.goto("/research?t=RELIANCE");
