@@ -82,9 +82,17 @@ export function CommitteeMemo({ result }: { result: CommitteeResult }) {
                 <span style={{ fontSize: 12, fontWeight: 600, color: viewColor(r.view) }}>{VIEW_LABEL[r.view]}</span>
               </div>
               <p style={{ fontSize: 13, lineHeight: 1.5, margin: "6px 0 0" }}>{memo.views[r.agent as keyof typeof memo.views]}</p>
-              <p style={{ fontSize: 11, color: "var(--th-text-muted)", margin: "6px 0 0" }}>
-                Input coverage {pct(r.confidence)}{r.missingData.length ? ` · ${r.missingData.length} gap${r.missingData.length === 1 ? "" : "s"}` : ""}
-              </p>
+              <p style={{ fontSize: 11, color: "var(--th-text-muted)", margin: "6px 0 0" }}>Input coverage {pct(r.confidence)}</p>
+              {r.missingData.length > 0 && (
+                <details style={{ marginTop: 4 }}>
+                  <summary style={{ cursor: "pointer", fontSize: 11, color: "var(--th-text-muted)" }}>
+                    What this agent could not see ({r.missingData.length})
+                  </summary>
+                  <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: 11, color: "var(--th-text-muted)", lineHeight: 1.5 }}>
+                    {r.missingData.map((m) => <li key={m}>{m}</li>)}
+                  </ul>
+                </details>
+              )}
             </li>
           ))}
         </ul>

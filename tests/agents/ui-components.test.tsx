@@ -16,6 +16,9 @@ describe("committee components", () => {
     for (const h of ["Investment verdict", "Agent opinions", "Disagreements", "Scenarios", "Key catalysts", "Key risks", "What would change our mind", "Data used", "Evidence ("]) expect(html).toContain(h);
     expect(html).toContain("evidence agreement, not a probability");
     expect(html).toContain('role="meter"');
+    // Data gaps are listed, not just counted.
+    expect(html).toContain("What this agent could not see");
+    expect(html).toContain("CPI inflation (DATA_UNAVAILABLE)");
     // Every evidence item has an anchor that citations link to.
     for (const e of result.evidence) expect(html).toContain(`id="ev-${e.id}"`);
     for (const m of html.matchAll(/href="#ev-([A-Z]\d+)"/g)) expect(html).toContain(`id="ev-${m[1]}"`);
