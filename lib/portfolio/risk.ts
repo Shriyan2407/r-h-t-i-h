@@ -76,6 +76,17 @@ export function historicalVaR(rets: readonly number[], level = 0.95): number {
   return -s[k];
 }
 
+/**
+ * Empirical 1-day Conditional VaR (expected shortfall) at `level`: the average loss on the days at or beyond the
+ * VaR cut-off, returned as a positive loss fraction. Uses the same cut-off index as historicalVaR, so CVaR >= VaR.
+ */
+export function historicalCVaR(rets: readonly number[], level = 0.95): number {
+  const s = [...rets].sort((a, b) => a - b);
+  const k = Math.max(0, Math.floor((1 - level) * s.length) - 1);
+  const tail = s.slice(0, k + 1);
+  return -tail.reduce((a, b) => a + b, 0) / tail.length;
+}
+
 /** Herfindahl index of weights and the "effective number of holdings" 1/HHI. */
 export function concentration(weights: readonly number[]) {
   const hhi = weights.reduce((a, w) => a + w * w, 0);

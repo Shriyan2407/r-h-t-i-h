@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  alignSeries, analyzePortfolio, concentration, corrMatrix, covMatrix, historicalReplay, historicalVaR,
+  alignSeries, analyzePortfolio, concentration, corrMatrix, covMatrix, historicalCVaR, historicalReplay, historicalVaR,
   marketShock, maxDrawdown, riskContributions, sectorShock, volatilityShock,
 } from "@/lib/portfolio/risk";
 import type { Bar } from "@/lib/backtest/types";
@@ -36,6 +36,12 @@ describe("building blocks", () => {
     expect(maxDrawdown([0.1, -0.5, 0.2])).toBeCloseTo(-0.5, 12);
     const r = Array.from({ length: 100 }, (_, i) => (i - 50) / 1000); // -0.05..0.049
     expect(historicalVaR(r, 0.95)).toBeCloseTo(0.046, 12);
+  });
+
+  it("CVaR averages the tail at and beyond the VaR cut-off, so it is never below VaR", () => {
+    const r = Array.from({ length: 100 }, (_, i) => (i - 50) / 1000);
+    expect(historicalCVaR(r, 0.95)).toBeCloseTo(0.048, 12); // mean of -0.050..-0.046
+    for (const level of [0.9, 0.95, 0.99]) expect(historicalCVaR(r, level)).toBeGreaterThanOrEqual(historicalVaR(r, level));
   });
 
   it("alignSeries keeps only dates where every series traded (no forward fill)", () => {
