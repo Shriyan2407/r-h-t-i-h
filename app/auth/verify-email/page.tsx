@@ -177,8 +177,8 @@ export default function VerifyEmailPage() {
         <div className="flex items-center justify-center gap-2 mb-8">
           <Activity size={18} style={{ color: "#FFD700" }} />
           <span className="font-bold text-[15px] tracking-wider" style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
-            <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>MARKET KA </span>
-            <span style={{ color: "#FFD700" }}>BAADSHAH</span>
+            <span style={{ color: isLight ? "#1A1A1A" : "#E8E8E8" }}>EQUITY</span>
+            <span style={{ color: "#FFD700" }}>LENS</span>
           </span>
         </div>
         <div

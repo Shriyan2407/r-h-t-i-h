@@ -49,8 +49,8 @@ export default function SignupPage() {
                 className="font-bold text-[15px] tracking-wider"
                 style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}
               >
-                <span style={{ color: "#E8E8E8" }}>MARKET KA </span>
-                <span style={{ color: "#FFD700" }}>BAADSHAH</span>
+                <span style={{ color: "#E8E8E8" }}>EQUITY</span>
+                <span style={{ color: "#FFD700" }}>LENS</span>
               </span>
               <div className="text-[8px] font-mono uppercase tracking-[0.18em] mt-0.5"
                 style={{ color: "rgba(255,255,255,0.25)" }}>

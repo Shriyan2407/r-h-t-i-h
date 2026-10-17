@@ -60,8 +60,8 @@ export default function ForgotPasswordPage() {
           <Activity size={18} style={{ color: "#FFD700" }} />
           <span className="font-bold text-[15px] tracking-wider"
             style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
-            <span style={{ color: textP }}>MARKET KA </span>
-            <span style={{ color: "#FFD700" }}>BAADSHAH</span>
+            <span style={{ color: textP }}>EQUITY</span>
+            <span style={{ color: "#FFD700" }}>LENS</span>
           </span>
         </div>
 

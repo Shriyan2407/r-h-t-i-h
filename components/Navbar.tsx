@@ -116,9 +116,9 @@ export function Navbar() {
               style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
               <span className="transition-colors duration-300"
                 style={{ color: "var(--text)" }}>
-                MARKET KA{" "}
+                EQUITY
               </span>
-              <span style={{ color: "var(--gold)" }}>BAADSHAH</span>
+              <span style={{ color: "var(--gold)" }}>LENS</span>
             </span>
             <span className="text-[7.5px] font-mono uppercase tracking-[0.18em] mt-0.5"
               style={{ color: "var(--text-dim)" }}>
