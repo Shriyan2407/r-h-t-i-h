@@ -63,7 +63,7 @@ async function tryOllama(prompt: string, ticker: string): Promise<any | null> {
     if (!raw) return null;
     const report = parseIntelligenceResponse(raw, ticker);
     // Minimal validation
-    if (report?.scores && report?.ticker) return report;
+    if (report?.ticker) return report;
     return null;
   } catch { return null; }
 }
@@ -76,7 +76,7 @@ async function tryClaude(prompt: string, ticker: string): Promise<any | null> {
   try {
     const raw    = await callClaude(prompt, SYSTEM_MSG);
     const report = parseIntelligenceResponse(raw, ticker);
-    if (report?.scores && report?.ticker) return report;
+    if (report?.ticker) return report;
     return null;
   } catch (err) {
     console.warn(`[Intelligence] Claude failed for ${ticker}:`, (err as Error).message);
@@ -103,10 +103,14 @@ export async function generateIntelligence(ticker: string) {
   console.log(`[Intelligence] ${T}: quote=${!!quote}, news=${news.length}, sentiment=${!!sentiment}`);
 
   const prompt = buildInstitutionalPrompt({ ticker: T, quote, summary, news, sentiment });
+  // Scores are always the deterministic rule scores for these inputs. An LLM writes narrative only; any score it
+  // returns is discarded, so the page's "rule-based score" label is true whichever tier answered.
+  const ruleScores = buildDeterministicReport(T, quote, summary, news, sentiment).scores;
 
   /* Tier 1 — Ollama */
   let report = await tryOllama(prompt, T);
   if (report) {
+    report.scores = ruleScores;
     console.log(`[Intelligence] ${T}: Ollama success`);
     report._meta = {
       ticker: T, generatedAt: new Date().toISOString(),
@@ -123,6 +127,7 @@ export async function generateIntelligence(ticker: string) {
   /* Tier 2 — Claude */
   report = await tryClaude(prompt, T);
   if (report) {
+    report.scores = ruleScores;
     console.log(`[Intelligence] ${T}: Claude success`);
     report._meta = {
       ticker: T, generatedAt: new Date().toISOString(),

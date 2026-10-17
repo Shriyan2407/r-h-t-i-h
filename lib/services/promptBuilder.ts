@@ -578,17 +578,6 @@ Return ONLY valid JSON matching this exact structure. No markdown, no commentary
   "currentSentiment": "BULLISH|BEARISH|NEUTRAL|MIXED",
   "oneLiner": "ONE sharp sentence capturing the current investment thesis for ${ticker} — SPECIFIC, not generic",
   "trendState": "current market structure in 4-6 words",
-  "scores": {
-    "technical": <0-100>,
-    "fundamental": <0-100>,
-    "momentum": <0-100>,
-    "institutional": <0-100>,
-    "riskReward": <0-100>,
-    "smartMoney": <0-100>,
-    "volatility": <0-100>,
-    "ltInvestment": <0-100>,
-    "swingTrade": <0-100>
-  },
   "events": [
     /* 5-8 events. ONLY derive from the ACTUAL NEWS provided. Do not invent events.
        Each event must be grounded in a specific headline from the news list above.
@@ -681,7 +670,7 @@ ${frameworkBlock}
 CRITICAL ANALYSIS RULES
 ═══════════════════════════════════════════
 1. DERIVE ALL EVENTS from the actual news provided — never invent events
-2. SCORE BASED ON REALITY — if news is positive, scores should be higher; if negative, lower
+2. DO NOT OUTPUT SCORES OR RATINGS — numeric scores are computed separately by fixed rules
 3. ANALYSIS MUST BE SPECIFIC TO ${ticker} — not sector-generic boilerplate
 4. SOUND INSTITUTIONAL — like a Goldman Sachs or Motilal Oswal research note
 5. MENTION SPECIFIC NUMBERS from the data (price levels, PE ratios, margins)

@@ -30,7 +30,8 @@ export function extractJSON(raw: string): string {
 /* ── Response validator ─────────────────────────────────── */
 export function validateReport(data: any): boolean {
   if (!data || typeof data !== "object") return false;
-  const required = ["ticker", "companyName", "sector", "scores", "events"];
+  // Scores are not requested from the model: they are computed by rules (deterministicIntelligence) and attached later.
+  const required = ["ticker", "companyName", "sector", "events"];
   return required.every(key => key in data);
 }
 
@@ -123,18 +124,14 @@ export function parseIntelligenceResponse(raw: string, ticker: string): any {
   }
 
   if (!validateReport(data)) {
-    throw new Error("Claude response missing required fields (ticker, companyName, scores, events)");
+    throw new Error("Claude response missing required fields (ticker, companyName, sector, events)");
   }
 
   /* Ensure ticker is correct */
   data.ticker = ticker.toUpperCase();
 
-  /* Clamp all score values to 0-100 */
-  if (data.scores) {
-    for (const key of Object.keys(data.scores)) {
-      data.scores[key] = Math.max(0, Math.min(100, Math.round(data.scores[key] ?? 50)));
-    }
-  }
+  /* Model-written scores are never used: drop them so they cannot leak into the response. */
+  delete data.scores;
 
   /* Clamp event scores */
   if (Array.isArray(data.events)) {
