@@ -72,8 +72,8 @@ async function getNewsHeadlines(ticker: string): Promise<string[]> {
 function buildOllamaPrompt(ticker: string, quote: any, quantSummary: string, headlines: string[]): string {
   const price    = safeNum(quote?.regularMarketPrice) ?? 0;
   const chgPct   = safeNum(quote?.regularMarketChangePercent) ?? 0;
-  const hi52     = safeNum(quote?.fiftyTwoWeekHigh) ?? price * 1.3;
-  const lo52     = safeNum(quote?.fiftyTwoWeekLow)  ?? price * 0.7;
+  const hi52     = safeNum(quote?.fiftyTwoWeekHigh);
+  const lo52     = safeNum(quote?.fiftyTwoWeekLow);
   const mktCap   = quote?.marketCap ? `₹${(quote.marketCap / 1e12).toFixed(2)}T` : "N/A";
   const pe       = safeNum(quote?.trailingPE);
   const mktCapCat = (quote?.marketCap ?? 0) >= 2e12 ? "Large Cap" : (quote?.marketCap ?? 0) >= 5e11 ? "Mid Cap" : "Small Cap";
@@ -83,7 +83,7 @@ function buildOllamaPrompt(ticker: string, quote: any, quantSummary: string, hea
 
   return `EQUITYLENS — ${new Date().toLocaleDateString("en-IN")}
 ${ticker} | ₹${price.toFixed(2)} (${chgPct >= 0 ? "+" : ""}${chgPct.toFixed(2)}%) | ${mktCapCat} ${mktCap}
-52W: ₹${lo52.toFixed(0)}–₹${hi52.toFixed(0)} | P/E: ${pe?.toFixed(1) ?? "N/A"}
+52W: ${hi52 != null && lo52 != null ? `₹${lo52.toFixed(0)}–₹${hi52.toFixed(0)}` : "N/A"} | P/E: ${pe?.toFixed(1) ?? "N/A"}
 Company: ${quote?.longName ?? quote?.shortName ?? ticker}
 Sector: ${quote?.sector ?? "Unknown"} | Industry: ${quote?.industry ?? "Unknown"}
 
@@ -236,8 +236,9 @@ async function generateAnalysis(ticker: string): Promise<AIAnalysis & { _meta?: 
   ]);
 
   const price = safeNum(quote?.regularMarketPrice) ?? 0;
-  const hi52  = safeNum(quote?.fiftyTwoWeekHigh)   ?? price * 1.3;
-  const lo52  = safeNum(quote?.fiftyTwoWeekLow)    ?? price * 0.7;
+  // A missing 52-week range is passed as NaN so the range-position rule is skipped, not fed an invented range.
+  const hi52  = safeNum(quote?.fiftyTwoWeekHigh)   ?? NaN;
+  const lo52  = safeNum(quote?.fiftyTwoWeekLow)    ?? NaN;
 
   // Always compute deterministic quant scores
   const emptyFund: FundamentalData = { pe_ratio: null, pb_ratio: null, ps_ratio: null, ev_ebitda: null, sector_pe: null, roe: null, roce: null, roa: null, net_margin: null, operating_margin: null, gross_margin: null, revenue_growth_yoy: null, profit_growth_yoy: null, eps_growth_3yr: null, debt_to_equity: null, current_ratio: null, quick_ratio: null, interest_coverage: null, free_cash_flow: null, promoter_holding: null, fii_holding: null, dii_holding: null, pledged_shares: null, asset_turnover: null, inventory_turnover: null, receivables_turnover: null };
