@@ -111,7 +111,8 @@ export function Navbar() {
               style={{ background: "var(--positive)" }} />
           </div>
 
-          <div className="flex flex-col leading-none">
+          <span className="sr-only min-[400px]:hidden">EquityLens home</span>
+          <div className="hidden min-[400px]:flex flex-col leading-none">
             <span className="font-bold text-[15px] tracking-wider"
               style={{ fontFamily: "var(--font-space-grotesk, sans-serif)" }}>
               <span className="transition-colors duration-300"
@@ -128,7 +129,7 @@ export function Navbar() {
         </Link>
 
         {/* ── Center Nav ── */}
-        <div className="hidden min-[1440px]:flex items-center gap-0.5">
+        <div className="hidden min-[1440px]:flex items-center gap-0.5 min-w-0 overflow-x-auto [scrollbar-width:none]">
           {navLinks.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || (href !== "/" && pathname.startsWith(href));
             return (
@@ -188,7 +189,7 @@ export function Navbar() {
         </div>
 
         {/* ── Right Controls ── */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Search button */}
           <button
             onClick={() => window.dispatchEvent(new Event("open-command-palette"))}

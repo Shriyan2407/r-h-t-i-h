@@ -76,7 +76,7 @@ export function ThemeToggle() {
 
       {/* Label */}
       <span
-        className="text-[9px] font-mono uppercase tracking-[0.12em] select-none"
+        className="hidden sm:inline text-[9px] font-mono uppercase tracking-[0.12em] select-none"
         style={{
           color: "var(--border-accent)",
           minWidth: "22px",
