@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { E2E_USER } from "./global-setup";
 
@@ -77,6 +78,16 @@ test("the investment committee convenes, shows real agent progress and a cited m
   const first = page.locator('a[href^="#ev-"]').first();
   const target = (await first.getAttribute("href"))!;
   await expect(page.locator(target)).toHaveCount(1);
+});
+
+test("the research workspace has no WCAG A/AA violations after a committee run", async ({ page }) => {
+  await login(page);
+  await page.goto("/research");
+  await page.getByLabel("Ask the investment committee").fill("Is Infosys overvalued?");
+  await page.getByRole("button", { name: "Convene committee" }).click();
+  await expect(page.getByRole("heading", { name: "Agent opinions" })).toBeVisible({ timeout: 60_000 });
+  const r = await new AxeBuilder({ page }).include("main").withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  expect(r.violations.map((v) => `${v.id} (${v.nodes.length}): ${v.nodes.slice(0, 3).map((n) => n.html.slice(0, 80)).join(" | ")}`)).toEqual([]);
 });
 
 test("the committee refuses to analyse a stock outside its coverage", async ({ page }) => {
