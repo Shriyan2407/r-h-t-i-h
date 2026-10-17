@@ -21,6 +21,8 @@ Services  lib/services/**, lib/scoring/**, lib/auth/**, lib/ratelimit/**, lib/em
    ├─ ML inference (lib/ml): point-in-time features -> registered JSON artifact (volatility-ridge)
    │     -> regime -> evidence contract -> optional Claude explanation behind a numeric guard (lib/ai)
    ├─ Backtesting (lib/backtest) and portfolio risk (lib/portfolio): pure TypeScript
+   ├─ Investment committee (lib/agents): one orchestrator, seven rule-based agents over shared,
+   │     traced datasets -> CIO decision -> cited memo; optional guarded Claude wording (ORCHESTRATOR.md)
    ├─ LLM narrative: Claude if ANTHROPIC_API_KEY is set, Ollama only if OLLAMA_BASE_URL is set, else templates
    ├─ Resend (transactional email)        ├─ Telegram Bot API   ├─ Web Push (VAPID)
    └─ Upstash Redis REST (rate limits + shared cache; optional, in-memory fallback)
@@ -129,6 +131,7 @@ lib/services/        market data, news, alerts, Telegram, push, intelligence eng
 lib/scoring/         deterministic rule scoring (evaluated: not predictive)
 lib/ml/              features, indicators, dataset/labels, volatility inference, regime, risk contract, registry
 lib/ai/              evidence contract, numeric guard, risk explainer, LLM clients
+lib/agents/          orchestrator, intent parser, router, data context, seven agents, memo, evidence engine
 lib/backtest/        backtest engine, metrics, strategies, walk-forward
 lib/portfolio/       portfolio risk analytics and service
 lib/observability/   structured logger, metrics, health

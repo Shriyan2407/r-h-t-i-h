@@ -19,7 +19,9 @@ Use [ENGINEERING_BASELINE.md](ENGINEERING_BASELINE.md) for the findings that mot
 | Input | Zod/regex validation of tickers, portfolio writes, pagination, upload type/size, push subscriptions | `lib/validation/*` | `ticker-validation`, `portfolio-validation`, `push` tests |
 | SSRF | Web-push endpoints restricted to real push-service hosts, re-checked at send time | `lib/validation/push.ts`, `pushService.ts` | `push.test.ts` |
 | Cost abuse | Intelligence endpoint requires a session, no longer busts its cache, limits cache misses | `app/api/intelligence/*` | `route-access.test.ts` |
-| Errors | Internal error text is logged, not returned | `app/api/ai-analysis` | `rate-limited-routes.test.ts` |
+| Errors | Internal error text is logged, not returned | `app/api/ai-analysis`, `app/api/agents/committee` | `rate-limited-routes.test.ts`, `tests/agents/route.test.ts` |
+| Prompt injection | Retrieved text is sanitized; instruction-like headlines are quarantined before they reach evidence, claims or prompts; LLM input is wrapped as untrusted data; the decision is computed before any LLM call and a rewrite that changes it is rejected | `lib/agents/untrusted.ts`, `intelligence.ts`, `narrative.ts` | `untrusted.test.ts`, `intelligence.test.ts`, `narrative.test.ts`, orchestrator injection test |
+| Committee API | Session required (route and middleware), Zod-validated query, 12 runs/h per user, `no-store`, holdings scoped to the session user, logs carry no query text or holdings | `app/api/agents/committee` | `tests/agents/route.test.ts`, `route-access.test.ts`, e2e public tier |
 | Headers | `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, COOP, HSTS (production); `X-Powered-By` removed; CSP in **report-only** mode | `lib/security/headers.ts`, `next.config.ts` | `tests/security/headers.test.ts` + verified on a running production server |
 | Dependencies | `npm audit --omit=dev`: **0** vulnerabilities; CI fails on high/critical | `.github/workflows/ci.yml` | CI |
 | Integrity | Production bundle must contain no sample data | `scripts/check-no-mock-in-bundle.mjs` | CI |
@@ -39,7 +41,7 @@ The app fails closed on these; set them before deploying (see DEPLOYMENT.md):
   session or demoted admin can persist up to 30 s on an instance that cached the old state
   (admin actions read fresh).
 - **CSP is report-only**, and still allows `'unsafe-inline'` scripts (Next.js bootstrap + theme/service-worker snippets). It must be validated in a real browser, moved to per-request nonces, and enforced.
-- **No error tracking or audit log** yet. (Planned.)
+- **Error tracking** (Sentry) runs only when `SENTRY_DSN` is set; there is **no audit log** yet.
 - `braces` (dev tooling) has an unfixed advisory; not shipped to production.
 - `xlsx` is installed from SheetJS's own registry (cdn.sheetjs.com), the vendor's supported
   channel for fixed releases; the lockfile pins its integrity hash.

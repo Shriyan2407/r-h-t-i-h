@@ -28,6 +28,21 @@ Read this before relying on any output. Each limitation is either measured or a 
 10. **Historical statistics are backward-looking.** Portfolio Sharpe, drawdown and VaR describe the past year with
     today's weights; stress scenarios are illustrative estimates.
 
+## Investment committee
+
+11. **Committee decisions are rule-based summaries, not forecasts.** The agents' thresholds and the CIO's weights are
+    published judgement calls ([AGENTS.md](AGENTS.md)). They have **not** been validated against subsequent returns: no
+    backtest of committee decisions exists yet, so BUY/SELL labels carry no measured edge. Conviction measures agreement
+    of the evidence, not the chance of profit.
+12. **Coverage is NSE/BSE equities.** Other assets (US stocks, crypto) are refused with INSUFFICIENT DATA rather than
+    analysed from guesses.
+13. **Several inputs a human analyst would use are unavailable** and are listed as `DATA_UNAVAILABLE` in every memo:
+    policy rate, CPI, GDP, ROCE, interest coverage, FCF yield, moat and management quality, insider and institutional
+    flows, and an events calendar.
+14. **News tone is keyword-based** and headlines are only "possibly related" to a move. Headlines alone can tilt a view
+    but never carry it.
+15. **Fundamentals have no reporting date** in the data feed, so they may lag the latest quarter.
+
 ## What the LLM is restricted to
 
 The LLM only rewords the computed evidence. It never sees labels or future returns, and any number it writes that is not

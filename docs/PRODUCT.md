@@ -25,16 +25,16 @@ Accounts with verification, market bar, quotes/charts/technicals/fundamentals, n
 sentiment, rule-based verdict with signal strength, optional LLM narrative, portfolio CRUD and
 import (CSV/XLSX/PDF/screenshot), Telegram and Web Push alerts with de-duplication, role-based
 admin dashboard, a validated 5-day volatility model with regime and evidence, a model evidence page,
-backtesting with walk-forward validation, portfolio risk analytics with stress scenarios and style exposures, delayed live quote streaming with a move-vs-forecast signal, a "why is it moving?" research page, and a command palette.
+backtesting with walk-forward validation, portfolio risk analytics with stress scenarios and style exposures, delayed live quote streaming with a move-vs-forecast signal, a "why is it moving?" research page, a command palette, and a seven-agent investment committee on `/research` (one orchestrator; strategist, quant, fundamental, intelligence, risk, contrarian and CIO agents; cited memo; streamed progress).
 
 ## Not built (do not claim)
 
 | Idea | Status |
 |---|---|
 | Price-direction prediction, up/down probabilities, price targets | **Tested and rejected** (MODEL_EVALUATION.md); deliberately not shown |
-| Multi-agent AI | Not built; the Python prototype is retired (ARCHITECTURE.md) |
+| Multi-agent AI | **Built** as a rule-based committee (`lib/agents`, AGENTS.md). Not built: validation of committee decisions against subsequent returns |
 | Fundamentals / news / macro as model inputs | Not built: no point-in-time history in the data source |
-| Free-form research chat on any question | Not built. Built instead: "Why is X moving?" (`/research`), an evidence-only answer for that one question |
+| Free-form research chat on any question | Partly. The committee answers seven question types (decision, why it moved, valuation, risk, portfolio review, portfolio construction from named stocks, market outlook); anything else falls back to the market view |
 | Returns-based factor model (factor premia, attribution) | Not built. Built: characteristic exposures (size, value, momentum, low volatility) vs Nifty 50 members |
 | Exchange real-time data | Not available: quotes stream over SSE every ~10 s but are Yahoo data and may be delayed |
 | Direct NSE/BSE feed | Not built; Yahoo only |

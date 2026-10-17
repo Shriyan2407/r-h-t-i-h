@@ -17,10 +17,24 @@ not built. Measured results: [MODEL_EVALUATION.md](MODEL_EVALUATION.md). Limits:
 | 8 | LLM | Claude (`claude-opus-5-5`) optionally rewrites the evidence in plain language | LLM; **explains only** | `lib/ai/riskExplainer.ts` |
 | 8b | Research | "Why is X moving?": deterministic decomposition (beta x index), volume, move vs forecast, regime, dated headlines; optional Claude wording behind the same guard | Evidence + LLM explains only | `lib/research/*`, `/research` |
 | 9 | Validation | Numeric grounding guard: any number not in the evidence, missing citation, or certainty language rejects the LLM text | No | `lib/ai/numericGuard.ts` |
+| 10 | Investment committee | One orchestrator routes a question to the minimum set of seven agents (strategist, quant, fundamental, intelligence, risk, contrarian, CIO). Each agent is a published rule set over real data with cited evidence; the CIO decides by weighted rules with risk and contrarian overrides | **No ML or LLM in any agent or the decision.** Uses layers 1-7 as inputs | `lib/agents/*`, `/research` |
+| 11 | Committee wording | Claude may reword the memo's thesis; kept only if numbers, citations and the decision all match | LLM; **rewords only** | `lib/agents/narrative.ts` |
 
 The older stock-analysis narrative (`/ai/analyze`, `/api/intelligence`) still uses an LLM or templates on top of the
 rule-based scores (layer 3). Since this work it may no longer produce price targets (prompt changed, parser strips
 them, regression test), and its scores are labelled heuristics.
+
+## Pipeline (investment committee)
+
+```
+question -> parseIntent (rules) -> planExecution (minimum agents, waves)
+  -> wave 1 analysts (parallel, shared datasets, 25 s timeout each)
+  -> contrarian (attacks wave 1) -> CIO (weights, disagreements, overrides) -> memo
+  -> optional Claude rewording of the thesis -> numeric + decision guards -> citation integrity check
+  -> POST /api/agents/committee (JSON or NDJSON progress stream) -> /research workspace
+```
+
+Details: [ORCHESTRATOR.md](ORCHESTRATOR.md), [AGENTS.md](AGENTS.md), [EVIDENCE_ENGINE.md](EVIDENCE_ENGINE.md).
 
 ## Pipeline (risk forecast)
 
@@ -58,6 +72,7 @@ Yahoo chart (adjclose)  ->  toAdjustedBars (split/dividend adjust, drop bad rows
 | May | May not |
 |---|---|
 | Re-word the provided evidence | Introduce any number (prices, ratios, probabilities, returns, performance) |
+| Re-word the committee thesis | Change or contradict the committee's decision, or name another decision label |
 | Order and connect points | Predict direction or give buy/sell advice |
 | Explain uncertainty | Use certainty language ("guaranteed", "will rise", "risk-free") |
 | | Cite evidence that does not exist |
@@ -75,3 +90,6 @@ Without `ANTHROPIC_API_KEY`, explanations are always the template.
 | Forecast interval | 80% range from calibration-slice residuals; measured coverage 79.3% (walk-forward), 79.6% (holdout) | Risk Model tab |
 | Model validation | Out-of-sample metrics from the registry | Model card, `/models` |
 | Evidence quality | Data freshness (`stale` when the last bar is > 4 days old) and explicit unavailability reasons | Risk Model tab |
+| Agent confidence | Share of an agent's required inputs that were present and fresh, 0-1. Not a probability. | Committee memo ("input coverage") |
+| Source reliability | Fixed trust per evidence source type and publisher tier | Committee evidence list |
+| Conviction | Committee score strength x analyst coverage x agreement, 0-100. Not a probability of profit. | Committee verdict |
