@@ -15,7 +15,7 @@
 
 | Suite | Count | Status (local run) |
 |---|---|---|
-| Vitest unit/route/render | 84 files, 780 tests | all pass |
+| Vitest unit/route/render | 86 files, 787 tests | all pass |
 | Vitest integration (real Postgres) | 1 file, 16 tests | runs in CI (`migrations` job) |
 | Python ML | 15 tests | all pass |
 | Playwright public tier | 9 tests x 2 projects (desktop, mobile) = 18 | all pass (incl. command palette by keyboard, committee API 401, no horizontal overflow) |

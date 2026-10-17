@@ -161,7 +161,7 @@ user (the committee: 12 runs/hour). Logs carry request ids, never queries, holdi
 ## Testing
 
 ```bash
-npm run lint && npm run typecheck && npm test   # 84 files, 780 tests at the time of writing
+npm run lint && npm run typecheck && npm test   # unit, route and render tests (counts in docs/TESTING.md)
 npm run build && npm run test:e2e               # Playwright; signed-in tier needs E2E_DATABASE_URL
 python -m unittest discover -s ml/tests -t .     # ML pipeline: leakage, splits, metrics, deployment gate
 ```
