@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { MoveAnswer } from "@/lib/research/move";
+import { Cited } from "./Cited";
 
 type Result = MoveAnswer & { answerSource: "template" | "llm"; model?: string };
 type State = { phase: "idle" } | { phase: "loading" } | { phase: "error"; message: string } | { phase: "done"; data: Result };
@@ -14,23 +15,6 @@ const CLASS_TEXT: Record<MoveAnswer["classification"], string> = {
   MIXED: "Partly market, partly stock-specific",
   QUIET: "Small move",
 };
-
-/** Render text with [M1]/[N2] citations as links to the evidence rows. */
-function Cited({ text }: { text: string }) {
-  const parts = text.split(/(\[[A-Z]\d+\])/g);
-  return (
-    <>
-      {parts.map((p, i) => {
-        const m = /^\[([A-Z]\d+)\]$/.exec(p);
-        return m ? (
-          <a key={i} href={`#ev-${m[1]}`} aria-label={`evidence ${m[1]}`} style={{ fontFamily: "monospace", fontSize: 11, color: "var(--primary)", textDecoration: "none" }}>[{m[1]}]</a>
-        ) : (
-          <span key={i}>{p}</span>
-        );
-      })}
-    </>
-  );
-}
 
 export function MoveView({ data }: { data: Result }) {
   const sections = [["What happened", data.answer.what], ["Market vs stock", data.answer.market], ["News", data.answer.news], ["Caveats", data.answer.caveats]] as const;
